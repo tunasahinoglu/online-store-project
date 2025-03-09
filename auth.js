@@ -178,7 +178,7 @@ signupForm.addEventListener('submit', (event) => {
         .then((userCredential) => {
 
             const user = userCredential.user;
-            const basket = localStorage.getItem("basket") ? JSON.parse(localStorage.getItem("basket")) : [];
+            const basket = localStorage.getItem("basket") ? JSON.parse(localStorage.getItem("basket")) : {products: [], counts: {}};
 
             setDoc(doc(database, "users", user.uid), mapToUser(firstName, lastName, email, country, city, address, basket))
             .then(() => {localStorage.removeItem("basket"); redirect();})
