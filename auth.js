@@ -39,6 +39,7 @@ onAuthStateChanged(auth, (user) => {
             if (userDocument.exists()) {redirect()}
             else {deleteUser(user)}
         })
+        .catch((error) => console.log(error.code))
     } else {switchForm(tab)}
 });
 
