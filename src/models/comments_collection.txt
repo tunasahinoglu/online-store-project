@@ -1,0 +1,8 @@
+//comments collection
+commentID: {
+    sender: senderID
+    product: productID
+    rate: >= 0 && <= 10
+    approved: True/False
+    comment: ".+"
+}

@@ -1,0 +1,17 @@
+//products collection
+productID: {
+    name: ".+",
+    category: ".+"
+    subcategory: ".+"
+    serialnumber: ".+"
+    price: > 0
+    discount: >= 0 && <= 100
+    stock: >= 0
+    description: ".+"
+    warranty: >= -1 // -1 means lifetime
+    distributername: ".+"
+    comments: [
+        commentID1
+        ...
+    ]
+}

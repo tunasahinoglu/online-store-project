@@ -1,7 +1,10 @@
 import { app, auth, database } from "./connect.js"
-import { onAuthStateChanged, createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { signOut, onAuthStateChanged, createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { mapToUser } from "./src/models/user_model.js"
+
+
+//redirection parameters
+let redirectionType = "auth"
 
 
 // get parameters
@@ -24,7 +27,8 @@ updateURL()
 function redirect() {
     document.getElementById("login-form").hidden = true
     document.getElementById("signup-form").hidden = true
-    document.getElementById("auth-info").hidden = false
+    document.getElementById("error-label-auth").hidden = false
+    document.getElementById("info-auth").hidden = false
 
     setTimeout(() => window.location.assign(returnURL), 2500)
 }
@@ -36,11 +40,15 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         getDoc(doc(database, "users", user.uid))
         .then((userDocument) => {
-            if (userDocument.exists()) {redirect()}
-            else {deleteUser(user)}
+            if (userDocument.exists()) {
+                if (redirectionType == "auth") {
+                    redirect();
+                };
+            }
+            else {deleteUser(user);}
         })
-        .catch((error) => console.log(error.code))
-    } else {switchForm(tab)}
+        .catch((error) => console.log(error))
+    } else {switchForm(tab);}
 });
 
 
@@ -62,8 +70,8 @@ const loginTab = document.querySelector("#login-tab")
 const signupTab = document.querySelector("#signup-tab")
 
 //to perform switch between tabs
-loginTab.addEventListener("click", () => switchForm("login"));
-signupTab.addEventListener("click", () => switchForm("signup"));
+loginTab.addEventListener("click", () => {if (auth.currentUser == null) {switchForm("login");};});
+signupTab.addEventListener("click", () => {if (auth.currentUser == null) {switchForm("signup");};});
 
 // to perform database related login operation
 loginForm.addEventListener("submit", (event) => {
@@ -94,11 +102,10 @@ loginForm.addEventListener("submit", (event) => {
 
     // to login
     if (isValid) {
+        redirectionType = "login"
         signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-
-        })
         .catch((error) => {
+            redirectionType = "auth"
             console.log(error.code)
             if (error.code === "auth/invalid-login-credentials") {
                 loginFormLabel.innerHTML = "Invalid email or password"
@@ -175,14 +182,41 @@ signupForm.addEventListener('submit', (event) => {
 
     // to sign up
     if (isValid) {
+        redirectionType = "signup"
         createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-
             const user = userCredential.user;
-            const basket = localStorage.getItem("basket") ? JSON.parse(localStorage.getItem("basket")) : {products: [], counts: {}};
-
-            setDoc(doc(database, "users", user.uid), mapToUser(firstName, lastName, email, country, city, address, basket))
-            .then(() => {localStorage.removeItem("basket"); redirect();})
+            setDoc(doc(database, "users", user.uid), {
+                firstname: firstName,
+                lastname: lastName,
+                email: email,
+                role: "customer",
+                address: {
+                    country: country,
+                    city: city,
+                    address: address,
+                },
+                invoices: [],
+                orders: [],
+                comments: []
+            })
+            .then(() => {
+                const authErrorLabel = document.querySelector("#error-label-auth")
+                const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
+                if (basket.size > 0) {
+                    basket.forEach((count, productID) => {
+                        setDoc(doc(database, "users", user.uid, "basket", productID), {
+                            count: count
+                        })
+                        .catch((error) => {
+                            authErrorLabel.innerHTML = "Some products in your basket may get lost";
+                            console.log(error);
+                        });
+                    });
+                    localStorage.removeItem("basket");
+                }
+                redirect();
+            })
             .catch((error) => {
                 deleteUser(user);
                 signupFormLabel.innerHTML = "Account cannot be created, try again later";
@@ -190,6 +224,7 @@ signupForm.addEventListener('submit', (event) => {
             });
         })
         .catch((error) => {
+            redirectionType = "auth"
             if (error.code === "auth/email-already-in-use") {
                 emailLabel.innerHTML = "Email is already in use";
             } else {
