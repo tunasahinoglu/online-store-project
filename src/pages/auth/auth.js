@@ -9,8 +9,8 @@ const urlParameters = new URLSearchParams(window.location.search);
 let returnURL = urlParameters.get("returnURL")
 let tab = urlParameters.get("tab");
 
-if (!returnURL) {returnURL = "/"; urlParameters.set("returnURL", "/")}
-if (!tab || (tab !== "login" && tab !== "signup")) {tab = "login"; urlParameters.set("tab", "login")}
+if (!returnURL) {returnURL = "index.html"; urlParameters.set("returnURL", returnURL)}
+if (!tab || (tab !== "login" && tab !== "signup")) {tab = "login"; urlParameters.set("tab", tab)}
 
 //to update url
 function updateURL() {
