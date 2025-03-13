@@ -1,4 +1,4 @@
-import { app, auth, database } from "./connect.js"
+import { app, auth, database } from "../../services/firebase/connect.js"
 import { onAuthStateChanged, createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
@@ -12,7 +12,7 @@ const urlParameters = new URLSearchParams(window.location.search);
 let returnURL = urlParameters.get("returnURL")
 let tab = urlParameters.get("tab");
 
-if (!returnURL) {returnURL = "index.html"; urlParameters.set("returnURL", returnURL)}
+if (!returnURL) {returnURL = "../../../index.html"; urlParameters.set("returnURL", returnURL)}
 if (!tab || (tab !== "login" && tab !== "signup")) {tab = "login"; urlParameters.set("tab", tab)}
 
 //to update url
