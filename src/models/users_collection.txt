@@ -1,6 +1,5 @@
 //users collection
-userID: {
-    
+userID: { 
     //common
     firstname: ".+"
     lastname: ".+"
@@ -27,6 +26,7 @@ userID: {
         ]
   
     //productmanager-related
+    
     //salesmanager-related
 }
 
