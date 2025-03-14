@@ -48,7 +48,7 @@ function switchForm(type) {
 
 /* code */
 //to validate/correct GET parameters
-if (!returnURL) {returnURL = "../../../index.html"; urlParameters.set("returnURL", returnURL)}
+if (!returnURL) {returnURL = "../../../"; urlParameters.set("returnURL", returnURL)}
 if (!tab || (tab !== "login" && tab !== "signup")) {tab = "login"; urlParameters.set("tab", tab)}
 updateURL()
 
@@ -104,7 +104,9 @@ loginForm.addEventListener("submit", (event) => {
     // to login
     if (isValid) {
         redirectionType = "login"
-        signInWithEmailAndPassword(auth, email, password)
+        signInWithEmailAndPassword(auth, email, password).then(() => {
+            redirect();
+        })
         .catch((error) => {
             redirectionType = "auth"
             if (error.code === "auth/invalid-login-credentials" || error.code === "auth/invalid-email" || error.code === "auth/invalid-password") {
