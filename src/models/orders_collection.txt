@@ -1,1 +1,19 @@
 //orders collection
+orderID: {
+    customer: userID
+    firstname: ".+"
+    lastname: ".+"
+    status: processing/in-transit/delivered/cancelled/refunded
+    address: {
+        country: ".+",
+        city: ".+",
+        address: ".+",
+    }
+    delivery: ".+"
+    date: "dd/mm/yyyy"
+}
+
+//order/products collection
+productID: {
+    count: > 0
+}

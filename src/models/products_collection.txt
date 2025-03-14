@@ -14,4 +14,8 @@ productID: {
         commentID1
         ...
     ]
+    features: {
+        feature1: ".+"
+        ...
+    }
 }

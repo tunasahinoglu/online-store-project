@@ -1,6 +1,5 @@
 //users collection
-userID: {
-    
+userID: { 
     //common
     firstname: ".+"
     lastname: ".+"
@@ -13,6 +12,10 @@ userID: {
         city: ".+",
         address: ".+",
     }
+    wishlist [
+        productID1
+        ...
+    ]
     invoices: [
         invoiceID1
         ...
@@ -25,12 +28,9 @@ userID: {
         commentID1
         ...
         ]
-  
-    //productmanager-related
-    //salesmanager-related
 }
 
 //users/basket collection
 productID: {
-    count: >= 0
+    count: > 0
 }

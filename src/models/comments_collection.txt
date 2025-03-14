@@ -3,6 +3,8 @@ commentID: {
     sender: senderID
     product: productID
     rate: >= 0 && <= 10
-    approved: True/False
+    reviewed: False
+    approved: False
     comment: ".+"
+    date: "dd/mm/yyyy"
 }
