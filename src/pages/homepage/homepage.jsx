@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import Card from '../../components/card.jsx';
 function Homepage() {
     const navigate = useNavigate();
 
@@ -15,6 +15,8 @@ function Homepage() {
                     <a href="./src/pages/auth/auth.html">
                         <button>Login or Register</button>
                     </a>
+                    <Card />
+                    <Card />
                 </section>
             </main>
             <footer className="homepage-footer">
