@@ -1,12 +1,10 @@
 //users collection
-userID: { 
+userID: {
     //common
     firstname: ".+"
     lastname: ".+"
     email: ".+@.+[.].+"
     role: "customer"/"productmanager"/"salesmanager"/"admin"
-    
-    //user-related
     address: {
         country: ".+",
         city: ".+",
