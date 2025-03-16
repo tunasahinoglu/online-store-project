@@ -1,33 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
+import { products } from '../../models/temp_product_db';
 
-const products = [ // Temp database
-    {
-        id: 1,
-        name: "iPhone 15",
-        price: 1000,
-        image: "https://cdsassets.apple.com/live/SZLF0YNV/images/sp/111339_sp818-mbp13touch-space-select-202005.png",
-    },
-    {
-        id: 2,
-        name: "Macbook Pro",
-        price: 2000,
-        image: "https://cdsassets.apple.com/live/SZLF0YNV/images/sp/111339_sp818-mbp13touch-space-select-202005.png",
-    },
-    {
-        id: 3,
-        name: "Samsung Galaxy S23",
-        price: 1000,
-        image: "https://cdsassets.apple.com/live/SZLF0YNV/images/sp/111339_sp818-mbp13touch-space-select-202005.png",
-    }
-];
-
-const categories = ['Electronics', 'Phones', 'Laptops', 'Accessories'];
+const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
 
 function Homepage() {
     const navigate = useNavigate();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortOption, setSortOption] = useState('default');
+    const [selectedCategory, setSelectedCategory] = useState('All');
+
+    const productList = Object.values(products).map(product => ({
+        ...product,
+        id: Object.keys(products).find(key => products[key] === product)
+    }));
+
+    const filteredProducts = productList.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === 'All' ||
+            product.category === selectedCategory ||
+            product.subcategory === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+        if (sortOption === 'priceHighToLow') {
+            return b.price - a.price;
+        } else if (sortOption === 'priceLowToHigh') {
+            return a.price - b.price;
+        } else {
+            return 0;
+        }
+    });
 
     return (
         <div className="homepage">
@@ -39,26 +45,51 @@ function Homepage() {
                     onClick={() => navigate('/')}
                 />
 
+                <div className="search-and-sort">
+                    <div className="search-bar">
+                        <input
+                            type="text"
+                            placeholder="Search products"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="sort-options">
+                        <select
+                            value={sortOption}
+                            onChange={(e) => setSortOption(e.target.value)}
+                        >
+                            <option value="default">Default</option>
+                            <option value="priceHighToLow">High to Low</option>
+                            <option value="priceLowToHigh">Low to High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <a href="./src/pages/auth/auth.html">
+                    <button>Login/Register</button>
+                </a>
+            </header>
+
+            <div className="categories-bar">
                 <div className="categories">
                     {categories.map((category) => (
                         <button
                             key={category}
-                            className="category-item"
-                            onClick={() => navigate(`/category/${category.toLowerCase()}`)}
+                            className={`category-item ${selectedCategory === category ? 'active' : ''}`}
+                            onClick={() => setSelectedCategory(category)}
                         >
                             {category}
                         </button>
                     ))}
                 </div>
+            </div>
 
-                <a href="./src/pages/auth/auth.html">
-                        <button>Login/Register</button>
-                    </a>
-            </header>
 
             <main className="main-content">
                 <section className="product-list">
-                    {products.map((product) => (
+                    {sortedProducts.map((product) => (
                         <div
                             key={product.id}
                             className="product-card"

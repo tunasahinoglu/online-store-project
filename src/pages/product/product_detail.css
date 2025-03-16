@@ -3,7 +3,7 @@
     margin: 0 auto;
     padding: 20px;
     font-family: Arial, sans-serif;
-    color: #333; 
+    color: #333;
 }
 
 .product-detail {
@@ -14,13 +14,20 @@
 
 .product-image {
     flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .product-image img {
-    width: 100%;
-    max-width: 400px;
+    width: 300px;
+
+    height: 300px;
+
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+
 }
 
 .product-info {
@@ -30,59 +37,59 @@
 .product-info h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    color: #ffffff; 
+    color: #ffffff;
 }
 
 .category {
     font-size: 1rem;
-    color: #ffffff; 
+    color: #ffffff;
     margin-bottom: 10px;
 }
 
 .price {
     font-size: 1.5rem;
     margin-bottom: 20px;
-    color: #ffffff; 
+    color: #ffffff;
 }
 
 .price .original-price {
     text-decoration: line-through;
-    color: #ffffff; 
+    color: #ffffff;
     margin-right: 10px;
 }
 
 .price .discounted-price {
     font-weight: bold;
-    color: #ffffff;  
+    color: #ffffff;
     margin-right: 10px;
 }
 
 .price .discount {
-    color: #388e3c; 
+    color: #388e3c;
     font-size: 1.2rem;
 }
 
 .description {
     font-size: 1.1rem;
     line-height: 1.6;
-    color: #ffffff; 
+    color: #ffffff;
     margin-bottom: 20px;
 }
 
 .stock .in-stock {
-    color: #388e3c; 
+    color: #388e3c;
     font-weight: bold;
 }
 
 .stock .out-of-stock {
-    color: #d32f2f; 
+    color: #d32f2f;
     font-weight: bold;
 }
 
 .warranty,
 .distributor {
     font-size: 1rem;
-    color: #ffffff; 
+    color: #ffffff;
     margin-bottom: 10px;
 }
 
@@ -99,7 +106,7 @@
 
 .add-to-cart {
     background-color: #ffd814;
-    color: #ffffff; 
+    color: #ffffff;
 }
 
 .add-to-cart:hover {
@@ -127,7 +134,7 @@
 .product-comments h2 {
     font-size: 1.8rem;
     margin-bottom: 20px;
-    color: #000; 
+    color: #000;
 }
 
 .product-specifications ul,

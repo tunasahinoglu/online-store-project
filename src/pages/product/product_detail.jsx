@@ -1,61 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import './product_detail.css'; 
-
-// Temp database
-const products = {
-    1: {
-        name: "iPhone 15",
-        category: "Electronics",
-        subcategory: "Smartphones",
-        serialnumber: "test",
-        price: 1000,
-        discount: 10,
-        stock: 50,
-        description: "test",
-        warranty: 12, 
-        distributername: "Apple",
-        comments: ["comment1", "comment2"],
-        features: {
-            test: "test",
-        },
-        image: "https://cdsassets.apple.com/live/SZLF0YNV/images/sp/111339_sp818-mbp13touch-space-select-202005.png",
-    },
-    2: {
-        name: "MacBook Pro",
-        category: "Electronics",
-        subcategory: "Laptops",
-        serialnumber: "test",
-        price: 2000,
-        discount: 5,
-        stock: 30,
-        description: "test",
-        warranty: 12, 
-        distributername: "Apple",
-        comments: ["comment1", "comment2"],
-        features: {
-            test: "test",
-        },
-        image: "https://cdsassets.apple.com/live/SZLF0YNV/images/sp/111339_sp818-mbp13touch-space-select-202005.png",
-    },
-    3: {
-        name: "Samsung Galaxy S23",
-        category: "Electronics",
-        subcategory: "Smartphones",
-        serialnumber: "test",
-        price: 2000,
-        discount: 5,
-        stock: 0,
-        description: "test",
-        warranty: 12, 
-        distributername: "Samsung",
-        comments: ["comment1", "comment2"],
-        features: {
-            test: "test",
-        },
-        image: "https://cdsassets.apple.com/live/SZLF0YNV/images/sp/111339_sp818-mbp13touch-space-select-202005.png",
-    },
-};
+import './product_detail.css';
+import { products } from '../../models/temp_product_db';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -93,8 +39,12 @@ function ProductDetail() {
                     <div className="distributor">
                         <span>Sold by: {product.distributername}</span>
                     </div>
-                    <button className="add-to-cart">Add to Cart</button>
-                    <button className="buy-now">Buy Now</button>
+                    {product.stock > 0 ? (
+                        <div className="buttons">
+                            <button className="add-to-cart">Add to Cart</button>
+                            <button className="buy-now">Buy Now</button>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
