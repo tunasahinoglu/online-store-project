@@ -5,16 +5,12 @@ productID: {
     subcategory: ".+"
     serialnumber: ".+"
     image: ".+"
-    price: > 0
+    price: >= 0
     discount: >= 0 && <= 100
     stock: >= 0
     description: ".+"
     warranty: >= -1 // -1 means lifetime
     distributorname: ".+"
-    comments: [
-        commentID1
-        ...
-    ]
     features: {
         feature1: ".+"
         ...
