@@ -1,79 +1,168 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>CS308-Group32</title>
-    </head>
-    <body>
-        <header>
-            <div id="logo-container">
-                <a href="../../../index.html">
-                    <img id="website-logo" src="https://upload.wikimedia.org/wikipedia/commons/8/85/Teknosa_logo.svg"></img>
-                </a>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS308-Group32</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        #auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tab Buttons */
+        #tab-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #tab-container input {
+            display: none;
+        }
+
+        #tab-container label {
+            cursor: pointer;
+            padding: 10px 20px;
+            margin: 0 5px;
+            background-color: #ddd;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        #tab-container input:checked + label {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Forms */
+        form {
+            display: none;
+        }
+
+        form.active {
+            display: block;
+        }
+
+        /* Input Fields */
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .half-entry {
+            width: 48%;
+            display: inline-block;
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div id="logo-container">
+            <a href="./index.html">
+                <img id="website-logo" src="https://upload.wikimedia.org/wikipedia/commons/8/85/Teknosa_logo.svg" alt="Logo" width="150">
+            </a>
+        </div>
+    </header>
+
+    <section>
+        <div id="auth-container">
+            <div id="tab-container">
+                <input type="radio" id="login-tab" name="auth-tab" checked>
+                <label for="login-tab">Login</label>
+                <input type="radio" id="signup-tab" name="auth-tab">
+                <label for="signup-tab">Sign Up</label>
             </div>
-        </header>
-        <section>
-            <div id="auth-container">
-                <div id="tab-container">
-                    <span id="login-tab">Login</span>
-                    <span id="signup-tab">Sign up</span>
-                </div>
-                <div id="entry-info-container">
-                    <form id="login-form" hidden>
-                        <p id="error-label-login" class="error-label"></p>
-                        <div class="entry-label-container">
-                            <input type="text" class="full-entry" id="email-entry-login" placeholder="Email">
-                            <label for="email-entry-login" class="error-label"></label>
-                        </div>
-                        <div class="entry-label-container">
-                            <input type="password" class="full-entry" id="password-entry-login" placeholder="Password">
-                            <label for="password-entry-login" class="error-label"></label>
-                        </div>
-                        <button type="submit" id="login-button">Login</button>
-                    </form>
-                    <form id="signup-form" hidden>
-                        <p id="error-label-signup" class="error-label"></p>
-                        <div class="entry-label-container-container">
-                            <span class="entry-label-container">
-                                <input type="text" class="half-entry" id="firstName-entry" placeholder="First Name">
-                                <label for="firstName-entry" class="error-label"></label>
-                            </span>
-                            <span class="entry-label-container">
-                                <input type="text" class="half-entry" id="lastName-entry" placeholder="Last Name">
-                                <label for="lastName-entry" class="error-label"></label>
-                            </span>
-                        </div>
-                        <div class="entry-label-container-container">
-                            <span class="entry-label-container">
-                                <input type="text" class="half-entry" id="country-entry" placeholder="Country">
-                                <label for="country-entry" class="error-label"></label>
-                            </span>
-                            <span class="entry-label-container">
-                                <input type="text" class="half-entry" id="city-entry" placeholder="City">
-                                <label for="city-entry" class="error-label"></label>
-                            </span>
-                        </div>
-                        <div class="entry-label-container">
-                            <input type="text" class="full-entry" id="address-entry" placeholder="Address">
-                            <label for="address-entry" class="error-label"></label>
-                        </div>
-                        <div class="entry-label-container">
-                            <input type="text" class="full-entry" id="email-entry-signup" placeholder="Email">
-                            <label for="email-entry-signup" class="error-label"></label>
-                        </div>
-                        <div class="entry-label-container">
-                            <input type="password" class="full-entry" id="password-entry-signup" placeholder="Password">
-                            <label for="password-entry-signup" class="error-label"></label>
-                        </div>
-                        <button type="submit" id="signup-button">Sign Up</button>
-                    </form>
-                    <p id="error-label-auth" hidden></p>
-                    <p id="info-auth" hidden>Redirecting...</p>
-                </div>
-            </div>
-        </section>
-        <footer>
-            <p>&copy; Copyright 2025, CS308-Group32</p>
-        </footer>
-        <script src="./auth.js" type="module"></script>
-    </body>
+
+            <!-- Login Form -->
+            <form id="login-form" class="active">
+                <input type="email" id="email-entry-login" placeholder="Email">
+                <input type="password" id="password-entry-login" placeholder="Password">
+                <button type="submit">Login</button>
+            </form>
+
+            <!-- Sign-Up Form -->
+            <form id="signup-form">
+                <input type="text" class="half-entry" id="firstName-entry" placeholder="First Name">
+                <input type="text" class="half-entry" id="lastName-entry" placeholder="Last Name">
+                <input type="text" class="half-entry" id="country-entry" placeholder="Country">
+                <input type="text" class="half-entry" id="city-entry" placeholder="City">
+                <input type="text" id="address-entry" placeholder="Address">
+                <input type="email" id="email-entry-signup" placeholder="Email">
+                <input type="password" id="password-entry-signup" placeholder="Password">
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <p>Copyright © 2025, CS308-Group32</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const loginTab = document.getElementById("login-tab");
+            const signupTab = document.getElementById("signup-tab");
+            const loginForm = document.getElementById("login-form");
+            const signupForm = document.getElementById("signup-form");
+            const emailLogin = document.getElementById("email-entry-login");
+            const emailSignup = document.getElementById("email-entry-signup");
+
+            function switchForm() {
+                if (loginTab.checked) {
+                    signupForm.classList.remove("active");
+                    loginForm.classList.add("active");
+                    emailLogin.value = emailSignup.value;  // Preserve email when switching
+                } else {
+                    loginForm.classList.remove("active");
+                    signupForm.classList.add("active");
+                    emailSignup.value = emailLogin.value;
+                }
+            }
+
+            loginTab.addEventListener("change", switchForm);
+            signupTab.addEventListener("change", switchForm);
+
+            // Initialize
+            switchForm();
+        });
+    </script>
+    <script src="./auth.js" type="module"></script>
+
+</body>
+
 </html>
