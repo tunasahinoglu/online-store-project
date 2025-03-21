@@ -59,7 +59,7 @@
 
         /* Input Fields */
         input {
-            width: 100%;
+            width: 90%;
             padding: 10px;
             margin: 5px 0;
             border: 1px solid #ccc;
@@ -67,9 +67,43 @@
         }
 
         .half-entry {
-            width: 48%;
-            display: inline-block;
+            padding: 10px;
+            border: 1px solid #ccc;  /* Optional for visible borders */
+            box-sizing: border-box;  /* Ensure the padding is considered inside the element's total width */
         }
+
+
+        .input-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .error-label {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .input-container input.error + .error-label {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .input-container input.error {
+            border: 2px solid red;
+        }
+
 
         /* Buttons */
         button {
@@ -110,22 +144,55 @@
 
             <!-- Login Form -->
             <form id="login-form" class="active">
-                <input type="email" id="email-entry-login" placeholder="Email">
-                <input type="password" id="password-entry-login" placeholder="Password">
+                <div class="input-container">
+                    <input type="email" id="email-entry-login" placeholder="Email">
+                    <span class="error-label"></span>
+                </div>
+                
+                <div class="input-container">
+                    <input type="password" id="password-entry-login" placeholder="Password">
+                    <span class="error-label"></span>
+                </div>
+            
                 <button type="submit">Login</button>
+                <label id="error-label-login" class="error"></label>
             </form>
+            
 
             <!-- Sign-Up Form -->
             <form id="signup-form">
-                <input type="text" class="half-entry" id="firstName-entry" placeholder="First Name">
-                <input type="text" class="half-entry" id="lastName-entry" placeholder="Last Name">
-                <input type="text" class="half-entry" id="country-entry" placeholder="Country">
-                <input type="text" class="half-entry" id="city-entry" placeholder="City">
-                <input type="text" id="address-entry" placeholder="Address">
-                <input type="email" id="email-entry-signup" placeholder="Email">
-                <input type="password" id="password-entry-signup" placeholder="Password">
+                <div class="input-container">
+                    <input type="text" id="firstName-entry" placeholder="First Name">
+                    <span class="error-label"></span>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="lastName-entry" placeholder="Last Name">
+                    <span class="error-label"></span>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="country-entry" placeholder="Country">
+                    <span class="error-label"></span>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="city-entry" placeholder="City">
+                    <span class="error-label"></span>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="address-entry" placeholder="Address">
+                    <span class="error-label"></span>
+                </div>
+                <div class="input-container">
+                    <input type="email" id="email-entry-signup" placeholder="Email">
+                    <span class="error-label"></span>
+                </div>
+                <div class="input-container">
+                    <input type="password" id="password-entry-signup" placeholder="Password">
+                    <span class="error-label"></span>
+                </div>
+            
                 <button type="submit">Sign Up</button>
-            </form>
+                <label id="error-label-signup" class="error"></label>
+            </form>            
         </div>
     </section>
 
