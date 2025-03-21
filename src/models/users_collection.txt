@@ -1,0 +1,34 @@
+//users collection
+userID: {
+    //common
+    firstname: ".+"
+    lastname: ".+"
+    email: ".+@.+[.].+"
+    role: "customer"/"productmanager"/"salesmanager"/"admin"
+    address: {
+        country: ".+",
+        city: ".+",
+        address: ".+",
+    }
+    wishlist [
+        productID1
+        ...
+    ]
+    invoices: [
+        invoiceID1
+        ...
+        ]
+    orders: [
+        orderID1
+        ...
+        ]
+    comments: [
+        commentID1
+        ...
+        ]
+}
+
+//users/basket collection
+productID: {
+    count: > 0
+}

@@ -1,0 +1,155 @@
+.product-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.product-detail {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.product-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.product-image img {
+    width: 300px;
+
+    height: 300px;
+
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+
+}
+
+.product-info {
+    flex: 2;
+}
+
+.product-info h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.category {
+    font-size: 1rem;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.price {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+.price .original-price {
+    text-decoration: line-through;
+    color: #ffffff;
+    margin-right: 10px;
+}
+
+.price .discounted-price {
+    font-weight: bold;
+    color: #ffffff;
+    margin-right: 10px;
+}
+
+.price .discount {
+    color: #388e3c;
+    font-size: 1.2rem;
+}
+
+.description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.stock .in-stock {
+    color: #388e3c;
+    font-weight: bold;
+}
+
+.stock .out-of-stock {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.warranty,
+.distributor {
+    font-size: 1rem;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.add-to-cart,
+.buy-now {
+    padding: 12px 24px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+
+.add-to-cart {
+    background-color: #ffd814;
+    color: #ffffff;
+}
+
+.add-to-cart:hover {
+    background-color: #f7ca00;
+}
+
+.buy-now {
+    background-color: #ffa41c;
+    color: white;
+}
+
+.buy-now:hover {
+    background-color: #ff8c00;
+}
+
+.product-specifications,
+.product-comments {
+    background-color: #f7f7f7;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.product-specifications h2,
+.product-comments h2 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #000;
+}
+
+.product-specifications ul,
+.product-comments ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.product-specifications li,
+.product-comments li {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.product-specifications strong {
+    color: #000;
+}

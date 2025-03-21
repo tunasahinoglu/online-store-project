@@ -1,0 +1,10 @@
+//comments collection
+commentID: {
+    sender: senderID
+    product: productID
+    rate: >= 0 && <= 10
+    reviewed: False
+    approved: False
+    comment: ".+"
+    date: "dd/mm/yyyy"
+}
