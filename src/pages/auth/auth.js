@@ -1,40 +1,48 @@
-import { auth, database } from "../../services/firebase/connect.js"
+import { app, auth, database } from "/src/services/firebase/connect.js"
 import { onAuthStateChanged, createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { mapToUser } from "/src/models/user_model.js"
 
 
-/* parameters */
-//redirection parameters
-let redirectionType = "auth"
-
-//GET parameters
+// get parameters
 const urlParameters = new URLSearchParams(window.location.search);
 let returnURL = urlParameters.get("returnURL")
 let tab = urlParameters.get("tab");
 
-//form/tab references
-const loginForm = document.querySelector("#login-form")
-const signupForm = document.querySelector("#signup-form")
-const loginTab = document.querySelector("#login-tab")
-const signupTab = document.querySelector("#signup-tab")
+if (!returnURL) {returnURL = "/"; urlParameters.set("returnURL", "/")}
+if (!tab || (tab !== "login" && tab !== "signup")) {tab = "login"; urlParameters.set("tab", "login")}
 
-
-/* functions */
 //to update url
 function updateURL() {
     const newURL = `${window.location.pathname}?${urlParameters.toString()}`
     window.history.replaceState(null, "", newURL);
 }
+updateURL()
+
 
 //to redirect after login
 function redirect() {
     document.getElementById("login-form").hidden = true
     document.getElementById("signup-form").hidden = true
-    document.getElementById("error-label-auth").hidden = false
-    document.getElementById("info-auth").hidden = false
+    document.getElementById("auth-info").hidden = false
 
     setTimeout(() => window.location.assign(returnURL), 2500)
 }
+
+
+//to check whether already signed in
+onAuthStateChanged(auth, (user) => {
+
+    if (user) {
+        getDoc(doc(database, "users", user.uid))
+        .then((userDocument) => {
+            if (userDocument.exists()) {redirect()}
+            else {deleteUser(user)}
+        })
+        .catch((error) => console.log(error.code))
+    } else {switchForm(tab)}
+});
+
 
 // to switch between login and sign up
 function switchForm(type) {
@@ -46,35 +54,18 @@ function switchForm(type) {
         updateURL()
 }
 
-/* code */
-//to validate/correct GET parameters
-if (!returnURL) {returnURL = "../../../"; urlParameters.set("returnURL", returnURL)}
-if (!tab || (tab !== "login" && tab !== "signup")) {tab = "login"; urlParameters.set("tab", tab)}
-updateURL()
 
-/* listeners */
-//to check whether already signed in
-onAuthStateChanged(auth, (user) => {
-
-    if (user) {
-        getDoc(doc(database, "users", user.uid))
-        .then((userDocument) => {
-            if (userDocument.exists()) {
-                if (redirectionType == "auth") {
-                    redirect();
-                };
-            }
-            else {deleteUser(user);}
-        })
-        .catch((error) => console.log(error))
-    } else {switchForm(tab);}
-});
+// form/tab references
+const loginForm = document.querySelector("#login-form")
+const signupForm = document.querySelector("#signup-form")
+const loginTab = document.querySelector("#login-tab")
+const signupTab = document.querySelector("#signup-tab")
 
 //to perform switch between tabs
-loginTab.addEventListener("click", () => {if (auth.currentUser == null) {switchForm("login");};});
-signupTab.addEventListener("click", () => {if (auth.currentUser == null) {switchForm("signup");};});
+loginTab.addEventListener("click", () => switchForm("login"));
+signupTab.addEventListener("click", () => switchForm("signup"));
 
-//to perform database related login operation
+// to perform database related login operation
 loginForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
@@ -103,13 +94,13 @@ loginForm.addEventListener("submit", (event) => {
 
     // to login
     if (isValid) {
-        redirectionType = "login"
-        signInWithEmailAndPassword(auth, email, password).then(() => {
-            redirect();
+        signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+
         })
         .catch((error) => {
-            redirectionType = "auth"
-            if (error.code === "auth/invalid-login-credentials" || error.code === "auth/invalid-email" || error.code === "auth/invalid-password") {
+            console.log(error.code)
+            if (error.code === "auth/invalid-login-credentials") {
                 loginFormLabel.innerHTML = "Invalid email or password"
             }
             else {console.log(error);}
@@ -123,7 +114,7 @@ signupForm.addEventListener('submit', (event) => {
 
     let isValid = true
 
-    //values
+    // values
     const firstName = signupForm.elements["firstName-entry"].value
     const lastName = signupForm.elements["lastName-entry"].value
     const country = signupForm.elements["country-entry"].value
@@ -132,8 +123,9 @@ signupForm.addEventListener('submit', (event) => {
     const email = signupForm.elements["email-entry-signup"].value
     const password = signupForm.elements["password-entry-signup"].value
 
-    //labels
+    // labels
     const signupFormLabel = signupForm.querySelector("#error-label-signup")
+    signupFormLabel.innerHTML = ""
     const firstNameLabel = signupForm.elements["firstName-entry"].labels[0]
     const lastNameLabel = signupForm.elements["lastName-entry"].labels[0]
     const countryLabel = signupForm.elements["country-entry"].labels[0]
@@ -142,10 +134,7 @@ signupForm.addEventListener('submit', (event) => {
     const emailLabel = signupForm.elements["email-entry-signup"].labels[0]
     const passwordLabel = signupForm.elements["password-entry-signup"].labels[0]
 
-    //to clear previous error message
-    signupFormLabel.innerHTML = ""
-
-    //validation
+    // validation
     if (!firstName) {
         isValid = false
         firstNameLabel.innerHTML = "First Name field cannot be empty"
@@ -174,9 +163,6 @@ signupForm.addEventListener('submit', (event) => {
     if (!email) {
         isValid = false
         emailLabel.innerHTML = "Email field cannot be empty"
-    } else if (!email.match(/.+@.+[.].+/)) {
-        isValid = false
-        emailLabel.innerHTML = "Email format should be email@domain.com"
     } else {emailLabel.innerHTML = ""}
 
     if (!password) {
@@ -187,53 +173,23 @@ signupForm.addEventListener('submit', (event) => {
         passwordLabel.innerHTML = "Password must be at least six-character long"
     } else {passwordLabel.innerHTML = ""}
 
-    //to sign up
+    // to sign up
     if (isValid) {
-        redirectionType = "signup"
         createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
+
             const user = userCredential.user;
-            setDoc(doc(database, "users", user.uid), {
-                firstname: firstName,
-                lastname: lastName,
-                email: email,
-                role: "customer",
-                address: {
-                    country: country,
-                    city: city,
-                    address: address,
-                },
-                wishlist: [],
-                invoices: [],
-                orders: [],
-                comments: []
-            })
-            .then(() => {
-                const authErrorLabel = document.querySelector("#error-label-auth")
-                const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
-                if (basket.size > 0) {
-                    basket.forEach((count, productID) => {
-                        setDoc(doc(database, "users", user.uid, "basket", productID), {
-                            count: count
-                        })
-                        .catch((error) => {
-                            authErrorLabel.innerHTML = "Some products in your basket may get lost";
-                            console.log(error);
-                        });
-                    });
-                    localStorage.removeItem("basket");
-                }
-                redirect();
-            })
+            const basket = localStorage.getItem("basket") ? JSON.parse(localStorage.getItem("basket")) : {products: [], counts: {}};
+
+            setDoc(doc(database, "users", user.uid), mapToUser(firstName, lastName, email, country, city, address, basket))
+            .then(() => {localStorage.removeItem("basket"); redirect();})
             .catch((error) => {
-                redirectionType = "auth"
                 deleteUser(user);
                 signupFormLabel.innerHTML = "Account cannot be created, try again later";
                 console.log(error);
             });
         })
         .catch((error) => {
-            redirectionType = "auth"
             if (error.code === "auth/email-already-in-use") {
                 emailLabel.innerHTML = "Email is already in use";
             } else {
