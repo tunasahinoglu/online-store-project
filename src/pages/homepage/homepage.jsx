@@ -4,6 +4,8 @@ import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
 import { products } from '../../models/temp_product_db';
 import { Link } from 'react-router-dom';
+import Cart from '../../pages/cart/cart_page';
+import { useCart } from '../../pages/cart/cart_context';
 
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
 
@@ -12,6 +14,7 @@ function Homepage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState('default');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const { cart, addToCart } = useCart();
 
     const productList = Object.values(products).map(product => ({
         ...product,
@@ -66,6 +69,11 @@ function Homepage() {
                             <option value="priceLowToHigh">Low to High</option>
                         </select>
                     </div>
+
+                    <div className="cart-icon" onClick={() => navigate('/cart')}>
+                        🛒
+                        <span>{cart.length}</span>
+                    </div>
                 </div>
 
                 <a href="./src/pages/auth/auth.html">
@@ -101,6 +109,12 @@ function Homepage() {
                             <img src={product.image} alt={product.name} className="product-image" />
                             <h3>{product.name}</h3>
                             <p>${product.price}</p>
+
+                            <button onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                                alert('Product added to cart');
+                            }}> Add to Cart  </button>
                         </div>
                     ))}
                 </section>

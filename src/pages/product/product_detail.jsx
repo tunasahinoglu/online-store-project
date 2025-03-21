@@ -2,12 +2,17 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import './product_detail.css';
 import { products } from '../../models/temp_product_db';
+import Cart from '../../pages/cart/cart_page';
+import { useCart } from '../../pages/cart/cart_context';
 
 function ProductDetail() {
     const { id } = useParams();
     const product = products[id];
 
     const discountedPrice = product.price - (product.price * product.discount) / 100;
+
+    const { cart, addToCart } = useCart();
+    
 
     return (
         <div className="product-detail-container">
@@ -41,8 +46,12 @@ function ProductDetail() {
                     </div>
                     {product.stock > 0 ? (
                         <div className="buttons">
-                            <button className="add-to-cart">Add to Cart</button>
-                            <button className="buy-now">Buy Now</button>
+                            <button className="add-to-cart" onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                                alert('Product added to cart');
+                            }} >Add to Cart</button>
+                           {/* <button className="buy-now">Buy Now</button> */}
                         </div>
                     ) : null}
                 </div>
