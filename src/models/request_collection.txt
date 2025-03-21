@@ -1,6 +1,7 @@
 //orders collection
 requestID: {
+    user: userID
     order: orderID
-    request: refund
-    date: "dd/mm/yyyy"
+    request: "refund"
+    date: timestamp
 }

@@ -1,6 +1,5 @@
 //users collection
 userID: {
-    //common
     firstname: ".+"
     lastname: ".+"
     email: ".+@.+[.].+"
@@ -14,18 +13,6 @@ userID: {
         productID1
         ...
     ]
-    invoices: [
-        invoiceID1
-        ...
-        ]
-    orders: [
-        orderID1
-        ...
-        ]
-    comments: [
-        commentID1
-        ...
-        ]
 }
 
 //users/basket collection

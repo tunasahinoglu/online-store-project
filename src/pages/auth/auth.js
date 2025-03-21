@@ -203,10 +203,7 @@ signupForm.addEventListener('submit', (event) => {
                     city: city,
                     address: address,
                 },
-                wishlist: [],
-                invoices: [],
-                orders: [],
-                comments: []
+                wishlist: []
             })
             .then(() => {
                 const authErrorLabel = document.querySelector("#error-label-auth")
@@ -235,7 +232,10 @@ signupForm.addEventListener('submit', (event) => {
         .catch((error) => {
             redirectionType = "auth"
             if (error.code === "auth/email-already-in-use") {
-                emailLabel.innerHTML = "Email is already in use";
+                emailLabel.innerHTML = "Email address is already in use";
+            }
+            else if (error.code === "auth/invalid-email") {
+                emailLabel.innerHTML = "Invalid email address";
             } else {
                 signupFormLabel.innerHTML = "Account cannot be created, try again later";
                 console.log(error);
