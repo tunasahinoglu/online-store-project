@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
 import { products } from '../../models/temp_product_db';
+import { Link } from 'react-router-dom';
 
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
 
@@ -68,7 +69,9 @@ function Homepage() {
                 </div>
 
                 <a href="./src/pages/auth/auth.html">
-                    <button>Login/Register</button>
+                    <Link to="/login">
+                        <button>Login/Register</button>
+                    </Link>
                 </a>
             </header>
 
