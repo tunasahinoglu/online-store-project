@@ -52,7 +52,7 @@ function Homepage() {
     const handleLogout = async () => {
         try {
             await signOut(getAuth());
-            navigate('/login');
+            navigate('/');
         } catch (error) {
             console.error('Logout error:', error);
         }
