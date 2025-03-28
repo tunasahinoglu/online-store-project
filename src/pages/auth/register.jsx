@@ -59,10 +59,27 @@ const RegisterPage = () => {
                 },
                 wishlist: [],
                 createdAt: new Date()
-            });
+            })
+                .then(() => {
+                    const authErrorLabel = document.querySelector("#error-label-auth")
+                    const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
+                    if (basket.size > 0) {
+                        basket.forEach((count, productID) => {
+                            setDoc(doc(database, "users", user.uid, "basket", productID), {
+                                count: count
+                            })
+                                .catch((error) => {
+                                    authErrorLabel.innerHTML = "Some products in your basket may get lost";
+                                    console.log(error);
+                                });
+                        });
+                        localStorage.removeItem("basket");
+                    }
+                })
 
             navigate('/');
         } catch (error) {
+            console.log(error);
             let errorMessage = 'Registration failed. Please try again.';
             switch (error.code) {
                 case 'auth/email-already-in-use':
