@@ -38,18 +38,18 @@ function redirect() {
 
 // to switch between login and sign up
 function switchForm(type) {
-    document.getElementById("login-form").hidden = type === "login" ? false : true
-    document.getElementById("signup-form").hidden = type === "login" ? true : false
+        document.getElementById("login-form").hidden = type === "login" ? false : true
+        document.getElementById("signup-form").hidden = type === "login" ? true : false
 
-    tab = type
-    urlParameters.set("tab", type)
-    updateURL()
+        tab = type
+        urlParameters.set("tab", type)
+        updateURL()
 }
 
 /* code */
 //to validate/correct GET parameters
-if (!returnURL) { returnURL = "../../../"; urlParameters.set("returnURL", returnURL) }
-if (!tab || (tab !== "login" && tab !== "signup")) { tab = "login"; urlParameters.set("tab", tab) }
+if (!returnURL) {returnURL = "../../../"; urlParameters.set("returnURL", returnURL)}
+if (!tab || (tab !== "login" && tab !== "signup")) {tab = "login"; urlParameters.set("tab", tab)}
 updateURL()
 
 /* listeners */
@@ -58,21 +58,21 @@ onAuthStateChanged(auth, (user) => {
 
     if (user) {
         getDoc(doc(database, "users", user.uid))
-            .then((userDocument) => {
-                if (userDocument.exists()) {
-                    if (redirectionType == "auth") {
-                        redirect();
-                    };
-                }
-                else { deleteUser(user); }
-            })
-            .catch((error) => console.log(error))
-    } else { switchForm(tab); }
+        .then((userDocument) => {
+            if (userDocument.exists()) {
+                if (redirectionType == "auth") {
+                    redirect();
+                };
+            }
+            else {deleteUser(user);}
+        })
+        .catch((error) => console.log(error))
+    } else {switchForm(tab);}
 });
 
 //to perform switch between tabs
-loginTab.addEventListener("click", () => { if (auth.currentUser == null) { switchForm("login"); }; });
-signupTab.addEventListener("click", () => { if (auth.currentUser == null) { switchForm("signup"); }; });
+loginTab.addEventListener("click", () => {if (auth.currentUser == null) {switchForm("login");};});
+signupTab.addEventListener("click", () => {if (auth.currentUser == null) {switchForm("signup");};});
 
 //to perform database related login operation
 loginForm.addEventListener("submit", (event) => {
@@ -94,12 +94,12 @@ loginForm.addEventListener("submit", (event) => {
     if (!email) {
         isValid = false
         emailLabel.innerHTML = "Email field cannot be empty"
-    } else { emailLabel.innerHTML = "" }
+    } else {emailLabel.innerHTML = ""}
 
     if (!password) {
         isValid = false
         passwordLabel.innerHTML = "Password field cannot be empty"
-    } else { passwordLabel.innerHTML = "" }
+    } else {passwordLabel.innerHTML = ""}
 
     // to login
     if (isValid) {
@@ -107,13 +107,13 @@ loginForm.addEventListener("submit", (event) => {
         signInWithEmailAndPassword(auth, email, password).then(() => {
             redirect();
         })
-            .catch((error) => {
-                redirectionType = "auth"
-                if (error.code === "auth/invalid-login-credentials" || error.code === "auth/invalid-email" || error.code === "auth/invalid-password") {
-                    loginFormLabel.innerHTML = "Invalid email or password"
-                }
-                else { console.log(error); }
-            });
+        .catch((error) => {
+            redirectionType = "auth"
+            if (error.code === "auth/invalid-login-credentials" || error.code === "auth/invalid-email" || error.code === "auth/invalid-password") {
+                loginFormLabel.innerHTML = "Invalid email or password"
+            }
+            else {console.log(error);}
+        });
     }
 });
 
@@ -149,27 +149,27 @@ signupForm.addEventListener('submit', (event) => {
     if (!firstName) {
         isValid = false
         firstNameLabel.innerHTML = "First Name field cannot be empty"
-    } else { firstNameLabel.innerHTML = "" }
+    } else {firstNameLabel.innerHTML = ""}
 
     if (!lastName) {
         isValid = false
         lastNameLabel.innerHTML = "Last Name field cannot be empty"
-    } else { lastNameLabel.innerHTML = "" }
+    } else {lastNameLabel.innerHTML = ""}
 
     if (!country) {
         isValid = false
         countryLabel.innerHTML = "Country field cannot be empty"
-    } else { countryLabel.innerHTML = "" }
+    } else {countryLabel.innerHTML = ""}
 
     if (!city) {
         isValid = false
         cityLabel.innerHTML = "City field cannot be empty"
-    } else { cityLabel.innerHTML = "" }
+    } else {cityLabel.innerHTML = ""}
 
     if (!address) {
         isValid = false
         addressLabel.innerHTML = "Address field cannot be empty"
-    } else { addressLabel.innerHTML = "" }
+    } else {addressLabel.innerHTML = ""}
 
     if (!email) {
         isValid = false
@@ -177,7 +177,7 @@ signupForm.addEventListener('submit', (event) => {
     } else if (!email.match(/.+@.+[.].+/)) {
         isValid = false
         emailLabel.innerHTML = "Email format should be email@domain.com"
-    } else { emailLabel.innerHTML = "" }
+    } else {emailLabel.innerHTML = ""}
 
     if (!password) {
         isValid = false
@@ -185,60 +185,60 @@ signupForm.addEventListener('submit', (event) => {
     } else if (password.length < 6) {
         isValid = false
         passwordLabel.innerHTML = "Password must be at least six-character long"
-    } else { passwordLabel.innerHTML = "" }
+    } else {passwordLabel.innerHTML = ""}
 
     //to sign up
     if (isValid) {
         redirectionType = "signup"
         createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                setDoc(doc(database, "users", user.uid), {
-                    firstname: firstName,
-                    lastname: lastName,
-                    email: email,
-                    role: "customer",
-                    address: {
-                        country: country,
-                        city: city,
-                        address: address,
-                    },
-                    wishlist: []
-                })
-                    .then(() => {
-                        const authErrorLabel = document.querySelector("#error-label-auth")
-                        const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
-                        if (basket.size > 0) {
-                            basket.forEach((count, productID) => {
-                                setDoc(doc(database, "users", user.uid, "basket", productID), {
-                                    count: count
-                                })
-                                    .catch((error) => {
-                                        authErrorLabel.innerHTML = "Some products in your basket may get lost";
-                                        console.log(error);
-                                    });
-                            });
-                            localStorage.removeItem("basket");
-                        }
-                        redirect();
-                    })
-                    .catch((error) => {
-                        redirectionType = "auth"
-                        deleteUser(user);
-                        signupFormLabel.innerHTML = "Account cannot be created, try again later";
-                        console.log(error);
+        .then((userCredential) => {
+            const user = userCredential.user;
+            setDoc(doc(database, "users", user.uid), {
+                firstname: firstName,
+                lastname: lastName,
+                email: email,
+                role: "customer",
+                address: {
+                    country: country,
+                    city: city,
+                    address: address,
+                },
+                wishlist: []
+            })
+            .then(() => {
+                const authErrorLabel = document.querySelector("#error-label-auth")
+                const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
+                if (basket.size > 0) {
+                    basket.forEach((count, productID) => {
+                        setDoc(doc(database, "users", user.uid, "basket", productID), {
+                            count: count
+                        })
+                        .catch((error) => {
+                            authErrorLabel.innerHTML = "Some products in your basket may get lost";
+                            console.log(error);
+                        });
                     });
+                    localStorage.removeItem("basket");
+                }
+                redirect();
             })
             .catch((error) => {
                 redirectionType = "auth"
-                if (error.code === "auth/email-already-in-use") {
-                    emailLabel.innerHTML = "Email address is already in use";
-                } else if (error.code === "auth/invalid-email") {
-                    emailLabel.innerHTML = "Invalid email address";
-                } else {
-                    signupFormLabel.innerHTML = "Account cannot be created, try again later";
-                    console.log(error);
-                }
+                deleteUser(user);
+                signupFormLabel.innerHTML = "Account cannot be created, try again later";
+                console.log(error);
             });
+        })
+        .catch((error) => {
+            redirectionType = "auth"
+            if (error.code === "auth/email-already-in-use") {
+                emailLabel.innerHTML = "Email address is already in use";
+            } else if (error.code === "auth/invalid-email") {
+                emailLabel.innerHTML = "Invalid email address";
+            } else {
+                signupFormLabel.innerHTML = "Account cannot be created, try again later";
+                console.log(error);
+            }
+        });
     }
 });
