@@ -28,6 +28,16 @@
     margin-bottom: 1rem;
 }
 
+.name-fields {
+    display: flex;
+    gap: 20px;
+}
+
+.name-fields .input-group {
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
 /* Labels */
 .input-group label {
     display: block;
@@ -86,8 +96,21 @@
     transform: translate(-18%, -50%);
 }
 
+.double-fields {
+    display: flex;
+    gap: 20px;
+}
+
+.double-fields .input-group {
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
 @media (max-width: 400px) {
-    .login-form {
-        width: 90%;
+
+    .name-fields,
+    .double-fields {
+        flex-direction: column;
+        gap: 0;
     }
 }
