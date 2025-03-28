@@ -4,6 +4,7 @@ import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
 import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
 
@@ -14,6 +15,15 @@ function Homepage() {
     const [sortOption, setSortOption] = useState('default');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
+    const [currentUser, setCurrentUser] = useState(null);
+
+    useEffect(() => {
+        const auth = getAuth();
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            setCurrentUser(user);
+        });
+        return unsubscribe;
+    }, []);
 
     useEffect(() => {
         const search = searchParams.get('search') || '';
@@ -37,6 +47,15 @@ function Homepage() {
         else params.delete('category');
 
         setSearchParams(params);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await signOut(getAuth());
+            navigate('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     };
 
     const productList = Object.values(products).map(product => ({
@@ -87,7 +106,6 @@ function Homepage() {
         updateURLParams('', sortOption, category);
     };
 
-
     return (
         <div className="homepage">
             <header className="app-bar">
@@ -121,9 +139,11 @@ function Homepage() {
                         🛒
                         <span>{cart.length}</span>
                     </div>
-                    <button onClick={() => navigate('/login')}>
-                        Login/Register
-                    </button>
+                    {currentUser ? (
+                        <button onClick={handleLogout}>Logout</button>
+                    ) : (
+                        <button onClick={() => navigate('/login')}>Login/Register</button>
+                    )}
                 </div>
             </header>
 
