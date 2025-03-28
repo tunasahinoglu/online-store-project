@@ -3,5 +3,6 @@ requestID: {
     user: userID
     order: orderID
     request: "refund"
+    approved: false
     date: timestamp
 }
