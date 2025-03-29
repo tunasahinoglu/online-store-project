@@ -137,7 +137,7 @@ function Homepage() {
                 <div className="header-actions">
                     <div className="cart-icon" onClick={() => navigate('/cart')}>
                         🛒
-                        <span>{cart.length}</span>
+                        <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
                     </div>
                     {currentUser ? (
                         <button onClick={handleLogout}>Logout</button>

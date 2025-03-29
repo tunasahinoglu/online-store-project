@@ -53,21 +53,6 @@
     color: #666;
 }
 
-.remove-button {
-    background-color: #ff4d4d;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-}
-
-.remove-button:hover {
-    background-color: #ff1a1a;
-}
-
 .cart-summary {
     margin-top: 20px;
     padding-top: 20px;
@@ -104,4 +89,36 @@
 
 .cart-item:hover {
     background-color: #f0f0f0; 
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.quantity-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    color: black;
+}
+
+.quantity-button:hover {
+    background-color: #e0e0e0;
+}
+
+.quantity {
+    margin: 0 10px;
+    font-size: 16px;
+    min-width: 20px;
+    text-align: center;
+    color: black;
 }
