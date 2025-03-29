@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './login.css';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth, database } from "../../services/firebase/connect.js"
-import { onAuthStateChanged, createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { auth } from "../../services/firebase/connect.js"
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');

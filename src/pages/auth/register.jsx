@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, database } from "../../services/firebase/connect.js"
@@ -17,6 +17,16 @@ const RegisterPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Check if user is already logged in
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) {
+                navigate('/'); // Redirect to home if already logged in
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -57,27 +67,29 @@ const RegisterPage = () => {
                     city: city,
                     address: address,
                 },
-                wishlist: [],
-                createdAt: new Date()
+                wishlist: []
             })
-                .then(() => {
-                    const authErrorLabel = document.querySelector("#error-label-auth")
-                    const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
-                    if (basket.size > 0) {
-                        basket.forEach((count, productID) => {
-                            setDoc(doc(database, "users", user.uid, "basket", productID), {
-                                count: count
-                            })
-                                .catch((error) => {
-                                    authErrorLabel.innerHTML = "Some products in your basket may get lost";
-                                    console.log(error);
-                                });
-                        });
-                        localStorage.removeItem("basket");
-                    }
-                })
 
+            const basket = localStorage.getItem("basket") ? new Map(JSON.parse(localStorage.getItem("basket"))) : new Map();    
+            let isItemLost = false;
+
+            if (basket.size > 0) {
+                for (let [productID, count] of basket) {
+                    try {
+                        await setDoc(doc(database, "users", user.uid, "basket", productID), {
+                            count: count
+                        });
+                    } catch(error) {
+                        console.error("Error saving basket item:", error);
+                        isItemLost = true
+                    }
+                };
+                localStorage.removeItem("basket");
+            }
+
+            if (isItemLost) {alert("Some products in your basket may get lost")}
             navigate('/');
+
         } catch (error) {
             console.log(error);
             let errorMessage = 'Registration failed. Please try again.';

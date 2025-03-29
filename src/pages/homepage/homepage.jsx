@@ -4,7 +4,8 @@ import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
 import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { auth, database } from "../../services/firebase/connect.js"
+import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
 
@@ -18,7 +19,6 @@ function Homepage() {
     const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
-        const auth = getAuth();
         const unsubscribe = auth.onAuthStateChanged(user => {
             setCurrentUser(user);
         });
@@ -51,7 +51,7 @@ function Homepage() {
 
     const handleLogout = async () => {
         try {
-            await signOut(getAuth());
+            await signOut(auth);
             navigate('/');
         } catch (error) {
             console.error('Logout error:', error);
