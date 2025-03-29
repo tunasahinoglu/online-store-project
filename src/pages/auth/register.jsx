@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
 import './login.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { auth, database } from "../../services/firebase/connect.js"
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const RegisterPage = () => {
     const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [country, setCountry] = useState('');
+    const [city, setCity] = useState('');
+    const [address, setAddress] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
 
-        if (!firstName || !email || !password || !confirmPassword) {
+        if (!firstName || !lastName || !email || !password || !confirmPassword || !country || !city || !address) {
             setError('All fields are required');
             return;
         }
@@ -27,19 +37,77 @@ const RegisterPage = () => {
             return;
         }
 
-        setError('');
-        console.log('Registering user with:', { firstName, lastName, email, password });
+        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            setError('Please enter a valid email address');
+            return;
+        }
 
-        setFirstName('');
-        setLastName('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
+        try {
+            setLoading(true);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            await setDoc(doc(database, "users", user.uid), {
+                firstname: firstName,
+                lastname: lastName,
+                email: email,
+                role: "customer",
+                address: {
+                    country: country,
+                    city: city,
+                    address: address,
+                },
+                wishlist: [],
+                createdAt: new Date()
+            })
+                .then(() => {
+                    const authErrorLabel = document.querySelector("#error-label-auth")
+                    const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
+                    if (basket.size > 0) {
+                        basket.forEach((count, productID) => {
+                            setDoc(doc(database, "users", user.uid, "basket", productID), {
+                                count: count
+                            })
+                                .catch((error) => {
+                                    authErrorLabel.innerHTML = "Some products in your basket may get lost";
+                                    console.log(error);
+                                });
+                        });
+                        localStorage.removeItem("basket");
+                    }
+                })
+
+            navigate('/');
+        } catch (error) {
+            console.log(error);
+            let errorMessage = 'Registration failed. Please try again.';
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'This email is already registered';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Please enter a valid email address';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Password should be at least 6 characters';
+                    break;
+            }
+            setError(errorMessage);
+            if (auth.currentUser) {
+                try {
+                    await auth.currentUser.delete();
+                } catch (deleteError) {
+                    console.error('Failed to delete auth user:', deleteError);
+                }
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="login-container">
-            <a href="../../../"> {/*what the f*/}
+            <a href="/">
                 <img
                     src="https://upload.wikimedia.org/wikipedia/commons/8/85/Teknosa_logo.svg"
                     alt="Register"
@@ -50,18 +118,31 @@ const RegisterPage = () => {
                 <h2>Register</h2>
                 {error && <div className="error-message">{error}</div>}
 
-                <div className="input-group">
-                    <label htmlFor="name">name</label>
-                    <input
-                        type="text"
-                        id="name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                    />
+                <div className="name-fields">
+                    <div className="input-group">
+                        <label htmlFor="firstName">First Name</label>
+                        <input
+                            type="text"
+                            id="firstName"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="input-group">
+                        <label htmlFor="lastName">Last Name</label>
+                        <input
+                            type="text"
+                            id="lastName"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required
+                        />
+                    </div>
                 </div>
+
                 <div className="input-group">
-                    <label htmlFor="email">Email:</label>
+                    <label htmlFor="email">Email</label>
                     <input
                         type="email"
                         id="email"
@@ -93,9 +174,51 @@ const RegisterPage = () => {
                     />
                 </div>
 
-                <button type="submit" className="login-button">Register</button>
+                <div className="double-fields">
+                    <div className="input-group">
+                        <label htmlFor="country">Country</label>
+                        <input
+                            type="text"
+                            id="country"
+                            value={country}
+                            onChange={(e) => setCountry(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="input-group">
+                        <label htmlFor="city">City</label>
+                        <input
+                            type="text"
+                            id="city"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="input-group">
+                    <label htmlFor="address">Address</label>
+                    <input
+                        type="text"
+                        id="address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    className="login-button"
+                    disabled={loading}
+                >
+                    {loading ? 'Creating account...' : 'Register'}
+                </button>
                 <Link to="/login">
-                    <button type="button" className="register-button">Already have an account? Login</button>
+                    <button type="button" className="register-button">
+                        Already have an account? Login
+                    </button>
                 </Link>
             </form>
             <footer>
