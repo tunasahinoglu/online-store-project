@@ -54,7 +54,8 @@ function ProductDetail() {
 
                 <div className="header-actions">
                     <div className="cart-icon" onClick={() => navigate('/cart')}>
-                        🛒 <span className="cart-count">{cart.length}</span>
+                        🛒
+                        <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
                     </div>
                     <div>
                         <button onClick={() => navigate('/login')}>
