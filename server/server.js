@@ -1,11 +1,11 @@
 import express from "express";
 import auth from "./routers/auth.js"
 import user from "./routers/users.js"
-//import deliveryCompany from "./routers/deliveryCompanies.js"
+import deliveryCompany from "./routers/deliveryCompanies.js"
 import product from "./routers/products.js"
 import order from "./routers/orders.js"
-//import request from "./routers/requests.js"
-//import comment from "./routers/comments.js"
+import request from "./routers/requests.js"
+import comment from "./routers/comments.js"
 import errorHandler from "./middlewares/error.js"
 import notFoundHandler from "./middlewares/notFound.js"
 import logHandler from "./middlewares/log.js"
@@ -34,15 +34,15 @@ app.use("/api/auth", auth);
 //-users
 app.use("/api/users", user);
 //-deliverycompanies
-//app.use("/api/deliverycompanies", deliveryCompany);
+app.use("/api/deliverycompanies", deliveryCompany);
 //-products
 app.use("/api/products", product);
 //-orders
 app.use("/api/orders", order);
 //-requests
-//app.use("/api/request", request);
+app.use("/api/request", request);
 //-comments
-//app.use("/api/comments", comment);
+app.use("/api/comments", comment);
 
 
 //error handling middlewares

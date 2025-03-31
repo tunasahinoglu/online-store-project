@@ -47,7 +47,7 @@ export const addOrder = async (req, res, next) => {
         //get the delivery company
         const deliveryCompanyReference = database.collection("deliverycompanies").doc(delivery.company);
         const deliveryCompanyDocument = await deliveryCompanyReference.get();
-        if (!deliveryCompanyDocument.exists || !deliveryCompanyDocument.data().types.includes(delivery.type)) {
+        if (!deliveryCompanyDocument.exists) {
             const error = new Error("Please enter a valid delivery");
             error.status = 400;
             return next(error);
@@ -57,7 +57,7 @@ export const addOrder = async (req, res, next) => {
         const userReference = database.collection("users").doc(decodedToken.uid);
         const userDocument = await userReference.get();
         if (!userDocument.exists) {
-            const error = new Error(`A user with the id of ${productID} was not found`);
+            const error = new Error(`A user with the id of ${decodedToken.uid} was not found`);
             error.status = 404;
             return next(error);
         }
@@ -88,8 +88,8 @@ export const addOrder = async (req, res, next) => {
         //add the order
         const orderDocument = await database.collection("orders").add(orderData);
         //calculate total cost & discounted cost
-        let totalCost = 0;
-        let totalDiscountedCost = 0;
+        let totalCost = delivery.type === "standard" ? deliveryCompanyDocument.costs[0] : deliveryCompanyDocument.costs[1];
+        let totalDiscountedCost = totalCost;
         const orderID = orderDocument.id;
         for (let productDocument of basketDocuments) {
             //get the product
@@ -190,7 +190,7 @@ export const setOrder = async (req, res, next) => {
             return next(error);
         }
         const orderData = orderDocument.data();
-        if (((tokenRole === "admin" || tokenRole === "user") && orderData.status !== "processing" && status !== "cancelled") || (tokenRole === "salesmanager" && orderData.status !== "delivered" && status !== "refunded")) {
+        if (((tokenRole === "admin" || tokenRole === "user") && orderData.status !== "processing" && status !== "cancelled") || (tokenRole === "salesmanager" && ((orderData.status !== "delivered" && status !== "refunded") || (orderData.status !== "processing" && status !== "in-transmit") || (orderData.status !== "in-trasmit" && status !== "delivered")))) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
@@ -207,7 +207,22 @@ export const setOrder = async (req, res, next) => {
             const requestDocument = requestSnapshot.docs[0];
         }
         orderData["status"] = status;
+        await orderReference.set(orderData);
         log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
+        if (status === "cancelled" || status === "refund") {
+            //update product stocks
+            const productsReference = orderReference.collection("products");
+            const productsSnapshot = productsReference.get();
+            const productDocuments = productsSnapshot.docs;
+            for (let productDocument of productDocuments) {
+                const reference = database.collection("products").doc(productDocument.id);
+                const document = reference.get();
+                const productData = document.data();
+                productData["stock"] += productDocument.data().stock;
+                await reference.set(productData);
+                log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
+            }
+        }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
