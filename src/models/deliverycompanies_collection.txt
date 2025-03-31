@@ -1,0 +1,7 @@
+//deliverycompany collection
+deliverycompanyID: {
+    name: ".+"
+    types: ["standard", "express"]
+    costs: [5, 10]
+    email: ".+@.+[.].+"
+}

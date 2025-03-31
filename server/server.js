@@ -1,0 +1,54 @@
+import express from "express";
+import auth from "./routers/auth.js"
+import user from "./routers/users.js"
+//import deliveryCompany from "./routers/deliveryCompanies.js"
+import product from "./routers/products.js"
+import order from "./routers/orders.js"
+//import request from "./routers/requests.js"
+//import comment from "./routers/comments.js"
+import errorHandler from "./middlewares/error.js"
+import notFoundHandler from "./middlewares/notFound.js"
+import logHandler from "./middlewares/log.js"
+import cors from "cors";
+
+
+//set constants
+//-secrets
+const port = process.env.PORT;
+
+
+//initialize apps
+//-express
+const app = express();
+
+
+//common middlewares
+app.use(cors({origin: "http://localhost:5173", methods: "GET,HEAD,PUT,PATCH,POST,DELETE", credentials: true}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(logHandler);
+
+//routing
+//-auth
+app.use("/api/auth", auth);
+//-users
+app.use("/api/users", user);
+//-deliverycompanies
+//app.use("/api/deliverycompanies", deliveryCompany);
+//-products
+app.use("/api/products", product);
+//-orders
+app.use("/api/orders", order);
+//-requests
+//app.use("/api/request", request);
+//-comments
+//app.use("/api/comments", comment);
+
+
+//error handling middlewares
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+
+//listen the port
+app.listen(port, () => console.log(`Server is running on the port ${port}`));
