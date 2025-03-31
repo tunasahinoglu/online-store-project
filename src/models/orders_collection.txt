@@ -26,6 +26,7 @@ orderID: {
 
 //order/products collection
 productID: {
+    name: ".+"
     price: >=0
     discount: >= 0 && <= 100
     count: > 0

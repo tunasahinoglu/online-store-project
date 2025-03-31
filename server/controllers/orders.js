@@ -1,5 +1,7 @@
 import admin from "../services/auth.js"
 import log from "../services/log.js";
+import createPDFAttachment from "../services/pdf.js";
+import sendEmail from "../services/email.js";
 
 
 //initialize apps
@@ -110,6 +112,7 @@ export const addOrder = async (req, res, next) => {
             totalCost += document.data().price;
             totalDiscountedCost += document.data().price * (100 - document.data().discount)/100
             const productData = {
+                name: document.data().name,
                 price: document.data().price,
                 discount: document.data().discount,
                 count: productDocument.data().count
@@ -124,7 +127,31 @@ export const addOrder = async (req, res, next) => {
         }
         orderData["totalcost"] = totalCost;
         orderData["totaldiscountedcost"] = totalDiscountedCost;
+        await database.collection("orders").doc(orderDocument.id).set(orderData);
         log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
+        //email
+        orderDocument = await database.collection("orders").doc(orderDocument.id).get();
+        const productsSnapshot = await database.collection("orders").doc(orderDocument.id).collection("products").get();
+        const productDocuments = productsSnapshot.docs;
+        const attachment = createPDFAttachment(orderDocument, productDocuments);
+        const content = `
+            Hello ${userDocument.data().firstname},
+
+            Thank you for your order! We are pleased to confirm that your order #${orderDocument.id} has been successfully placed.
+
+            **Order Details:**
+            - **Order ID:** ${orderDocument.id}
+            - **Order Date:** ${orderDocument.data().date}
+            - **Total Amount:** $${orderDocument.data().totaldiscountedcost.toFixed(2)}
+
+            You can expect to receive your order soon. The tracking information will be sent once your order has been shipped.
+            Please find the invoice attached.
+
+
+            Best regards,  
+            **Teknosu Team**
+        `
+        await sendEmail(userDocument.data().email, content, [attachment]);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -211,7 +238,7 @@ export const setOrder = async (req, res, next) => {
         orderData["status"] = status;
         await orderReference.set(orderData);
         log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
-        if (status === "cancelled" || status === "refund") {
+        if (status === "cancelled" || status === "refunded") {
             //update product stocks
             const productsReference = orderReference.collection("products");
             const productsSnapshot = productsReference.get();
@@ -225,6 +252,27 @@ export const setOrder = async (req, res, next) => {
                 await reference.set(productData);
                 log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }
+        }
+        if (status === "refunded") {
+            const userReference = database.collection("users").doc(orderData.user);
+            const userDocument = await userReference.get();
+            const content = `
+                Hello ${userDocument.data().firstname},
+        
+                We’re reaching out to confirm that your refund for order #${orderDocument.id} has been successfully processed.
+        
+                **Refund Details:**
+                - **Order ID:** ${orderDocument.id}
+                - **Refund Amount:** $${orderData.totaldiscountedcost.toFixed(2)}
+                - **Refund Date:** ${Date()}
+        
+                The amount will be credited back within 3-5 business days, depending on your bank’s processing time.
+        
+
+                Best regards,  
+                **Teknosu Team**
+            `
+            await sendEmail(userDocument.data().email, content);
         }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
