@@ -44,7 +44,7 @@ export const get = async (path, selectConditions = null, whereConditions = null,
 };
 
 
-export const add = async (path, body, token=null) => {
+export const add = async (path, body) => {
     //send request to set
     const auth = getAuth(app);
     const user = auth.currentUser;
@@ -64,7 +64,7 @@ export const add = async (path, body, token=null) => {
 };
 
 
-export const set = async (path, body, token=null) => {
+export const set = async (path, body) => {
     //send request to set
     const auth = getAuth(app);
     const user = auth.currentUser;

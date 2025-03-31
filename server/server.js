@@ -10,9 +10,14 @@ import errorHandler from "./middlewares/error.js"
 import notFoundHandler from "./middlewares/notFound.js"
 import logHandler from "./middlewares/log.js"
 import cors from "cors";
+import url from "url";
+import path from "path";
 
 
 //set constants
+//-path 
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 //-secrets
 const port = process.env.PORT;
 
@@ -23,12 +28,14 @@ const app = express();
 
 
 //common middlewares
-app.use(cors({origin: "http://localhost:5173", methods: "GET,HEAD,PUT,PATCH,POST,DELETE", credentials: true}));
+app.use(cors({origin: "http://localhost:5173", methods: "GET,PUT,POST,DELETE", credentials: true}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(logHandler);
 
 //routing
+//-index.html
+app.use(express.static(path.join(__dirname, "../dist")));
 //-auth
 app.use("/api/auth", auth);
 //-users
