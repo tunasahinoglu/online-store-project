@@ -94,7 +94,7 @@ export const createAccount = async (req, res, next) => {
                 try {
                     const productData = {count: count};
                     await basketReference.set(productData);
-                    log(database, "SET", `users/${user.uid}/basket/${productID}`, productData, user.uid);
+                    log(database, "ADD", `users/${user.uid}/basket/${productID}`, productData, user.uid);
                 } catch (error) {
                     invalidProduct = true;
                 }

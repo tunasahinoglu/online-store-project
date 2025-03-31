@@ -12,7 +12,7 @@ export const get = async (path, selectConditions = null, whereConditions = null,
     if (isDocument) {
         queryReference = doc(database, ...path);
         const snapshot = await getDoc(queryReference);
-        return snapshot.exists() ? { [snapshot.id]: snapshot.data() } : {};
+        return snapshot.exists() ? [{[document.id]:snapshot.data()}] : [];
     //collection
     } else {
         queryReference = collection(database, ...path);
@@ -36,10 +36,10 @@ export const get = async (path, selectConditions = null, whereConditions = null,
         const snapshot = await getDocs(queryReference);
         return snapshot.docs.length > 0
             ? snapshot.docs.reduce((documents, document) => {
-                documents[document.id] = document.data();
+                documents.push({[document.id]:document.data()});
                 return documents;
-            }, {})
-            : {};
+            }, [])
+            : [];
     }
 };
 

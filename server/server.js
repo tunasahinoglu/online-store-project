@@ -59,4 +59,4 @@ app.use(errorHandler);
 
 
 //listen the port
-app.listen(port, () => console.log(`Server is running on the port ${port}`));
+app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
