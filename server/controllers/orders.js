@@ -102,8 +102,10 @@ export const addOrder = async (req, res, next) => {
             }
             //update product
             const newDocumentData = document.data();
-            newDocumentData["stock"] = document.data() - productDocument.data().count;
+            newDocumentData["stock"] = document.data().stock - productDocument.data().count;
+            newDocumentData["popularity"] = document.data().popularity + productDocument.data().count;
             await database.collection("products").doc(productDocument.id).set(newDocumentData);
+            log(database, "SET", `products/${document.id}`, newDocumentData, decodedToken.uid);
             //add product
             totalCost += document.data().price;
             totalDiscountedCost += document.data().price * (100 - document.data().discount)/100
@@ -175,7 +177,7 @@ export const setOrder = async (req, res, next) => {
             const error = new Error("All fields are required");
             error.status = 400;
             return next(error);
-        } else if (typeof status !== "string" || ["cancelled", "refunded"].includes(status)) {
+        } else if (typeof status !== "string" || ["cancelled", "refunded", "in-transit", "delivered"].includes(status)) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
@@ -190,7 +192,7 @@ export const setOrder = async (req, res, next) => {
             return next(error);
         }
         const orderData = orderDocument.data();
-        if (((tokenRole === "admin" || tokenRole === "user") && orderData.status !== "processing" && status !== "cancelled") || (tokenRole === "salesmanager" && ((orderData.status !== "delivered" && status !== "refunded") || (orderData.status !== "processing" && status !== "in-transmit") || (orderData.status !== "in-trasmit" && status !== "delivered")))) {
+        if (((tokenRole === "admin" || tokenRole === "user") && orderData.status !== "processing" && status !== "cancelled") || (tokenRole === "salesmanager" && (orderData.status !== "delivered" && status !== "refunded")) || (tokenRole === "productmanager" && ((orderData.status !== "processing" && status !== "in-transit") || (orderData.status !== "in-trasmit" && status !== "delivered")))) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
@@ -218,7 +220,8 @@ export const setOrder = async (req, res, next) => {
                 const reference = database.collection("products").doc(productDocument.id);
                 const document = reference.get();
                 const productData = document.data();
-                productData["stock"] += productDocument.data().stock;
+                productData["stock"] += productDocument.data().count;
+                productData["popularity"] -= productDocument.data().count;
                 await reference.set(productData);
                 log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }

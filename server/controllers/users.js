@@ -7,6 +7,81 @@ import log from "../services/log.js";
 const database = admin.firestore();
 
 
+//  @desc   salesmanager adds a notification
+//  @route  POST  /api/users/:userID/notifications
+export const addNotification = async (req, res, next) => {
+    const token = req.headers.authorization;
+    const { message } = req.body;
+    const userID = req.params.userID;
+    
+
+    //add the product
+    try {
+        //token check
+        let decodedToken;
+        let tokenRole;
+        if (!token) {
+            const error = new Error("No token provided");
+            error.status = 401;
+            return next(error);
+        } else {
+            decodedToken = await admin.auth().verifyIdToken(token);
+            const userReference = database.collection("users").doc(decodedToken.uid);
+            const user = await userReference.get();
+            tokenRole = user.data().role;
+            if (!user.exists || tokenRole !== "salesmanager") {
+                const error = new Error("Unauthorized access");
+                error.status = 401;
+                return next(error);
+            }
+        }
+        //input check
+        if (message === undefined) {
+            const error = new Error("All fields are required");
+            error.status = 400;
+            return next(error);
+        } else if (typeof message !== "string" || !message.trim()) {
+            const error = new Error("Please enter a valid message");
+            error.status = 400;
+            return next(error);
+        }
+        //get the user
+        const userReference = database.collection("users").doc(userID);
+        const userDocument = await userReference.get();
+        if (!userDocument.exists) {
+            const error = new Error(`A user with the id of ${userID} was not found`);
+            error.status = 404;
+            return next(error);
+        }
+
+        const notificationData = {
+            message: message,
+            seen: false,
+            date: Date()
+        };
+
+        //set the product
+        const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
+        log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        res.status(201).json({message: "Successfully set"});
+    } catch (error) {
+        console.error(error);
+        //extract error message and return response
+        let message = "Internal server error";
+        let status = 500;
+        switch (error.code) {
+            case "auth/id-token-expired":
+                message = "Invalid or expired token";
+                status = 401;
+                break;
+        }
+        res.status(status).json({
+          message: message
+        });
+    }
+}
+
+
 //  @desc   admin/user sets product to a specific user's/its basket
 //  @route  PUT  /api/users/:userID/basket/:productID
 export const setProduct = async (req, res, next) => {
@@ -199,6 +274,83 @@ export const setUser = async (req, res, next) => {
         await database.collection("users").doc(userID).set(userData);
         log(database, "SET", `users/${userDocument.uid}`, userData, decodedToken.uid);
         res.status(200).json({message: "Successfully set"});
+    } catch (error) {
+        console.error(error);
+        //extract error message and return response
+        let message = "Internal server error";
+        let status = 500;
+        switch (error.code) {
+            case "auth/id-token-expired":
+                message = "Invalid or expired token";
+                status = 401;
+                break;
+        }
+        res.status(status).json({
+          message: message
+        });
+    }
+}
+
+
+//  @desc   user sets its specific notification
+//  @route  PUT  /api/users/:userID/notifications/:notificationID
+export const setNotification = async (req, res, next) => {
+    const token = req.headers.authorization;
+    const { seen } = req.body;
+    const userID = req.params.userID;
+    const notificationID = req.params.notificationID;
+    
+
+    //add the product
+    try {
+        //token check
+        let decodedToken;
+        let tokenRole;
+        if (!token) {
+            const error = new Error("No token provided");
+            error.status = 401;
+            return next(error);
+        } else {
+            decodedToken = await admin.auth().verifyIdToken(token);
+            const userReference = database.collection("users").doc(decodedToken.uid);
+            const user = await userReference.get();
+            tokenRole = user.data().role;
+            if (!user.exists || tokenRole !== "user") {
+                const error = new Error("Unauthorized access");
+                error.status = 401;
+                return next(error);
+            }
+        }
+        //input check
+        if (seen === undefined) {
+            const error = new Error("All fields are required");
+            error.status = 400;
+            return next(error);
+        } else if (typeof seen !== "boolean") {
+            const error = new Error("Please enter a valid seen");
+            error.status = 400;
+            return next(error);
+        }
+        //get the user
+        const userReference = database.collection("users").doc(userID);
+        const userDocument = await userReference.get();
+        if (!userDocument.exists) {
+            const error = new Error(`A user with the id of ${userID} was not found`);
+            error.status = 404;
+            return next(error);
+        }
+        const notificationReference = userReference.collection("notifications").doc(notificationID);
+        const notificationDocument = await notificationReference.get();
+        if (!notificationDocument.exists) {
+            const error = new Error(`A notification with the id of ${notificationID} was not found`);
+            error.status = 404;
+            return next(error);
+        }
+        const notificationData = notificationDocument.data();
+        notificationData["seen"] = seen;
+        await notificationReference.set(notificationData);
+        log(database, "SET", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        res.status(201).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
         //extract error message and return response

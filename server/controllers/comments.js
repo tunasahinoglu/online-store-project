@@ -84,9 +84,9 @@ export const addComment = async (req, res, next) => {
             order: order,
             product: product,
             rate: rate,
-            comment: comment,
-            reviewed: false,
-            approved: false,
+            comment: comment !== undefined ? JSON.stringify(comment) : "",
+            reviewed: comment !== undefined ? false : true,
+            approved: comment !== undefined ? false : true,
             date: Date()
         };
 

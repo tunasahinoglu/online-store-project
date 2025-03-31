@@ -1,5 +1,5 @@
 import express from "express";
-import { setProduct, setUser, deleteProduct } from "../controllers/users.js";
+import { setProduct, setUser, deleteProduct, setNotification } from "../controllers/users.js";
 
 
 //initialize apps
@@ -11,6 +11,7 @@ const router = express.Router();
 //-put
 router.put("/:userID", setUser);
 router.put("/:userID/basket/:productID", setProduct);
+router.put("/:userID/notifications/:notificationID", setNotification);
 //-delete
 router.delete("/:userID/basket/:productID", deleteProduct);
 

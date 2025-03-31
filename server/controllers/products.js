@@ -7,7 +7,7 @@ import log from "../services/log.js";
 const database = admin.firestore();
 
 
-//  @desc   admin/productmanager/salesmanager sets a product
+//  @desc   productmanager/salesmanager sets a product
 //  @route  PUT  /api/products/:productID
 export const setProduct = async (req, res, next) => {
     const token = req.headers.authorization;
@@ -29,7 +29,7 @@ export const setProduct = async (req, res, next) => {
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
             tokenRole = user.data().role;
-            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "productmanager" && tokenRole !== "salesmanager")) {
+            if (!user.exists || (tokenRole !== "productmanager" && tokenRole !== "salesmanager")) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);
@@ -37,7 +37,7 @@ export const setProduct = async (req, res, next) => {
         }
         //input check
         if (tokenRole !== "salesmanager") {
-            if (name === undefined || category === undefined || subcategory === undefined || serialnumber === undefined || image === undefined || stock === undefined || warranty === undefined || distributername === undefined || features === undefined || (tokenRole === "admin" && (price === undefined || discount === undefined))) {
+            if (name === undefined || category === undefined || subcategory === undefined || serialnumber === undefined || image === undefined || stock === undefined || warranty === undefined || distributername === undefined || features === undefined) {
                 const error = new Error("All fields are required");
                 error.status = 400;
                 return next(error);
@@ -81,14 +81,6 @@ export const setProduct = async (req, res, next) => {
                 const error = new Error("Please enter a valid features");
                 error.status = 400;
                 return next(error);
-            } else if (tokenRole === "admin" && typeof price !== "number" || price < 0) {
-                const error = new Error("Please enter a valid price");
-                error.status = 400;
-                return next(error);
-            } else if (tokenRole === "admin" && typeof discount !== "number" || 100 < discount < 0) {
-                const error = new Error("Please enter a valid discount");
-                error.status = 400;
-                return next(error);
             }
         } else {
             if (price === undefined || discount === undefined) {
@@ -107,23 +99,10 @@ export const setProduct = async (req, res, next) => {
         }
         
         let productData;
+        let oldPrice;
+        let oldDiscount;
         //get the product
-        if (tokenRole === "admin") {
-            productData = {
-                name: name,
-                category: category,
-                subcategory: subcategory,
-                serialnumber: serialnumber,
-                image: image,
-                price: price,
-                discount: discount,
-                stock: stock,
-                description: description !== undefined ? description : "",
-                warranty: warranty,
-                distributername: distributername,
-                features: features
-            };
-        } else if (tokenRole === "productmanager") {
+        if (tokenRole === "productmanager") {
             const productReference = database.collection("products").doc(productID);
             const productDocument = await productReference.get();
             productData = {
@@ -135,6 +114,7 @@ export const setProduct = async (req, res, next) => {
                 price: productDocument.exists ? productDocument.data().price : 0,
                 discount: productDocument.exists ? productDocument.data().discount : 0,
                 stock: stock,
+                popularity: 0,
                 description: description !== undefined ? description : "",
                 warranty: warranty,
                 distributername: distributername,
@@ -149,6 +129,8 @@ export const setProduct = async (req, res, next) => {
                 return next(error);
             }
             productData = productDocument.data();
+            oldPrice = productData["price"];
+            oldDiscount = productData["discount"];
             productData["price"] = price;
             productData["discount"] = discount;
         }
@@ -156,6 +138,16 @@ export const setProduct = async (req, res, next) => {
         //set the product
         await database.collection("products").doc(productID).set(productData);
         log(database, "SET", `products/${productID}`, productData, decodedToken.uid);
+        if (tokenRole === "salesmanager" && oldPrice*(100-oldDiscount)/100 > price*(100-discount)/100) {
+            const notificationData = {
+                message: `${productData["name"]} is on sale`,
+                seen: false,
+                date: Date()
+            };
+            //add the notification
+            const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
+            log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);

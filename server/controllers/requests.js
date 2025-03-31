@@ -48,10 +48,10 @@ export const addRequest = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
-        //get the order company
+        //get the order
         const orderReference = database.collection("orders").doc(order);
         const orderDocument = await orderReference.get();
-        if (!orderDocument.exists || orderDocument.data().status !== "delivered") {
+        if (!orderDocument.exists || orderDocument.data().status !== "delivered" || (new Date() - orderDocument.data().date.toDate())/(1000*60*60*24) <= 30) {
             const error = new Error("Please enter a valid order");
             error.status = 400;
             return next(error);
