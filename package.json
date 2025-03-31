@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "node --watch --env-file=./src/server/.env ./src/server/server.js",
+    "start": "node --watch --env-file=./server/.env ./server/server.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "colors": "^1.4.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "firebase": "^11.5.0",

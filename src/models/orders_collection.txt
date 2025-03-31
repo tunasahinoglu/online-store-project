@@ -11,14 +11,14 @@ orderID: {
         city: ".+",
         address: ".+",
     }
-    billingAddress: {
+    billingaddress: {
         country: ".+",
         city: ".+",
         address: ".+"
     }
     delivery: {
         type: "standard"/"express"
-        cost: => 0
+        company: deliverycompanyID
     }
     notes: ".*"
     date: timestamp
