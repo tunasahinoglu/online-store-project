@@ -27,7 +27,7 @@ export const addComment = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
+            tokenRole = user.data().role;
             if (!user.exists || !user.data().active) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
@@ -47,8 +47,8 @@ export const addComment = async (req, res, next) => {
             const error = new Error("Please enter a valid product");
             error.status = 400;
             return next(error);
-        } else if (!Number.isInteger(product) || 10 < product < 0) {
-            const error = new Error("Please enter a valid product");
+        } else if (!Number.isInteger(rate) || 10 < rate < 0) {
+            const error = new Error("Please enter a valid rate");
             error.status = 400;
             return next(error);
         }
@@ -133,7 +133,7 @@ export const setComment = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
+            tokenRole = user.data().role;
             if (!user.exists || (tokenRole !== "admin" && (tokenRole !== "productmanager"))) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
@@ -152,7 +152,7 @@ export const setComment = async (req, res, next) => {
         }
 
         //get the comment
-        const commentReference = userReference.collection("comments").doc(commentID);
+        const commentReference = database.collection("comments").doc(commentID);
         const commentDocument = await commentReference.get();
         if (!commentDocument.exists) {
             const error = new Error(`Comment with the id of ${commentID} was not found`);

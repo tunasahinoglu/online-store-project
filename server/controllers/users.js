@@ -21,6 +21,7 @@ export const setProduct = async (req, res, next) => {
         //token check
         let decodedToken;
         let tokenRole;
+        let isUser;
         if (!token) {
             const error = new Error("No token provided");
             error.status = 401;
@@ -29,8 +30,9 @@ export const setProduct = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
-            if (!user.exists || tokenRole !== "user") {
+            tokenRole = user.data().role;
+            isUser = user.id === decodedToken.uid;
+            if (!user.exists || !isUser) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);
@@ -115,6 +117,7 @@ export const setUser = async (req, res, next) => {
         //token check
         let decodedToken;
         let tokenRole;
+        let isUser;
         if (!token) {
             const error = new Error("No token provided");
             error.status = 401;
@@ -123,23 +126,24 @@ export const setUser = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
-            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "user")) {
+            tokenRole = user.data().role;
+            isUser = user.id === decodedToken.uid;
+            if (!user.exists || (tokenRole !== "admin" && !isUser)) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);
             }
         }
         //input check
-        if (tokenRole === "user" && (firstname === undefined || lastname === undefined || country === undefined || city === undefined || address === undefined)) {
+        if (isUser && (firstname === undefined || lastname === undefined || country === undefined || city === undefined || address === undefined)) {
             const error = new Error("All fields are required");
             error.status = 400;
             return next(error);
-        } else if (tokenRole === "user" && (typeof firstname !== "string" || !firstname.trim())) {
+        } else if (isUser && (typeof firstname !== "string" || !firstname.trim())) {
             const error = new Error("Please enter a valid firstname");
             error.status = 400;
             return next(error);
-        } else if (tokenRole === "user" && (typeof lastname !== "string" || !lastname.trim())) {
+        } else if (isUser && (typeof lastname !== "string" || !lastname.trim())) {
             const error = new Error("Please enter a valid lastname");
             error.status = 400;
             return next(error);
@@ -147,19 +151,19 @@ export const setUser = async (req, res, next) => {
             const error = new Error("Please enter a valid role");
             error.status = 400;
             return next(error);
-        } else if (tokenRole === "user" && (typeof country !== "string" || !country.trim())) {
+        } else if (isUser && (typeof country !== "string" || !country.trim())) {
             const error = new Error("Please enter a valid country");
             error.status = 400;
             return next(error);
-        } else if (tokenRole === "user" && (typeof city !== "string" || !city.trim())) {
+        } else if (isUser && (typeof city !== "string" || !city.trim())) {
             const error = new Error("Please enter a valid city");
             error.status = 400;
             return next(error);
-        } else if (tokenRole === "user" && (typeof address !== "string" || !address.trim())) {
+        } else if (isUser && (typeof address !== "string" || !address.trim())) {
             const error = new Error("Please enter a valid address");
             error.status = 400;
             return next(error);
-        } else if (tokenRole === "user" && (!Array.isArray(wishlist))) {
+        } else if (isUser && (!Array.isArray(wishlist))) {
             const error = new Error("Please enter a valid wishlist");
             error.status = 400;
             return next(error);
@@ -168,7 +172,7 @@ export const setUser = async (req, res, next) => {
             error.status = 400;
             return next(error); 
         }
-        if (tokenRole === "user") {
+        if (isUser) {
             wishlist = [...new Set(wishlist)];
             for (let productID of wishlist) {
                 const productReference = database.collection("products").doc(productID);
@@ -239,6 +243,7 @@ export const setNotification = async (req, res, next) => {
         //token check
         let decodedToken;
         let tokenRole;
+        let isUser;
         if (!token) {
             const error = new Error("No token provided");
             error.status = 401;
@@ -248,7 +253,8 @@ export const setNotification = async (req, res, next) => {
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
             tokenRole = user.data().role;
-            if (!user.exists || tokenRole !== "user") {
+            isUser = user.id === decodedToken.uid;
+            if (!user.exists || !isUser) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);
@@ -315,6 +321,7 @@ export const deleteProduct = async (req, res, next) => {
         //token check
         let decodedToken;
         let tokenRole;
+        let isUser;
         if (!token) {
             const error = new Error("No token provided");
             error.status = 401;
@@ -323,8 +330,9 @@ export const deleteProduct = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
-            if (!user.exists || tokenRole !== "user") {
+            tokenRole = user.data().role;
+            isUser = user.id === decodedToken.uid;
+            if (!user.exists || !isUser) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);

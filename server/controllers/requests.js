@@ -27,7 +27,7 @@ export const addRequest = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
+            tokenRole = user.data().role;
             if (!user.exists || !user.data().active) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
@@ -51,7 +51,7 @@ export const addRequest = async (req, res, next) => {
         //get the order
         const orderReference = database.collection("orders").doc(order);
         const orderDocument = await orderReference.get();
-        if (!orderDocument.exists || orderDocument.data().status !== "delivered" || (new Date() - orderDocument.data().date.toDate())/(1000*60*60*24) <= 30) {
+        if (!(orderDocument.exists && orderDocument.data().status === "delivered" && (new Date() - new Date(orderDocument.data().date))/(1000*60*60*24) <= 30)) {
             const error = new Error("Please enter a valid order");
             error.status = 400;
             return next(error);

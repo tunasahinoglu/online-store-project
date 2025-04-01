@@ -11,7 +11,7 @@ const router = express.Router();
 //-post
 router.post("/", addComment);
 //-put
-router.delete("/:commentID", setComment);
+router.put("/:commentID", setComment);
 
 
 export default router;

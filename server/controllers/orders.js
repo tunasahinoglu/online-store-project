@@ -21,6 +21,7 @@ export const addOrder = async (req, res, next) => {
         //token check
         let decodedToken;
         let tokenRole;
+        let isUser;
         if (!token) {
             const error = new Error("No token provided");
             error.status = 401;
@@ -29,7 +30,8 @@ export const addOrder = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
+            tokenRole = user.data().role;
+            isUser = user.id === decodedToken.uid;
             if (!user.exists || !user.data().active) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
@@ -72,6 +74,17 @@ export const addOrder = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+        //check for an unavailable item
+        for (let productDocument of basketDocuments) {
+            //get the product
+            const reference = database.collection("products").doc(productDocument.id);
+            const document = await reference.get();
+            if (!document.exists || document.data().price === 0 || document.data().stock < productDocument.data().count) {
+                const error = new Error(`Basket contains an unavailable item`);
+                error.status = 400;
+                return next(error);
+            }
+        }
 
         const orderData = {
             user: userDocument.id,
@@ -99,11 +112,6 @@ export const addOrder = async (req, res, next) => {
             //get the product
             const reference = database.collection("products").doc(productDocument.id);
             const document = await reference.get();
-            if (!document.exists || document.data().price === 0 || document.data().stock < productDocument.data().count) {
-                const error = new Error(`Basket contains an unavailable item`);
-                error.status = 400;
-                return next(error);
-            }
             //update product
             const newDocumentData = document.data();
             newDocumentData["stock"] = document.data().stock - productDocument.data().count;
@@ -187,6 +195,7 @@ export const setOrder = async (req, res, next) => {
         //token check
         let decodedToken;
         let tokenRole;
+        let isUser;
         if (!token) {
             const error = new Error("No token provided");
             error.status = 401;
@@ -195,8 +204,9 @@ export const setOrder = async (req, res, next) => {
             decodedToken = await admin.auth().verifyIdToken(token);
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
-            tokenRole = user.id === decodedToken.uid ? "user" : user.data().role;
-            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "salesmanager" && tokenRole !== "user" && !user.data().active)) {
+            tokenRole = user.data().role;
+            isUser = user.id === decodedToken.uid;
+            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "salesmanager" && !isUser && !user.data().active)) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);
@@ -207,14 +217,14 @@ export const setOrder = async (req, res, next) => {
             const error = new Error("All fields are required");
             error.status = 400;
             return next(error);
-        } else if (typeof status !== "string" || ["cancelled", "refunded", "in-transit", "delivered"].includes(status)) {
+        } else if (typeof status !== "string" || !["cancelled", "refunded", "in-transit", "delivered"].includes(status)) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
         }
 
         //get the order
-        const orderReference = userReference.collection("orders").doc(orderID);
+        const orderReference = database.collection("orders").doc(orderID);
         const orderDocument = await orderReference.get();
         if (!orderDocument.exists) {
             const error = new Error(`Order with the id of ${orderID} was not found`);
@@ -222,21 +232,20 @@ export const setOrder = async (req, res, next) => {
             return next(error);
         }
         const orderData = orderDocument.data();
-        if (((tokenRole === "admin" || tokenRole === "user") && orderData.status !== "processing" && status !== "cancelled") || (tokenRole === "salesmanager" && (orderData.status !== "delivered" && status !== "refunded")) || (tokenRole === "productmanager" && ((orderData.status !== "processing" && status !== "in-transit") || (orderData.status !== "in-trasmit" && status !== "delivered")))) {
+        if (!(((tokenRole === "admin" || isUser) && orderData.status === "processing" && status === "cancelled") || (tokenRole === "salesmanager" && (orderData.status === "delivered" && status === "refunded")) || (tokenRole === "productmanager" && ((orderData.status === "processing" && status === "in-transit") || (orderData.status === "in-transit" && status === "delivered"))))) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
         }
         if (status === "refunded") {
             //get request
-            const requestReference = requestReference.collection("requests").where("order", "==", orderID).where("request", "==", "refund");
+            const requestReference = database.collection("requests").where("order", "==", orderID).where("request", "==", "refund");
             const requestSnapshot = await requestReference.get();
             if (requestSnapshot.empty) {
                 const error = new Error(`Request was not found`);
                 error.status = 400;
                 return next(error);
             }
-            const requestDocument = requestSnapshot.docs[0];
         }
         orderData["status"] = status;
         await orderReference.set(orderData);
@@ -244,11 +253,11 @@ export const setOrder = async (req, res, next) => {
         if (status === "cancelled" || status === "refunded") {
             //update product stocks
             const productsReference = orderReference.collection("products");
-            const productsSnapshot = productsReference.get();
+            const productsSnapshot = await productsReference.get();
             const productDocuments = productsSnapshot.docs;
             for (let productDocument of productDocuments) {
                 const reference = database.collection("products").doc(productDocument.id);
-                const document = reference.get();
+                const document = await reference.get();
                 const productData = document.data();
                 productData["stock"] += productDocument.data().count;
                 productData["popularity"] -= productDocument.data().count;

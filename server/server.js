@@ -48,7 +48,7 @@ app.use("/api/products", product);
 //-orders
 app.use("/api/orders", order);
 //-requests
-app.use("/api/request", request);
+app.use("/api/requests", request);
 //-comments
 app.use("/api/comments", comment);
 

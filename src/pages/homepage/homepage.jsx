@@ -7,6 +7,53 @@ import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
+
+
+import { add, set, del } from "../../services/firebase/database.js";
+/*
+const data = {
+    count: 10
+};
+const p = set(`users/BAEfWIuIgvekkG1MCAnZdJuQZuJ2/basket/D0MXECdhAOAXu6MYaReT`, data);
+const q = set(`users/BAEfWIuIgvekkG1MCAnZdJuQZuJ2/basket/JtVnOtp6Eqr94d8KIFbd`, data);
+const r = set(`users/BAEfWIuIgvekkG1MCAnZdJuQZuJ2/basket/zXojb4bBPdxq7exqj1NO`, data);
+console.log(p);
+console.log(q);
+console.log(r);
+*/
+/*
+const data = {
+    name: "x",
+    costs: [5, 10],
+    email: "x@x.x"
+}
+const q = add("deliverycompanies", data);
+*/
+/*
+const data = {
+    delivery: {
+        company: "adlsWC6m4nlNTxS9h3Py",
+        type: "express"
+    }
+}
+const q = add("orders", data);
+console.log(q);
+*/
+
+const data = {
+    approved: false
+}
+const q = set("comments/wqAegkEQaCqQDJaVbq3Y", data);
+console.log(q);
+
+/*
+const data = {
+    request: "refund",
+    order: "5Z3tGhFUYpKWVl4H7iV9"
+}
+const q = add("requests", data);
+console.log(q);
+*/
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
 
 function Homepage() {
