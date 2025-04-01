@@ -41,7 +41,7 @@ export const addOrder = async (req, res, next) => {
             const error = new Error("All fields are required");
             error.status = 400;
             return next(error);
-        } else if (typeof delivery !== "object" || delivery.type === undefined || typeof delivery.type !== "string" || !["standard", "express"].includes(delivery.type) || delivery.company === undefined || typeof delivery.company === "string") {
+        } else if (typeof delivery !== "object" || delivery.type === undefined || typeof delivery.type !== "string" || !["standard", "express"].includes(delivery.type) || delivery.company === undefined || typeof delivery.company !== "string") {
             const error = new Error("Please enter a valid delivery");
             error.status = 400;
             return next(error);
@@ -67,7 +67,7 @@ export const addOrder = async (req, res, next) => {
         const basketReference = userReference.collection("basket");
         const basketSnapshot = await basketReference.get();
         const basketDocuments = basketSnapshot.docs;
-        if (basketDocuments.length) {
+        if (basketDocuments.empty) {
             const error = new Error(`Basket is empty`);
             error.status = 400;
             return next(error);
@@ -79,19 +79,21 @@ export const addOrder = async (req, res, next) => {
             lastname: userDocument.data().lastname,
             totalcost: 0,
             totaldiscountedcost: 0,
+            deliverycost: 0,
             status: "processing",
             address: userDocument.data().address,
             billingaddress: userDocument.data().address,
             delivery: delivery,
-            notes: JSON.stringify(notes),
+            notes: notes ? JSON.stringify(notes) : "",
             date: Date()
         };
 
         //add the order
-        const orderDocument = await database.collection("orders").add(orderData);
+        let orderDocument = await database.collection("orders").add(orderData);
         //calculate total cost & discounted cost
-        let totalCost = delivery.type === "standard" ? deliveryCompanyDocument.costs[0] : deliveryCompanyDocument.costs[1];
+        let totalCost = delivery.type === "standard" ? deliveryCompanyDocument.data().costs[0] : deliveryCompanyDocument.data().costs[1];
         let totalDiscountedCost = totalCost;
+        orderData["deliverycost"] = totalCost;
         const orderID = orderDocument.id;
         for (let productDocument of basketDocuments) {
             //get the product
@@ -110,7 +112,7 @@ export const addOrder = async (req, res, next) => {
             log(database, "SET", `products/${document.id}`, newDocumentData, decodedToken.uid);
             //add product
             totalCost += document.data().price;
-            totalDiscountedCost += document.data().price * (100 - document.data().discount)/100
+            totalDiscountedCost += productDocument.data().count * document.data().price * (100 - document.data().discount)/100
             const productData = {
                 name: document.data().name,
                 price: document.data().price,
@@ -118,7 +120,7 @@ export const addOrder = async (req, res, next) => {
                 count: productDocument.data().count
             };
             await database.collection("orders").doc(orderID).collection("products").doc(productDocument.id).set(productData);
-            log(database, "SET", `orders/${orderID}/products/${productDocument.id}`, productData, decodedToken.uid);
+            log(database, "ADD", `orders/${orderID}/products/${productDocument.id}`, productData, decodedToken.uid);
         }
         //delete user basket
         for (let productDocument of basketDocuments) {
@@ -128,30 +130,31 @@ export const addOrder = async (req, res, next) => {
         orderData["totalcost"] = totalCost;
         orderData["totaldiscountedcost"] = totalDiscountedCost;
         await database.collection("orders").doc(orderDocument.id).set(orderData);
-        log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
+        log(database, "ADD", `orders/${orderID}`, orderData, decodedToken.uid);
         //email
         orderDocument = await database.collection("orders").doc(orderDocument.id).get();
         const productsSnapshot = await database.collection("orders").doc(orderDocument.id).collection("products").get();
         const productDocuments = productsSnapshot.docs;
         const attachment = createPDFAttachment(orderDocument, productDocuments);
         const content = `
-            Hello ${userDocument.data().firstname},
-
-            Thank you for your order! We are pleased to confirm that your order #${orderDocument.id} has been successfully placed.
-
-            **Order Details:**
-            - **Order ID:** ${orderDocument.id}
-            - **Order Date:** ${orderDocument.data().date}
-            - **Total Amount:** $${orderDocument.data().totaldiscountedcost.toFixed(2)}
-
-            You can expect to receive your order soon. The tracking information will be sent once your order has been shipped.
-            Please find the invoice attached.
-
-
-            Best regards,  
-            **Teknosu Team**
-        `
-        await sendEmail(userDocument.data().email, content, [attachment]);
+            <p>Hello ${userDocument.data().firstname},</p>
+        
+            <p>Thank you for your order! We are pleased to confirm that your order #${orderDocument.id} has been successfully placed.</p>
+        
+            <p><strong>Order Details:</strong></p>
+            <ul>
+                <li><strong>Order ID:</strong> ${orderDocument.id}</li>
+                <li><strong>Order Date:</strong> ${orderDocument.data().date}</li>
+                <li><strong>Total Amount:</strong> $${orderDocument.data().totaldiscountedcost.toFixed(2)}</li>
+            </ul>
+        
+            <p>You can expect to receive your order soon. The tracking information will be sent once your order has been shipped.</p>
+            <p>Please find the invoice attached.</p>
+        
+            <p>Best regards,</p>
+            <p><strong>Teknosu Team</strong></p>
+        `;
+        await sendEmail(userDocument.data().email, "We have received your order", content, [attachment]);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -257,22 +260,23 @@ export const setOrder = async (req, res, next) => {
             const userReference = database.collection("users").doc(orderData.user);
             const userDocument = await userReference.get();
             const content = `
-                Hello ${userDocument.data().firstname},
-        
-                We’re reaching out to confirm that your refund for order #${orderDocument.id} has been successfully processed.
-        
-                **Refund Details:**
-                - **Order ID:** ${orderDocument.id}
-                - **Refund Amount:** $${orderData.totaldiscountedcost.toFixed(2)}
-                - **Refund Date:** ${Date()}
-        
-                The amount will be credited back within 3-5 business days, depending on your bank’s processing time.
-        
-
-                Best regards,  
-                **Teknosu Team**
-            `
-            await sendEmail(userDocument.data().email, content);
+                <p>Hello ${userDocument.data().firstname},</p>
+                
+                <p>We’re reaching out to confirm that your refund for order #${orderDocument.id} has been successfully processed.</p>
+            
+                <h3>Refund Details:</h3>
+                <ul>
+                    <li><strong>Order ID:</strong> ${orderDocument.id}</li>
+                    <li><strong>Refund Amount:</strong> $${orderData.totaldiscountedcost.toFixed(2)}</li>
+                    <li><strong>Refund Date:</strong> ${Date()}</li>
+                </ul>
+            
+                <p>The amount will be credited back within 3-5 business days, depending on your bank’s processing time.</p>
+            
+                <p>Best regards,</p>
+                <p><strong>Teknosu Team</strong></p>
+            `;
+            await sendEmail(userDocument.data().email, "Refund request has been confirmed", content);
         }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {

@@ -60,7 +60,7 @@ export const addDeliveryCompany = async (req, res, next) => {
         };
 
         //add the delivery company
-        const deliveryCompanyDocument = await database.collection("users").add(deliveryCompanyData);
+        const deliveryCompanyDocument = await database.collection("deliverycompanies").add(deliveryCompanyData);
         log(database, "ADD", `deliverycompanies/${deliveryCompanyDocument.id}`, deliveryCompanyData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {

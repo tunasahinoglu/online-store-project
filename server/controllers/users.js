@@ -73,10 +73,16 @@ export const setProduct = async (req, res, next) => {
             count: count
         };
 
+        let method = "ADD";
+        const reference = database.collection("users").doc(userID).collection("basket").doc(productID);
+        const document = await reference.get();
+        if (document.exists) {
+            method = "SET";
+        }
         //set the product
         await database.collection("users").doc(userID).collection("basket").doc(productID).set(productData);
-        log(database, "SET", `users/${userDocument.id}/basket/${productID}`, productData, decodedToken.uid);
-        res.status(200).json({message: "Successfully set"});
+        log(database, method, `users/${userDocument.id}/basket/${productID}`, productData, decodedToken.uid);
+        res.status(200).json({message: `Successfully ${method == "ADD" ? "added" : "set"}`});
     } catch (error) {
         console.error(error);
         //extract error message and return response

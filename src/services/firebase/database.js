@@ -84,7 +84,7 @@ export const set = async (path, body) => {
 };
 
 
-export const del = async (path, body) => {
+export const del = async (path) => {
     //send request to set
     const auth = getAuth(app);
     const user = auth.currentUser;
@@ -93,8 +93,7 @@ export const del = async (path, body) => {
         headers: {
             "Content-Type": "application/json",
             "authorization": user ? user.accessToken : ""
-        },
-        body: JSON.stringify(body)
+        }
     })
 
     const response = await res.json();

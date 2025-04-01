@@ -1,5 +1,5 @@
 import express from "express";
-import { setProduct, deleteProduct } from "../controllers/products.js";
+import { addProduct, setProduct, deleteProduct } from "../controllers/products.js";
 
 
 //initialize apps
@@ -8,6 +8,8 @@ const router = express.Router();
 
 
 //handle requests
+//-post
+router.post("/", addProduct);
 //-put
 router.put("/:productID", setProduct);
 //-delete

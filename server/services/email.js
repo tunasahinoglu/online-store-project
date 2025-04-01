@@ -15,7 +15,7 @@ const sendEmail = async (to, subject, content, attachments=[]) => {
         from: process.env.EMAIL,
         to: to,
         subject: subject,
-        text: content,
+        html: content,
         attachments: attachments
     };
     await transporter.sendMail(email);

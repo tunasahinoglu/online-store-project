@@ -72,7 +72,7 @@ export const createAccount = async (req, res, next) => {
             wishlist: []
         };
         await userReference.set(userData);
-        log(database, "SET", `users/${user.uid}`, userData, user.uid);
+        log(database, "ADD", `users/${user.uid}`, userData, user.uid);
 
         //add its basket to the database
         let invalidProduct = false;
@@ -103,7 +103,7 @@ export const createAccount = async (req, res, next) => {
 
         //return response
         res.status(201).json({
-            message: "Successfully set",
+            message: "Successfully added",
             alert: invalidProduct ? "Some products in your basket may get lost" : "",
             token: token,
         });

@@ -4,7 +4,7 @@ import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
 import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
-import { auth, database } from "../../services/firebase/connect.js"
+import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
