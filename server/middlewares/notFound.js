@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 
 const notFoundHandler = (req, res, next) => {
-    if (req.originalUrl.startsWith("/api")) {
+    if (req.originalUrl.startsWith("/api/")) {
         const error = new Error("API is not found");
         error.status = 404;
         next(error);

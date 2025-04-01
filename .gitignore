@@ -8,9 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-server/.env
-server/.key
-.key
 dist
 dist-ssr
 *.local

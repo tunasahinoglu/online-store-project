@@ -45,7 +45,7 @@ export const get = async (path, selectConditions = null, whereConditions = null,
 
 
 export const add = async (path, body) => {
-    //send request to set
+    //send request to add
     const auth = getAuth(app);
     const user = auth.currentUser;
     const res = await fetch(`http://localhost:5000/api/${path}`, {
@@ -85,7 +85,7 @@ export const set = async (path, body) => {
 
 
 export const del = async (path) => {
-    //send request to set
+    //send request to delete
     const auth = getAuth(app);
     const user = auth.currentUser;
     const res = await fetch(`http://localhost:5000/api/${path}`, {

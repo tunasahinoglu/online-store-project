@@ -64,6 +64,14 @@ export const addRequest = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+        //get the request
+        const requestReference = database.collection("requests").where("user", "==", decodedToken.uid).where("request", "==", request);
+        const requestSnapshot = await requestReference.get();
+        if (!requestSnapshot.empty) {
+            const error = new Error(`A request was already made`);
+            error.status = 400;
+            return next(error);
+        }   
 
         const requestData = {
             user: userDocument.id,

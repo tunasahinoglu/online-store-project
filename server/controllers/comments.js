@@ -76,6 +76,14 @@ export const addComment = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+        //get the comment
+        const commentReference = database.collection("comments").where("user", "==", decodedToken.uid);
+        const commentSnapshot = await commentReference.get();
+        if (!commentSnapshot.empty) {
+            const error = new Error(`A comment was already made`);
+            error.status = 400;
+            return next(error);
+        }   
 
         const commentData = {
             user: userDocument.id,
@@ -91,7 +99,7 @@ export const addComment = async (req, res, next) => {
         };
 
         //add the comment
-        const commentDocument = await database.collection("comments").add(commentData);
+        commentDocument = await database.collection("comments").add(commentData);
         log(database, "ADD", `comments/${commentDocument.id}`, commentData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
