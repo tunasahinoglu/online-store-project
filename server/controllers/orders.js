@@ -119,7 +119,7 @@ export const addOrder = async (req, res, next) => {
             await database.collection("products").doc(productDocument.id).set(newDocumentData);
             log(database, "SET", `products/${document.id}`, newDocumentData, decodedToken.uid);
             //add product
-            totalCost += document.data().price;
+            totalCost += productDocument.data().count * document.data().price;
             totalDiscountedCost += productDocument.data().count * document.data().price * (100 - document.data().discount)/100
             const productData = {
                 name: document.data().name,
