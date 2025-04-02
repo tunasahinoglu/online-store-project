@@ -1,5 +1,5 @@
-const log = (database, method, document, data, user) => {
-    database.collection("logs").add({
+const log = async (database, method, document, data, user) => {
+    await database.collection("logs").add({
         user: user,
         method: method,
         document: document,
@@ -7,5 +7,6 @@ const log = (database, method, document, data, user) => {
         date: Date()
     });
 };
+
 
 export default log;

@@ -84,7 +84,7 @@ export const addRequest = async (req, res, next) => {
 
         //add the request
         const requestDocument = await database.collection("requests").add(requestData);
-        log(database, "ADD", `requests/${requestDocument.id}`, requestData, decodedToken.uid);
+        await log(database, "ADD", `requests/${requestDocument.id}`, requestData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);

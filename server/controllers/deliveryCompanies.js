@@ -61,7 +61,7 @@ export const addDeliveryCompany = async (req, res, next) => {
 
         //add the delivery company
         const deliveryCompanyDocument = await database.collection("deliverycompanies").add(deliveryCompanyData);
-        log(database, "ADD", `deliverycompanies/${deliveryCompanyDocument.id}`, deliveryCompanyData, decodedToken.uid);
+        await log(database, "ADD", `deliverycompanies/${deliveryCompanyDocument.id}`, deliveryCompanyData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -118,7 +118,7 @@ export const deleteDeliveryCompany = async (req, res, next) => {
         }
         //delete the delivery company
         await database.collection("users").doc(deliveryCompanyID).delete();
-        log(database, "DELETE", `deliverycompanies/${deliveryCompanyDocument.id}`, null, decodedToken.uid);
+        await log(database, "DELETE", `deliverycompanies/${deliveryCompanyDocument.id}`, null, decodedToken.uid);
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         console.error(error);

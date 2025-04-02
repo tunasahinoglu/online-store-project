@@ -100,7 +100,7 @@ export const addComment = async (req, res, next) => {
 
         //add the comment
         commentDocument = await database.collection("comments").add(commentData);
-        log(database, "ADD", `comments/${commentDocument.id}`, commentData, decodedToken.uid);
+        await log(database, "ADD", `comments/${commentDocument.id}`, commentData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -176,7 +176,7 @@ export const setComment = async (req, res, next) => {
         commentData["reviewed"] = true;
         commentData["approved"] = approved;
         await commentReference.set(commentData);
-        log(database, "SET", `comments/${commentID}`, commentData, decodedToken.uid);
+        await log(database, "SET", `comments/${commentID}`, commentData, decodedToken.uid);
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);

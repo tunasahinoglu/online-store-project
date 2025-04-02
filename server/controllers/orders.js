@@ -117,7 +117,7 @@ export const addOrder = async (req, res, next) => {
             newDocumentData["stock"] = document.data().stock - productDocument.data().count;
             newDocumentData["popularity"] = document.data().popularity + productDocument.data().count;
             await database.collection("products").doc(productDocument.id).set(newDocumentData);
-            log(database, "SET", `products/${document.id}`, newDocumentData, decodedToken.uid);
+            await log(database, "SET", `products/${document.id}`, newDocumentData, decodedToken.uid);
             //add product
             totalCost += productDocument.data().count * document.data().price;
             totalDiscountedCost += productDocument.data().count * document.data().price * (100 - document.data().discount)/100
@@ -128,17 +128,17 @@ export const addOrder = async (req, res, next) => {
                 count: productDocument.data().count
             };
             await database.collection("orders").doc(orderID).collection("products").doc(productDocument.id).set(productData);
-            log(database, "ADD", `orders/${orderID}/products/${productDocument.id}`, productData, decodedToken.uid);
+            await log(database, "ADD", `orders/${orderID}/products/${productDocument.id}`, productData, decodedToken.uid);
         }
         //delete user basket
         for (let productDocument of basketDocuments) {
             await basketReference.doc(productDocument.id).delete();
-            log(database, "DELETE", `users/${userDocument.id}/basket/${productDocument.id}`, null, decodedToken.uid);
+            await log(database, "DELETE", `users/${userDocument.id}/basket/${productDocument.id}`, null, decodedToken.uid);
         }
         orderData["totalcost"] = totalCost;
         orderData["totaldiscountedcost"] = totalDiscountedCost;
         await database.collection("orders").doc(orderDocument.id).set(orderData);
-        log(database, "ADD", `orders/${orderID}`, orderData, decodedToken.uid);
+        await log(database, "ADD", `orders/${orderID}`, orderData, decodedToken.uid);
         //email
         orderDocument = await database.collection("orders").doc(orderDocument.id).get();
         const productsSnapshot = await database.collection("orders").doc(orderDocument.id).collection("products").get();
@@ -249,7 +249,7 @@ export const setOrder = async (req, res, next) => {
         }
         orderData["status"] = status;
         await orderReference.set(orderData);
-        log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
+        await log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
         if (status === "cancelled" || status === "refunded") {
             //update product stocks
             const productsReference = orderReference.collection("products");
@@ -262,7 +262,7 @@ export const setOrder = async (req, res, next) => {
                 productData["stock"] += productDocument.data().count;
                 productData["popularity"] -= productDocument.data().count;
                 await reference.set(productData);
-                log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
+                await log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }
         }
         if (status === "refunded") {

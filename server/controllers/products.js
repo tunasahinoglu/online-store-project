@@ -100,7 +100,7 @@ export const addProduct = async (req, res, next) => {
         };
         //add the product
         const productDocument = await database.collection("products").add(productData);
-        log(database, "ADD", `products/${productDocument.id}`, productData, decodedToken.uid);
+        await log(database, "ADD", `products/${productDocument.id}`, productData, decodedToken.uid);
         res.status(200).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -247,7 +247,7 @@ export const setProduct = async (req, res, next) => {
         }
         //set the product
         await database.collection("products").doc(productID).set(productData);
-        log(database, "SET", `products/${productID}`, productData, decodedToken.uid);
+        await log(database, "SET", `products/${productID}`, productData, decodedToken.uid);
         if (tokenRole === "salesmanager" && oldPrice*(100-oldDiscount)/100 > price*(100-discount)/100) {
             const notificationData = {
                 message: `${productData["name"]} is on sale`,
@@ -256,7 +256,7 @@ export const setProduct = async (req, res, next) => {
             };
             //add the notification
             const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
-            log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+            await log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
@@ -313,7 +313,7 @@ export const deleteProduct = async (req, res, next) => {
         }
         //delete the product
         await database.collection("products").doc(productID).delete();
-        log(database, "DELETE", `products/${productID}`, null, decodedToken.uid);
+        await log(database, "DELETE", `products/${productID}`, null, decodedToken.uid);
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         console.error(error);

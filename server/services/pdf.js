@@ -51,10 +51,9 @@ const createPDFAttachment = (orderDocument, productDocuments) => {
     currentY += 10;
 
     //footer
-    const deliveryCost = orderDocument.data().deliverycost;
     pdf.font("Helvetica-Bold")
         .fontSize(12)
-        .text(`Delivery Cost: $${deliveryCost.toFixed(2)}`, 380, currentY, { align: "right" });
+        .text(`Delivery Cost: $${orderDocument.data().deliverycost.toFixed(2)}`, 380, currentY, { align: "right" });
     currentY += 15;
     pdf.text(`Total: $${orderDocument.data().totaldiscountedcost.toFixed(2)}`, 430, currentY, { align: "right" });
     

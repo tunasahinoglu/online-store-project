@@ -83,7 +83,7 @@ export const setProduct = async (req, res, next) => {
         }
         //set the product
         await database.collection("users").doc(userID).collection("basket").doc(productID).set(productData);
-        log(database, method, `users/${userDocument.id}/basket/${productID}`, productData, decodedToken.uid);
+        await log(database, method, `users/${userDocument.id}/basket/${productID}`, productData, decodedToken.uid);
         res.status(200).json({message: `Successfully ${method == "ADD" ? "added" : "set"}`});
     } catch (error) {
         console.error(error);
@@ -209,7 +209,7 @@ export const setUser = async (req, res, next) => {
 
         //set the user
         await database.collection("users").doc(userID).set(userData);
-        log(database, "SET", `users/${userDocument.uid}`, userData, decodedToken.uid);
+        await log(database, "SET", `users/${userDocument.uid}`, userData, decodedToken.uid);
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
@@ -288,7 +288,7 @@ export const setNotification = async (req, res, next) => {
         const notificationData = notificationDocument.data();
         notificationData["seen"] = seen;
         await notificationReference.set(notificationData);
-        log(database, "SET", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        await log(database, "SET", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         res.status(201).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
@@ -356,7 +356,7 @@ export const deleteProduct = async (req, res, next) => {
         }
         //delete the product
         await database.collection("users").doc(userID).collection("basket").doc(productID).delete();
-        log(database, "DELETE", `users/${userDocument.uid}/basket/${productID}`, null, decodedToken.uid);
+        await log(database, "DELETE", `users/${userDocument.uid}/basket/${productID}`, null, decodedToken.uid);
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         console.error(error);
