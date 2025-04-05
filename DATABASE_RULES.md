@@ -53,10 +53,10 @@
 ## Requests:
 - **get:**
     - User can read their own requests
-        - `get("requests", null, ["user", "==", auth.currentUser.accessToken])`
+        - `get("requests", null, [["user", "==", auth.currentUser.accessToken]])`
         - `get("requests/{requestId}")`
-    - Sales Manager can read all requests
-        - `get("requests")`
+    - Sales Manager can read all unreviewed requests
+        - `get("requests", null, [["reviewed", "==", "false"]])`
         - `get("requests/{requestId}")`
     - Admin can read all requests
         - `get("requests")`
@@ -69,7 +69,7 @@
 ## Orders:
 - **get:**
     - User can read their own orders
-        - `get("orders", null, ["user", "==", auth.currentUser.accessToken])`
+        - `get("orders", null, [["user", "==", auth.currentUser.accessToken]])`
         - `get("orders/{orderID}")`
     - Sales Manager can read all orders
         - `get("orders")`
@@ -120,10 +120,10 @@
 ## Comments:
 - **get:**
     - Anyone can read approved comments
-        - `get("comments", null, ["approved", "==", "true"])`
+        - `get("comments", null, [["approved", "==", "true"]])`
         - `get("comments/{commentID}")`
     - User can read their own comments
-        - `get("comments", null, ["user", "==", auth.currentUser.accessToken])`
+        - `get("comments", null, [["user", "==", auth.currentUser.accessToken]])`
         - `get("comments/{commentID}")`
     - Product Manager can read all comments
         - `get("comments")`
