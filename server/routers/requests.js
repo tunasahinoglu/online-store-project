@@ -1,5 +1,5 @@
 import express from "express";
-import { addRequest } from "../controllers/requests.js";
+import { addRequest, setRequest } from "../controllers/requests.js";
 
 
 //initialize apps
@@ -10,6 +10,8 @@ const router = express.Router();
 //handle requests
 //-post
 router.post("/", addRequest);
+//-put
+router.put("/:requestID", setRequest);
 
 
 export default router;

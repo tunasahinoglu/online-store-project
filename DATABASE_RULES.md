@@ -1,18 +1,18 @@
-# Rules Documentation
+# Database Rules Documentation
 
 ## Users:
 - **get:**
+    - User can read their own user profile
+        - `get("users/{userId}")`
     - Admin can read all user profiles
         - `get("users")`
         - `get("users/{userId}")`
-    - User can read their own user profile
-        - `get("users/{userId}")`
 
 - **set:**
-    - Admin can set role of a user and ban/unban them
-        - `set("users/{userId}", { role: "customer"/"productmanager"/"salesmanager"/"admin", active: boolean })`
     - User can set their own user profile except for their email address, activation status, and role
         - `set("users/{userId}", { firstname: string, lastname: string, address: { country: string, city: string, address: string }, wishlist: [ productId, ... ] })`
+    - Admin can set role of a user and ban/unban them
+        - `set("users/{userId}", { role: "customer"/"productmanager"/"salesmanager"/"admin", active: boolean })`
 
 ## Basket:
 - **get:**
@@ -55,10 +55,10 @@
     - User can read their own requests
         - `get("requests", null, [["user", "==", auth.currentUser.accessToken]])`
         - `get("requests/{requestId}")`
-    - Sales Manager can read all unreviewed requests
-        - `get("requests", null, [["reviewed", "==", "false"]])`
-        - `get("requests/{requestId}")`
     - Admin can read all requests
+        - `get("requests")`
+        - `get("requests/{requestId}")`
+    - Sales Manager can read all requests
         - `get("requests")`
         - `get("requests/{requestId}")`
 
@@ -66,18 +66,22 @@
     - User can add a new request
         - `add("requests", { request: "refund" })`
 
+- **set:**
+    - Sales Manager can approve/disapprove a request
+        - `set("requests/{requestID}", { approved: true | false })`
+
 ## Orders:
 - **get:**
     - User can read their own orders
         - `get("orders", null, [["user", "==", auth.currentUser.accessToken]])`
         - `get("orders/{orderID}")`
-    - Sales Manager can read all orders
+    - Admin can read all orders
         - `get("orders")`
         - `get("orders/{orderID}")`
     - Product Manager can read all orders
         - `get("orders")`
         - `get("orders/{orderID}")`
-    - Admin can read all orders
+    - Sales Manager can read all orders
         - `get("orders")`
         - `get("orders/{orderID}")`
 
@@ -86,14 +90,12 @@
         - `add("orders", { delivery: { type: "standard"/"express", company: deliverycompanyID }, notes: string })`
 
 - **set:**
-    - Sales Manager can set status of an order from "delivered" to "refunded" if there is a refund request
-        - `set("orders/{orderId}", { status: "refunded" })`
-    - Product Manager can set status of an order from "processing" to "in-transit", from "in-transit" to "delivered"
-        - `set("orders/{orderId}", { status: "in-transit/delivered" })`
     - User can set status of their own order from "processing" to "cancelled"
         - `set("orders/{orderId}", { status: "cancelled" })`
     - Admin can set status of an order from "processing" to "cancelled"
         - `set("orders/{orderId}", { status: "cancelled" })`
+    - Product Manager can set status of an order from "processing" to "in-transit", from "in-transit" to "delivered"
+        - `set("orders/{orderId}", { status: "in-transit/delivered" })`
 
 ## Products:
 - **get:**
@@ -112,9 +114,9 @@
         - `set("products/{productId}", { price: non-negative integer, discount: integer between 0 and 100 })`
 
 - **del:**
-    - Product Manager can delete a product
-        - `del("products/{productId}")`
     - Admin can delete a product
+        - `del("products/{productId}")`
+    - Product Manager can delete a product
         - `del("products/{productId}")`
 
 ## Comments:
@@ -122,13 +124,13 @@
     - Anyone can read approved comments
         - `get("comments", null, [["approved", "==", "true"]])`
         - `get("comments/{commentID}")`
+    - Admin can read all comments
+        - `get("comments")`
+        - `get("comments/{commentID}")`
     - User can read their own comments
         - `get("comments", null, [["user", "==", auth.currentUser.accessToken]])`
         - `get("comments/{commentID}")`
     - Product Manager can read all comments
-        - `get("comments")`
-        - `get("comments/{commentID}")`
-    - Admin can read all comments
         - `get("comments")`
         - `get("comments/{commentID}")`
 
@@ -141,9 +143,9 @@
         - `del("comments/{commentId}")`
 
 - **set:**
-    - Product Manager can approve/disapprove an unreviewed comment
-        - `set("comments/{commentId}", { approved: true | false })`
     - Admin can approve/disapprove a comment
+        - `set("comments/{commentId}", { approved: true | false })`
+    - Product Manager can approve/disapprove an unreviewed comment
         - `set("comments/{commentId}", { approved: true | false })`
 
 ## Logs:
