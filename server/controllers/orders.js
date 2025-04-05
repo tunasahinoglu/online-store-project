@@ -206,7 +206,7 @@ export const setOrder = async (req, res, next) => {
             const user = await userReference.get();
             tokenRole = user.data().role;
             isUser = user.id === decodedToken.uid;
-            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "salesmanager" && !isUser && !user.data().active)) {
+            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "salesmanager" && !isUser)) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);

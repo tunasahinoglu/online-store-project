@@ -28,7 +28,7 @@ export const addRequest = async (req, res, next) => {
             const userReference = database.collection("users").doc(decodedToken.uid);
             const user = await userReference.get();
             tokenRole = user.data().role;
-            if (!user.exists || !user.data().active) {
+            if (!user.exists) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);
