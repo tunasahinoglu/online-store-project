@@ -239,13 +239,17 @@ export const setOrder = async (req, res, next) => {
         }
         if (status === "refunded") {
             //get request
-            const requestReference = database.collection("requests").where("order", "==", orderID).where("request", "==", "refund");
+            const requestReference = database.collection("requests").where("order", "==", orderID).where("request", "==", "refund").where("reviewed", "==", "false");
             const requestSnapshot = await requestReference.get();
             if (requestSnapshot.empty) {
                 const error = new Error(`Request was not found`);
                 error.status = 400;
                 return next(error);
             }
+            const requestData = requestSnapshot.docs[0].data();
+            requestData["reviewed"] = true;
+            requestData["approved"] = true;
+            await requestReference.set(requestData);
         }
         orderData["status"] = status;
         await orderReference.set(orderData);

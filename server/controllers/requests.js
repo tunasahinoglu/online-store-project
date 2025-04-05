@@ -77,6 +77,8 @@ export const addRequest = async (req, res, next) => {
             user: userDocument.id,
             firstname: userDocument.data().firstname,
             lastname: userDocument.data().lastname,
+            reviewed: false,
+            approved: false,
             order: order,
             request: request,
             date: Date()
