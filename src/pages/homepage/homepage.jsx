@@ -4,7 +4,7 @@ import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
 import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
-import { auth, database } from "../../services/firebase/connect.js"
+import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
@@ -137,7 +137,7 @@ function Homepage() {
                 <div className="header-actions">
                     <div className="cart-icon" onClick={() => navigate('/cart')}>
                         🛒
-                        <span>{cart.length}</span>
+                        <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
                     </div>
                     {currentUser ? (
                         <button onClick={handleLogout}>Logout</button>

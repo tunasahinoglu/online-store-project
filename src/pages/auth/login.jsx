@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from "../../services/firebase/connect.js"
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { signIn } from "../../services/firebase/auth.js"
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -31,7 +31,7 @@ const LoginPage = () => {
         }
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signIn(auth, email, password);
             // Redirect happens automatically due to the onAuthStateChanged listener
         } catch (error) {
             console.error('Login error:', error);

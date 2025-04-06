@@ -1,0 +1,30 @@
+
+.order-history-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.order-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.order-item {
+    background-color: #f9f9f9;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.view-order-details {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.view-order-details:hover {
+    background-color: #0056b3;
+}

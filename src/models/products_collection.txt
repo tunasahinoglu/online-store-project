@@ -8,6 +8,7 @@ productID: {
     price: >= 0
     discount: >= 0 && <= 100
     stock: >= 0
+    popularity: >= 0
     description: ".+"
     warranty: >= -1 // -1 means lifetime
     distributorname: ".+"

@@ -4,8 +4,8 @@ import { useCart } from '../../pages/cart/cart_context';
 import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
-    const { cart, removeFromCart, clearCart } = useCart();
-    const totalPrice = cart.reduce((sum, product) => sum + product.price, 0);
+    const { cart, removeFromCart, clearCart, addToCart } = useCart();
+    const totalPrice = cart.reduce((sum, product) => sum + (product.price * product.quantity), 0);
     const navigate = useNavigate();
 
     return (
@@ -17,25 +17,39 @@ const Cart = () => {
                 <>
                     <div className="cart-items">
                         {cart.map((product, index) => (
-                            <div key={index} className="cart-item" onClick={() => navigate(`/product/${product.id}`)} >
+                            <div key={index} className="cart-item">
                                 <img
                                     src={product.image}
                                     alt={product.name}
                                     className="cart-item-image"
+                                    onClick={() => navigate(`/product/${product.id}`)}
                                 />
-                                <div className="cart-item-details">
+                                <div className="cart-item-details" onClick={() => navigate(`/product/${product.id}`)}>
                                     <h3>{product.name}</h3>
                                     <p>${product.price.toFixed(2)}</p>
                                 </div>
-                                <button
-                                    className="remove-button"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); 
-                                        removeFromCart(product.uniqueId);
-                                    }}
-                                >
-                                    Remove
-                                </button>
+                                <div className="quantity-controls">
+                                    <button
+                                        className="quantity-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeFromCart(product.id);
+                                        }}
+                                    >
+                                        -
+                                    </button>
+                                    <span className="quantity">{product.quantity}</span>
+                                    <button
+                                        className="quantity-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            addToCart(product);
+                                        }}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+
                             </div>
                         ))}
                     </div>
