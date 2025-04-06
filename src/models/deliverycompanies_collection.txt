@@ -1,6 +1,0 @@
-//deliverycompany collection
-deliverycompanyID: {
-    name: ".+"
-    costs: [5, 10]
-    email: ".+@.+[.].+"
-}
