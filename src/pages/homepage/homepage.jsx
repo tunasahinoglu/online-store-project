@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
-import { products } from '../../models/temp_product_db';
+// import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { get } from '../../services/firebase/database.js';
 
 const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
 
@@ -17,6 +18,21 @@ function Homepage() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
     const [currentUser, setCurrentUser] = useState(null);
+    const [firestoreProducts, setFirestoreProducts] = useState({});
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const productsData = await get('products');
+
+                const productsObj = Object.assign({}, ...productsData);
+                setFirestoreProducts(productsObj);
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        };
+        fetchProducts();
+    }, []);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(user => {
@@ -58,9 +74,9 @@ function Homepage() {
         }
     };
 
-    const productList = Object.values(products).map(product => ({
+    const productList = Object.entries(firestoreProducts).map(([id, product]) => ({
         ...product,
-        id: Object.keys(products).find(key => products[key] === product)
+        id: id
     }));
 
     const filteredProducts = productList.filter(product => {
@@ -171,7 +187,16 @@ function Homepage() {
                         >
                             <img src={product.image} alt={product.name} className="product-image" />
                             <h3>{product.name}</h3>
-                            <p>${product.price}</p>
+                            {product.discount > 0 ? (
+                                <p>
+                                    <span className="discounted-price">
+                                        ${(product.price * (1 - product.discount / 100))}
+                                    </span>
+                                </p>
+                            ) : (
+                                <p>${product.price}</p>
+                            )}
+
                             <button onClick={(e) => {
                                 e.stopPropagation();
                                 addToCart(product);
