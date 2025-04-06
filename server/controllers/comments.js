@@ -14,7 +14,7 @@ export const addComment = async (req, res, next) => {
     const { order, product, rate, comment } = req.body;
     
 
-    //add the product
+    //add the comment
     try {
         //token check
         let decodedToken;
@@ -52,7 +52,7 @@ export const addComment = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
-        //get the order company
+        //get the order
         const orderReference = database.collection("orders").doc(order);
         const orderDocument = await orderReference.get();
         if (!orderDocument.exists || orderDocument.data().status !== "delivered") {
@@ -77,10 +77,10 @@ export const addComment = async (req, res, next) => {
             return next(error);
         }
         //get the comment
-        const commentReference = database.collection("comments").where("user", "==", decodedToken.uid);
+        const commentReference = database.collection("comments").where("user", "==", decodedToken.uid).where("order", "==", order).where("product", "==", product);
         const commentSnapshot = await commentReference.get();
         if (!commentSnapshot.empty) {
-            const error = new Error(`A comment was already made`);
+            const error = new Error(`A comment was already made for this order of the product`);
             error.status = 400;
             return next(error);
         }   
