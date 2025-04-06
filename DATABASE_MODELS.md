@@ -8,6 +8,7 @@ userID: {
     firstname: non-empty string,
     lastname: non-empty string,
     email: email address,
+    active: false | true by default,
     role: "customer" | "productmanager" | "salesmanager" | "admin",
     address: {
         country: non-empty string,
@@ -114,8 +115,8 @@ requestID: {
     user: userID,
     firstname: non-empty string,
     lastname: non-empty string,
-    revievew: boolean,
-    approved: boolean,
+    revievew: false by default | true,
+    approved: false by default | true,
     order: orderID,
     request: "refund",
     date: timestamp

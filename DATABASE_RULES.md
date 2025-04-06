@@ -11,7 +11,7 @@
 - **set:**
     - User can set their own user profile except for their email address, activation status, and role
         - `set("users/{userId}", { firstname: non-empty string, lastname: non-empty string, address: { country: non-empty string, city: non-empty string, address: non-empty string }, wishlist: [ productId, ... ] })`
-    - Admin can set role of a user and ban/unban them
+    - Admin can set role of a user, and set them as banned/active
         - `set("users/{userId}", { role: "customer"/"productmanager"/"salesmanager"/"admin", active: boolean })`
 
 ## Users/Basket Collection:
@@ -116,7 +116,7 @@
         - `add("requests", { request: "refund" })`
 
 - **set:**
-    - Sales Manager can approve/disapprove a request
+    - Sales Manager can set a request as approved/rejected
         - `set("requests/{requestID}", { approved: true | false })`
 
 ## Comments Collection:
@@ -139,9 +139,9 @@
         - `add("comments", { order: orderID, product: productId, comment: string, rating: number })`
 
 - **set:**
-    - Admin can approve/disapprove a comment
+    - Admin can set a comment as approved/rejected
         - `set("comments/{commentId}", { approved: true | false })`
-    - Product Manager can approve/disapprove an unreviewed comment
+    - Product Manager can set an unreviewed comment as approved/rejected
         - `set("comments/{commentId}", { approved: true | false })`
 
 ## Logs Collection:
