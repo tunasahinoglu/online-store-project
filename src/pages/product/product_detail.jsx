@@ -1,20 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './product_detail.css';
-import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
 import logo from '../../assets/TeknosaLogo.png';
+import { get } from '../../services/firebase/database';
 
 function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const product = products[id];
-
-    const discountedPrice = product.price - (product.price * product.discount) / 100;
-
     const { cart, addToCart } = useCart();
+
+    const [product, setProduct] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const productsData = await get('products');
+                const productsObj = Object.assign({}, ...productsData);
+                const selectedProduct = productsObj[id];
+
+                if (selectedProduct) {
+                    setProduct(selectedProduct);
+                } else {
+                    console.error("Product not found.");
+                    navigate('/');
+                }
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            }
+        };
+
+        fetchProduct();
+    }, [id, navigate]);
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -31,6 +50,12 @@ function ProductDetail() {
         if (category !== 'All') params.set('category', category);
         navigate(`/?${params.toString()}`);
     };
+
+    if (!product) {
+        return <div className="loading">Loading...</div>;
+    }
+
+    const discountedPrice = product.price - (product.price * product.discount) / 100;
 
     return (
         <div className="product-detail-container">
@@ -79,7 +104,6 @@ function ProductDetail() {
                 </div>
             </div>
 
-
             <div className="product-detail">
                 <div className="product-image">
                     <img src={product.image} alt={product.name} />
@@ -90,10 +114,17 @@ function ProductDetail() {
                         <span>{product.category} &gt; {product.subcategory}</span>
                     </div>
                     <div className="price">
-                        <span className="original-price">${product.price}</span>
-                        <span className="discounted-price">${discountedPrice.toFixed(2)}</span>
-                        <span className="discount">({product.discount}% off)</span>
+                        {product.discount > 0 ? (
+                            <>
+                                <span className="original-price">${product.price}</span>
+                                <span className="discounted-price">${discountedPrice.toFixed(2)}</span>
+                                <span className="discount">({product.discount}% off)</span>
+                            </>
+                        ) : (
+                            <span className="discounted-price">${product.price}</span>
+                        )}
                     </div>
+
                     <p className="description">{product.description}</p>
                     <div className="stock">
                         {product.stock > 0 ? (
@@ -125,7 +156,7 @@ function ProductDetail() {
             <div className="product-specifications">
                 <h2>Features</h2>
                 <ul>
-                    {Object.entries(product.features).map(([key, value]) => (
+                    {product.features && Object.entries(product.features).map(([key, value]) => (
                         <li key={key}>
                             <strong>{key}:</strong> {value}
                         </li>
@@ -136,7 +167,7 @@ function ProductDetail() {
             <div className="product-comments">
                 <h2>Comments</h2>
                 <ul>
-                    {product.comments.map((comment, index) => (
+                    {product.comments?.map((comment, index) => (
                         <li key={index}>{comment}</li>
                     ))}
                 </ul>
