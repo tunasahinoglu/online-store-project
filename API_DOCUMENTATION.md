@@ -1,4 +1,5 @@
 # API Documentation
+import { get, add, set, del } from "path-to-database.js"
 
 ## 1. `get`
 **Description**:  
