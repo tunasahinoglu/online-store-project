@@ -15,6 +15,31 @@ function ProductDetail() {
     const [product, setProduct] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [dynamicCategories, setDynamicCategories] = useState(['All']);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const categoriesData = await get('categories');
+                setDynamicCategories(['All', ...categoriesData]);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+
+                const productsData = await get('products');
+                const productsObj = Object.assign({}, ...productsData);
+
+                const allCategories = new Set(['All']);
+                Object.values(productsObj).forEach(product => {
+                    if (product.category) allCategories.add(product.category);
+                    if (product.subcategory) allCategories.add(product.subcategory);
+                });
+
+                setDynamicCategories(Array.from(allCategories));
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -38,20 +63,20 @@ function ProductDetail() {
     }, [id, navigate]);
 
     useEffect(() => {
-            const unsubscribe = auth.onAuthStateChanged(user => {
-                setCurrentUser(user);
-            });
-            return unsubscribe;
-        }, []);
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            setCurrentUser(user);
+        });
+        return unsubscribe;
+    }, []);
 
-        const handleLogout = async () => {
-                try {
-                    await signOut(auth);
-                    navigate('/');
-                } catch (error) {
-                    console.error('Logout error:', error);
-                }
-            };
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -102,13 +127,13 @@ function ProductDetail() {
                     </div>
                     {currentUser ? (
                         <div className="user-actions">
-                            <button 
+                            <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
                             >
                                 👤 {currentUser.email}
                             </button>
-                            <button 
+                            <button
                                 className="logout-button"
                                 onClick={handleLogout}
                             >
@@ -123,7 +148,7 @@ function ProductDetail() {
 
             <div className="categories-bar">
                 <div className="categories">
-                    {['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'].map((category) => (
+                    {dynamicCategories.map((category) => (
                         <button
                             key={category}
                             className={`category-item ${selectedCategory === category ? 'active' : ''}`}

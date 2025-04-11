@@ -8,8 +8,6 @@ import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { get } from '../../services/firebase/database.js';
 
-const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
-
 function Homepage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -19,14 +17,23 @@ function Homepage() {
     const { cart, addToCart } = useCart();
     const [currentUser, setCurrentUser] = useState(null);
     const [firestoreProducts, setFirestoreProducts] = useState({});
+    const [dynamicCategories, setDynamicCategories] = useState(['All']);
 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 const productsData = await get('products');
-
                 const productsObj = Object.assign({}, ...productsData);
                 setFirestoreProducts(productsObj);
+
+                const allCategories = new Set(['All']);
+
+                Object.values(productsObj).forEach(product => {
+                    if (product.category) allCategories.add(product.category);
+                    if (product.subcategory) allCategories.add(product.subcategory);
+                });
+
+                setDynamicCategories(Array.from(allCategories));
             } catch (error) {
                 console.error('Error fetching products:', error);
             }
@@ -81,8 +88,8 @@ function Homepage() {
 
     const filteredProducts = productList.filter(product => {
         const searchTermLower = searchTerm.toLowerCase();
-        const matchesSearch = 
-            product.name.toLowerCase().includes(searchTermLower) || 
+        const matchesSearch =
+            product.name.toLowerCase().includes(searchTermLower) ||
             product.description.toLowerCase().includes(searchTermLower);
         const matchesCategory = selectedCategory === 'All' ||
             product.category === selectedCategory ||
@@ -95,7 +102,7 @@ function Homepage() {
             return b.price - a.price;
         } else if (sortOption === 'priceLowToHigh') {
             return a.price - b.price;
-        } 
+        }
         else if (sortOption === 'popularity') {
             return (b.popularity || 0) - (a.popularity || 0);
         }
@@ -165,13 +172,13 @@ function Homepage() {
                     </div>
                     {currentUser ? (
                         <div className="user-actions">
-                            <button 
+                            <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
                             >
                                 👤 {currentUser.email}
                             </button>
-                            <button 
+                            <button
                                 className="logout-button"
                                 onClick={handleLogout}
                             >
@@ -186,7 +193,7 @@ function Homepage() {
 
             <div className="categories-bar">
                 <div className="categories">
-                    {categories.map((category) => (
+                    {dynamicCategories.map((category) => (
                         <button
                             key={category}
                             className={`category-item ${selectedCategory === category ? 'active' : ''}`}
