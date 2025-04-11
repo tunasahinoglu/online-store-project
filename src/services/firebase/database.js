@@ -48,7 +48,7 @@ export const add = async (path, body) => {
     //send request to add
     const auth = getAuth(app);
     const user = auth.currentUser;
-    const res = await fetch(`http://localhost:5000/api/${path}`, {
+    const res = await fetch(`http://localhost:5001/api/${path}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -68,7 +68,7 @@ export const set = async (path, body) => {
     //send request to set
     const auth = getAuth(app);
     const user = auth.currentUser;
-    const res = await fetch(`http://localhost:5000/api/${path}`, {
+    const res = await fetch(`http://localhost:5001/api/${path}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -88,7 +88,7 @@ export const del = async (path) => {
     //send request to delete
     const auth = getAuth(app);
     const user = auth.currentUser;
-    const res = await fetch(`http://localhost:5000/api/${path}`, {
+    const res = await fetch(`http://localhost:5001/api/${path}`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",

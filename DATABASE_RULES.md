@@ -1,4 +1,5 @@
 # Database Rules Documentation
+import { get, add, set, del } from "path-to-database.js"
 
 ## Users Collection:
 - **get:**
