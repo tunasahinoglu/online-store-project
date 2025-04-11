@@ -52,7 +52,7 @@ export const add = async (path, body) => {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "authorization": user ? user.accessToken : ""
+            "authorization": user ? await user.getIdToken(true) : ""
         },
         body: JSON.stringify(body)
     })
@@ -72,7 +72,7 @@ export const set = async (path, body) => {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
-            "authorization": user ? user.accessToken : ""
+            "authorization": user ? await user.getIdToken(true) : ""
         },
         body: JSON.stringify(body)
     })
@@ -92,7 +92,7 @@ export const del = async (path) => {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
-            "authorization": user ? user.accessToken : ""
+            "authorization": user ? await user.getIdToken(true) : ""
         }
     })
 
