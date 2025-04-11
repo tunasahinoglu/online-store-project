@@ -80,7 +80,10 @@ function Homepage() {
     }));
 
     const filteredProducts = productList.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const searchTermLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+            product.name.toLowerCase().includes(searchTermLower) || 
+            product.description.toLowerCase().includes(searchTermLower);
         const matchesCategory = selectedCategory === 'All' ||
             product.category === selectedCategory ||
             product.subcategory === selectedCategory;
@@ -92,7 +95,11 @@ function Homepage() {
             return b.price - a.price;
         } else if (sortOption === 'priceLowToHigh') {
             return a.price - b.price;
-        } else {
+        } 
+        else if (sortOption === 'popularity') {
+            return (b.popularity || 0) - (a.popularity || 0);
+        }
+        else {
             return 0;
         }
     });
@@ -146,6 +153,7 @@ function Homepage() {
                             <option value="default">Default</option>
                             <option value="priceHighToLow">High to Low</option>
                             <option value="priceLowToHigh">Low to High</option>
+                            <option value="popularity">Popular</option>
                         </select>
                     </div>
                 </div>
@@ -156,7 +164,20 @@ function Homepage() {
                         <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
                     </div>
                     {currentUser ? (
-                        <button onClick={handleLogout}>Logout</button>
+                        <div className="user-actions">
+                            <button 
+                                className="profile-button"
+                                onClick={() => navigate('/profile')}
+                            >
+                                👤 {currentUser.email}
+                            </button>
+                            <button 
+                                className="logout-button"
+                                onClick={handleLogout}
+                            >
+                                Logout
+                            </button>
+                        </div>
                     ) : (
                         <button onClick={() => navigate('/login')}>Login/Register</button>
                     )}

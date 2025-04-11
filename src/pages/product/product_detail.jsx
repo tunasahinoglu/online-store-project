@@ -4,12 +4,14 @@ import './product_detail.css';
 import { useCart } from '../../pages/cart/cart_context';
 import logo from '../../assets/TeknosaLogo.png';
 import { get } from '../../services/firebase/database';
+import { auth, database } from "../../services/firebase/connect.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { cart, addToCart } = useCart();
-
+    const [currentUser, setCurrentUser] = useState(null);
     const [product, setProduct] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -34,6 +36,22 @@ function ProductDetail() {
 
         fetchProduct();
     }, [id, navigate]);
+
+    useEffect(() => {
+            const unsubscribe = auth.onAuthStateChanged(user => {
+                setCurrentUser(user);
+            });
+            return unsubscribe;
+        }, []);
+
+        const handleLogout = async () => {
+                try {
+                    await signOut(auth);
+                    navigate('/');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            };
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -82,11 +100,24 @@ function ProductDetail() {
                         🛒
                         <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
                     </div>
-                    <div>
-                        <button onClick={() => navigate('/login')}>
-                            Login/Register
-                        </button>
-                    </div>
+                    {currentUser ? (
+                        <div className="user-actions">
+                            <button 
+                                className="profile-button"
+                                onClick={() => navigate('/profile')}
+                            >
+                                👤 {currentUser.email}
+                            </button>
+                            <button 
+                                className="logout-button"
+                                onClick={handleLogout}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    ) : (
+                        <button onClick={() => navigate('/login')}>Login/Register</button>
+                    )}
                 </div>
             </div>
 
@@ -137,7 +168,7 @@ function ProductDetail() {
                         <span>Warranty: {product.warranty === -1 ? "Lifetime" : `${product.warranty} months`}</span>
                     </div>
                     <div className="distributor">
-                        <span>Sold by: {product.distributername}</span>
+                        <span>Sold by: {product.distributorname}</span>
                     </div>
                     {product.stock > 0 && (
                         <div className="buttons">

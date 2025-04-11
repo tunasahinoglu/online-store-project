@@ -197,3 +197,16 @@ body {
   align-items: center;
   gap: 15px;
 }
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.profile-button {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
