@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
-// import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
@@ -225,11 +224,33 @@ function Homepage() {
                                 <p>${product.price}</p>
                             )}
 
-                            <button onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(product);
-                                alert('Product added to cart');
-                            }}>Add to Cart</button>
+                            {product.stock > 0 ? (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const finalPrice = product.discount > 0
+                                            ? product.price * (1 - product.discount / 100)
+                                            : product.price;
+
+                                        addToCart({
+                                            id: product.id,
+                                            name: product.name,
+                                            price: finalPrice,
+                                            image: product.image
+                                        });
+                                        alert('Product added to cart');
+                                    }}
+                                >
+                                    Add to Cart
+                                </button>
+                            ) : (
+                                <button
+                                    className="out-of-stock-btn"
+                                    disabled
+                                >
+                                    Out of Stock
+                                </button>
+                            )}
                         </div>
                     ))}
                 </section>

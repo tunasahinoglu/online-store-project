@@ -49,7 +49,10 @@ function ProductDetail() {
                 const selectedProduct = productsObj[id];
 
                 if (selectedProduct) {
-                    setProduct(selectedProduct);
+                    setProduct({
+                        ...selectedProduct,
+                        id: id  
+                    });
                 } else {
                     console.error("Product not found.");
                     navigate('/');
@@ -184,7 +187,7 @@ function ProductDetail() {
                     <p className="description">{product.description}</p>
                     <div className="stock">
                         {product.stock > 0 ? (
-                            <span className="in-stock">In Stock</span>
+                            <span className="in-stock">{product.stock} stock left</span>
                         ) : (
                             <span className="out-of-stock">Out of Stock</span>
                         )}
@@ -199,11 +202,20 @@ function ProductDetail() {
                         <div className="buttons">
                             <button className="add-to-cart" onClick={(e) => {
                                 e.stopPropagation();
-                                addToCart(product);
-                                alert('Product added to cart');
-                            }}>
-                                Add to Cart
-                            </button>
+                                addToCart({
+                                    id: product.id,
+                                    name: product.name,
+                                    price: product.discount > 0 
+                                        ? discountedPrice 
+                                        : product.price,
+                                    image: product.image,
+                                    quantity: 1 
+                                });
+                                alert('Ürün sepete eklendi');
+                            }}
+                        >
+                            Add to Cart
+                        </button>
                         </div>
                     )}
                 </div>
