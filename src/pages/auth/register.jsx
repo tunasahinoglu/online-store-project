@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './login.css';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth, database } from "../../services/firebase/connect.js"
-import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { auth } from "../../services/firebase/connect.js"
+import { signUp } from "../../services/firebase/auth.js"
 
 const RegisterPage = () => {
     const [firstName, setFirstName] = useState('');
@@ -17,6 +16,16 @@ const RegisterPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Check if user is already logged in
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) {
+                navigate('/'); // Redirect to home if already logged in
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -44,62 +53,11 @@ const RegisterPage = () => {
 
         try {
             setLoading(true);
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            await setDoc(doc(database, "users", user.uid), {
-                firstname: firstName,
-                lastname: lastName,
-                email: email,
-                role: "customer",
-                address: {
-                    country: country,
-                    city: city,
-                    address: address,
-                },
-                wishlist: [],
-                createdAt: new Date()
-            })
-                .then(() => {
-                    const authErrorLabel = document.querySelector("#error-label-auth")
-                    const basket = localStorage.getItem("basket") ? new Map(Object.entries(JSON.parse(localStorage.getItem("basket")))) : new Map();
-                    if (basket.size > 0) {
-                        basket.forEach((count, productID) => {
-                            setDoc(doc(database, "users", user.uid, "basket", productID), {
-                                count: count
-                            })
-                                .catch((error) => {
-                                    authErrorLabel.innerHTML = "Some products in your basket may get lost";
-                                    console.log(error);
-                                });
-                        });
-                        localStorage.removeItem("basket");
-                    }
-                })
-
+            await signUp(auth, firstName, lastName, email, password, country, city, address);
             navigate('/');
         } catch (error) {
             console.log(error);
-            let errorMessage = 'Registration failed. Please try again.';
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    errorMessage = 'This email is already registered';
-                    break;
-                case 'auth/invalid-email':
-                    errorMessage = 'Please enter a valid email address';
-                    break;
-                case 'auth/weak-password':
-                    errorMessage = 'Password should be at least 6 characters';
-                    break;
-            }
-            setError(errorMessage);
-            if (auth.currentUser) {
-                try {
-                    await auth.currentUser.delete();
-                } catch (deleteError) {
-                    console.error('Failed to delete auth user:', deleteError);
-                }
-            }
+            setError(error.message);
         } finally {
             setLoading(false);
         }

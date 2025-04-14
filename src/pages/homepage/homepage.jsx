@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
 import './homepage.css';
-import { products } from '../../models/temp_product_db';
 import { useCart } from '../../pages/cart/cart_context';
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-
-const categories = ['All', 'Electronics', 'Smartphones', 'Laptops', 'Headphones', 'Wearables', 'Cameras', 'TVs', 'Gaming'];
+import { auth, database } from "../../services/firebase/connect.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { get } from '../../services/firebase/database.js';
 
 function Homepage() {
     const navigate = useNavigate();
@@ -16,9 +15,32 @@ function Homepage() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
     const [currentUser, setCurrentUser] = useState(null);
+    const [firestoreProducts, setFirestoreProducts] = useState({});
+    const [dynamicCategories, setDynamicCategories] = useState(['All']);
 
     useEffect(() => {
-        const auth = getAuth();
+        const fetchProducts = async () => {
+            try {
+                const productsData = await get('products', ["category", "subcategory"]);
+                const productsObj = Object.assign({}, ...productsData);
+                setFirestoreProducts(productsObj);
+
+                const allCategories = new Set(['All']);
+
+                Object.values(productsObj).forEach(product => {
+                    if (product.category) allCategories.add(product.category.charAt(0).toUpperCase() + product.category.slice(1));
+                    if (product.subcategory) allCategories.add(product.subcategory.charAt(0).toUpperCase() + product.subcategory.slice(1));
+                });
+
+                setDynamicCategories(Array.from(allCategories));
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        };
+        fetchProducts();
+    }, []);
+
+    useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(user => {
             setCurrentUser(user);
         });
@@ -51,20 +73,23 @@ function Homepage() {
 
     const handleLogout = async () => {
         try {
-            await signOut(getAuth());
+            await signOut(auth);
             navigate('/');
         } catch (error) {
             console.error('Logout error:', error);
         }
     };
 
-    const productList = Object.values(products).map(product => ({
+    const productList = Object.entries(firestoreProducts).map(([id, product]) => ({
         ...product,
-        id: Object.keys(products).find(key => products[key] === product)
+        id: id
     }));
 
     const filteredProducts = productList.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const searchTermLower = searchTerm.toLowerCase();
+        const matchesSearch =
+            product.name.toLowerCase().includes(searchTermLower) ||
+            product.description.toLowerCase().includes(searchTermLower);
         const matchesCategory = selectedCategory === 'All' ||
             product.category === selectedCategory ||
             product.subcategory === selectedCategory;
@@ -76,7 +101,11 @@ function Homepage() {
             return b.price - a.price;
         } else if (sortOption === 'priceLowToHigh') {
             return a.price - b.price;
-        } else {
+        }
+        else if (sortOption === 'popularity') {
+            return (b.popularity || 0) - (a.popularity || 0);
+        }
+        else {
             return 0;
         }
     });
@@ -130,6 +159,7 @@ function Homepage() {
                             <option value="default">Default</option>
                             <option value="priceHighToLow">High to Low</option>
                             <option value="priceLowToHigh">Low to High</option>
+                            <option value="popularity">Popular</option>
                         </select>
                     </div>
                 </div>
@@ -137,10 +167,23 @@ function Homepage() {
                 <div className="header-actions">
                     <div className="cart-icon" onClick={() => navigate('/cart')}>
                         🛒
-                        <span>{cart.length}</span>
+                        <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
                     </div>
                     {currentUser ? (
-                        <button onClick={handleLogout}>Logout</button>
+                        <div className="user-actions">
+                            <button
+                                className="profile-button"
+                                onClick={() => navigate('/profile')}
+                            >
+                                👤 {currentUser.email}
+                            </button>
+                            <button
+                                className="logout-button"
+                                onClick={handleLogout}
+                            >
+                                Logout
+                            </button>
+                        </div>
                     ) : (
                         <button onClick={() => navigate('/login')}>Login/Register</button>
                     )}
@@ -149,7 +192,7 @@ function Homepage() {
 
             <div className="categories-bar">
                 <div className="categories">
-                    {categories.map((category) => (
+                    {dynamicCategories.map((category) => (
                         <button
                             key={category}
                             className={`category-item ${selectedCategory === category ? 'active' : ''}`}
@@ -171,12 +214,43 @@ function Homepage() {
                         >
                             <img src={product.image} alt={product.name} className="product-image" />
                             <h3>{product.name}</h3>
-                            <p>${product.price}</p>
-                            <button onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(product);
-                                alert('Product added to cart');
-                            }}>Add to Cart</button>
+                            {product.discount > 0 ? (
+                                <p>
+                                    <span className="discounted-price">
+                                        ${(product.price * (1 - product.discount / 100))}
+                                    </span>
+                                </p>
+                            ) : (
+                                <p>${product.price}</p>
+                            )}
+
+                            {product.stock > 0 ? (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const finalPrice = product.discount > 0
+                                            ? product.price * (1 - product.discount / 100)
+                                            : product.price;
+
+                                        addToCart({
+                                            id: product.id,
+                                            name: product.name,
+                                            price: finalPrice,
+                                            image: product.image
+                                        });
+                                        alert('Product added to cart');
+                                    }}
+                                >
+                                    Add to Cart
+                                </button>
+                            ) : (
+                                <button
+                                    className="out-of-stock-btn"
+                                    disabled
+                                >
+                                    Out of Stock
+                                </button>
+                            )}
                         </div>
                     ))}
                 </section>
