@@ -6,6 +6,8 @@ import logo from '../../assets/TeknosaLogo.png';
 import { get, set } from '../../services/firebase/database';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
+
 
 function ProductDetail() {
     const { id } = useParams();
@@ -17,6 +19,8 @@ function ProductDetail() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [isInWishlist, setIsInWishlist] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [unseenCount, setUnseenCount] = useState(0);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -99,6 +103,7 @@ function ProductDetail() {
         if (category !== 'All') params.set('category', category);
         navigate(`/?${params.toString()}`);
     };
+
     const addToWishlist = async (productId) => {
         try {
             const userDataResponse = await get(`users/${currentUser.uid}`);
@@ -164,6 +169,37 @@ function ProductDetail() {
         checkWishlist();
     }, [currentUser, id]);
 
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            setCurrentUser(user);
+            if (user) {
+                const data = await get(`users/${user.uid}/notifications`);
+
+                let merged = {};
+                if (Array.isArray(data)) {
+                    data.forEach(obj => {
+                        if (typeof obj === 'object') {
+                            merged = { ...merged, ...obj };
+                        }
+                    });
+                } else {
+                    merged = data;
+                }
+
+                const notificationsArray = Object.entries(merged || {}).map(([id, notif]) => ({
+                    id,
+                    ...notif,
+                }));
+
+                const unseen = notificationsArray.filter(notif => !notif.seen);
+                setUnseenCount(unseen.length);
+            }
+        });
+
+        return unsubscribe;
+    }, []);
+
+
     if (!product) {
         return <div className="loading">Loading...</div>;
     }
@@ -207,6 +243,17 @@ function ProductDetail() {
                     </div>
                     {currentUser ? (
                         <div className="user-actions">
+                            <div className="notification-icon" onClick={() => setOpenDialog(true)}>
+                                <span role="img" aria-label="bell" className="notification-bell-icon">
+                                    🔔
+                                </span>
+                                {unseenCount > 0 && (
+                                    <span className="notification-count">{unseenCount}</span>
+                                )}
+                            </div>
+
+
+                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
