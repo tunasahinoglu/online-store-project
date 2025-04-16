@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './product_detail.css';
 import { useCart } from '../../pages/cart/cart_context';
 import logo from '../../assets/TeknosaLogo.png';
-import { get } from '../../services/firebase/database';
+import { get, set } from '../../services/firebase/database';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
+
 
 function ProductDetail() {
     const { id } = useParams();
@@ -16,25 +18,30 @@ function ProductDetail() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [dynamicCategories, setDynamicCategories] = useState(['All']);
+    const [isInWishlist, setIsInWishlist] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [unseenCount, setUnseenCount] = useState(0);
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const categoriesData = await get('categories');
-                setDynamicCategories(['All', ...categoriesData]);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-
                 const productsData = await get('products');
+
                 const productsObj = Object.assign({}, ...productsData);
 
                 const allCategories = new Set(['All']);
+
                 Object.values(productsObj).forEach(product => {
                     if (product.category) allCategories.add(product.category);
                     if (product.subcategory) allCategories.add(product.subcategory);
                 });
 
                 setDynamicCategories(Array.from(allCategories));
+
+            } catch (error) {
+                console.error('Error fetching products:', error);
+
+                setDynamicCategories(['All']);
             }
         };
 
@@ -51,7 +58,7 @@ function ProductDetail() {
                 if (selectedProduct) {
                     setProduct({
                         ...selectedProduct,
-                        id: id  
+                        id: id
                     });
                 } else {
                     console.error("Product not found.");
@@ -97,6 +104,102 @@ function ProductDetail() {
         navigate(`/?${params.toString()}`);
     };
 
+    const addToWishlist = async (productId) => {
+        try {
+            const userDataResponse = await get(`users/${currentUser.uid}`);
+            const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
+                ? userDataResponse[0].undefined
+                : userDataResponse;
+
+            if (!userData) {
+                throw new Error("User data not found");
+            }
+
+            let updatedWishlist;
+
+            if (userData.wishlist && userData.wishlist.includes(productId)) {
+                updatedWishlist = userData.wishlist.filter(id => id !== productId);
+                setIsInWishlist(false);
+                alert('Product removed from your wishlist.');
+            } else {
+                updatedWishlist = userData.wishlist
+                    ? [...userData.wishlist, productId]
+                    : [productId];
+                setIsInWishlist(true);
+                alert('Product added to your wishlist!');
+            }
+
+            const updatedUserData = {
+                firstname: userData.firstname,
+                lastname: userData.lastname,
+                email: userData.email,
+                active: userData.active,
+                role: userData.role,
+                country: userData.address.country,
+                city: userData.address.city,
+                address: userData.address.address
+                ,
+                wishlist: updatedWishlist
+            };
+
+
+            await set(`users/${currentUser.uid}`, updatedUserData);
+        } catch (error) {
+            console.error('Wishlist error:', error);
+            alert('Error: ' + error.message);
+        }
+    };
+
+    useEffect(() => {
+        const checkWishlist = async () => {
+            if (currentUser) {
+                const userDataResponse = await get(`users/${currentUser.uid}`);
+                const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
+                    ? userDataResponse[0].undefined
+                    : userDataResponse;
+
+                if (userData?.wishlist?.includes(id)) {
+                    setIsInWishlist(true);
+                } else {
+                    setIsInWishlist(false);
+                }
+            }
+        };
+
+        checkWishlist();
+    }, [currentUser, id]);
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            setCurrentUser(user);
+            if (user) {
+                const data = await get(`users/${user.uid}/notifications`);
+
+                let merged = {};
+                if (Array.isArray(data)) {
+                    data.forEach(obj => {
+                        if (typeof obj === 'object') {
+                            merged = { ...merged, ...obj };
+                        }
+                    });
+                } else {
+                    merged = data;
+                }
+
+                const notificationsArray = Object.entries(merged || {}).map(([id, notif]) => ({
+                    id,
+                    ...notif,
+                }));
+
+                const unseen = notificationsArray.filter(notif => !notif.seen);
+                setUnseenCount(unseen.length);
+            }
+        });
+
+        return unsubscribe;
+    }, []);
+
+
     if (!product) {
         return <div className="loading">Loading...</div>;
     }
@@ -124,12 +227,33 @@ function ProductDetail() {
                 </div>
 
                 <div className="header-actions">
+                    {currentUser ? (
+                        <div className="user-actions">
+                            <div className="wishlist-icon" onClick={() => navigate('/wishlist')}>
+                                ❤️
+                                {currentUser?.wishlist?.length > 0 && (
+                                    <span>{currentUser.wishlist.length}</span>
+                                )}
+                            </div>
+                        </div>
+                    ) : null}
                     <div className="cart-icon" onClick={() => navigate('/cart')}>
                         🛒
                         <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
                     </div>
                     {currentUser ? (
                         <div className="user-actions">
+                            <div className="notification-icon" onClick={() => setOpenDialog(true)}>
+                                <span role="img" aria-label="bell" className="notification-bell-icon">
+                                    🔔
+                                </span>
+                                {unseenCount > 0 && (
+                                    <span className="notification-count">{unseenCount}</span>
+                                )}
+                            </div>
+
+
+                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -205,17 +329,30 @@ function ProductDetail() {
                                 addToCart({
                                     id: product.id,
                                     name: product.name,
-                                    price: product.discount > 0 
-                                        ? discountedPrice 
+                                    price: product.discount > 0
+                                        ? discountedPrice
                                         : product.price,
                                     image: product.image,
-                                    quantity: 1 
+                                    quantity: 1
                                 });
                                 alert('Ürün sepete eklendi');
                             }}
-                        >
-                            Add to Cart
-                        </button>
+                            >
+                                Add to Cart
+                            </button>
+                            {currentUser && (
+                                <button
+                                    className={`add-to-wishlist ${isInWishlist ? 'red' : ''}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        addToWishlist(id);
+                                    }}
+                                    title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                                >
+                                    ❤️
+                                </button>
+
+                            )}
                         </div>
                     )}
                 </div>

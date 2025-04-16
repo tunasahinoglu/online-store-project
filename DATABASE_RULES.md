@@ -11,7 +11,7 @@ import { get, add, set, del } from "path-to-database.js"
 
 - **set:**
     - User can set their own user profile except for their email address, activation status, and role
-        - `set("users/{userId}", { firstname: non-empty string, lastname: non-empty string, address: { country: non-empty string, city: non-empty string, address: non-empty string }, wishlist: [ productId, ... ] })`
+        - `set("users/{userId}", { firstname: non-empty string, lastname: non-empty string, country: non-empty string, city: non-empty string, address: non-empty string, wishlist: [ productId, ... ] })`
     - Admin can set role of a user, and set them as banned/active
         - `set("users/{userId}", { role: "customer"/"productmanager"/"salesmanager"/"admin", active: boolean })`
 

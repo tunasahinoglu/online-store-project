@@ -1,0 +1,55 @@
+.dialog-content {
+    padding: 24px;
+    background-color: white;
+}
+
+.notification-header {
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+    text-align: center;
+    color: black;
+}
+
+.notification-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f0f0f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: 0.2s;
+}
+
+.notification-item.unseen {
+    background-color: #ffe7e7;
+}
+
+.notification-item .message {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.notification-item .date {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.notification-item button {
+    margin-top: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.notification-item button:hover {
+    background-color: #0056b3;
+}
