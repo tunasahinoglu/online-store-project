@@ -165,6 +165,13 @@ function Homepage() {
                 </div>
 
                 <div className="header-actions">
+                    {currentUser ? (
+                        <div className="user-actions">
+                            <div className="wishlist-icon" onClick={() => navigate('/wishlist')}>
+                                ❤️
+                            </div>
+                        </div>
+                    ) : null}
                     <div className="cart-icon" onClick={() => navigate('/cart')}>
                         🛒
                         <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
