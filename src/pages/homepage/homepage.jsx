@@ -21,15 +21,15 @@ function Homepage() {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const productsData = await get('products');
+                const productsData = await get('products', ["category", "subcategory"]);
                 const productsObj = Object.assign({}, ...productsData);
                 setFirestoreProducts(productsObj);
 
                 const allCategories = new Set(['All']);
 
                 Object.values(productsObj).forEach(product => {
-                    if (product.category) allCategories.add(product.category);
-                    if (product.subcategory) allCategories.add(product.subcategory);
+                    if (product.category) allCategories.add(product.category.charAt(0).toUpperCase() + product.category.slice(1));
+                    if (product.subcategory) allCategories.add(product.subcategory.charAt(0).toUpperCase() + product.subcategory.slice(1));
                 });
 
                 setDynamicCategories(Array.from(allCategories));

@@ -13,8 +13,8 @@ dist-ssr
 *.local
 
 # Secrets
-server/.key.json
-server/.env
+.key.json
+.env
 
 # Editor directories and files
 .vscode/*
