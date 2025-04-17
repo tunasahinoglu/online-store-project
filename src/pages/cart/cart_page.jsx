@@ -155,7 +155,14 @@ const Cart = () => {
                             </div>
                             <button
                                 className="cart-buy-btn"
-                                onClick={() => navigate('/payment')}
+                                onClick={() => {
+                                    if (!currentUser) {
+                                        alert("Please log in to proceed to payment.");
+                                        navigate('/login');
+                                    } else {
+                                        navigate('/payment');
+                                    }
+                                }}
                             >
                                 Buy Now
                             </button>
