@@ -201,14 +201,18 @@ function Homepage() {
                 </div>
             </header>
 
-            <main className="main-content">
-                <h1>Welcome to your Profile</h1>
+            <main className="main-content2">
+                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
                 </div>
                 <div className="profile-container">
+                    <h2>Orders</h2>
+                    <div className='order-container'>
+
+                    </div>
 
                 </div>
 

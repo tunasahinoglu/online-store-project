@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import logo from '../../assets/TeknosaLogo.png';
-import { useCart } from '../cart/cart_context.jsx';
+import logo from '../../assets/teknosuLogo.jpg';
+import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { get } from '../../services/firebase/database.js';
-import NotificationDialog from '../notification/notification_dialog.jsx';
+import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
+import './profilepage.css';
 
-function SettingsPage() {
+function Homepage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState('default');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
-    const [currentUser, setCurrentUser] = useState(null); //MIGHT NEED TO FIX IT LATER
+    const [currentUser, setCurrentUser] = useState(null);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
+    const [INFOuser, setUserinfo] = useState({});
+    const [ChangedAdress, SetChangedAdress] = useState('');
+
+
 
     useEffect(() => {
         const search = searchParams.get('search') || '';
@@ -27,7 +32,6 @@ function SettingsPage() {
         setSortOption(sort);
         setSelectedCategory(category);
     }, [searchParams]);
-
 
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
@@ -52,6 +56,11 @@ function SettingsPage() {
         }
     };
 
+    const handleSaveSettings = (e) => {
+        e.preventDefault();
+    };
+
+
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         const trimmedSearch = searchTerm.trim();
@@ -71,14 +80,17 @@ function SettingsPage() {
         updateURLParams(searchTerm, newSortOption);
     };
 
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        setSearchTerm('');
+        updateURLParams('', sortOption, category);
+    };
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setCurrentUser(user);
             if (user) {
                 const data = await get(`users/${user.uid}/notifications`);
-                const test = await get(`users/${user.uid}/address`);
-                console.log('Notifications data:', test); // Debugging line
 
                 let merged = {};
                 if (Array.isArray(data)) {
@@ -102,6 +114,21 @@ function SettingsPage() {
         });
 
         return unsubscribe;
+    }, []);
+
+    useEffect(() => {
+        const Myuser = auth.onAuthStateChanged(async (user) => {
+            if (Myuser) {
+                const data = await get(`users/${user.uid}`);
+                console.log("Full user data:", data);
+
+                const values = Object.values(data);
+                const userInfo = values[0];
+                setUserinfo(userInfo);
+                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+            }
+        });
+        return Myuser;
     }, []);
 
 
@@ -178,22 +205,26 @@ function SettingsPage() {
                 </div>
             </header>
 
-            <main className="main-content">
+            <main className="main-content2">
+                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+                <div className='profile-tabs'>
+                    <button onClick={() => navigate('/profile')}>Account</button>
+                    <button onClick={() => navigate('/orders')}>Orders</button>
+                    <button onClick={() => navigate('/settings')}>Settings</button>
+                </div>
                 <div className="profile-container">
-                    <h1>isim soyisim</h1>
-                    <div className='profile-tabs'>
-                        <button onClick={() => navigate('/profile')}>Account</button>
-                        <button onClick={() => navigate('/orders')}>Orders</button>
-                        <button onClick={() => navigate('/settings')}>Settings</button>
-                        <div className='adress-bar'>
-                            <h3>Address</h3>
-                            <input
-                                type="text"
-                                id="adress"
-                                value={currentUser}
-                            />
-                        </div>
+                    <div className='names'>
+                        <h3>adress:  </h3>
+                        <input
+                            type="text"
+                            onChange={(e) => SetChangedAdress(e.target.value)}
+                            placeholder={INFOuser?.undefined?.address.address || "loading"}
+                        />
+                        <h3>email: </h3>
+                        <textarea className='email-textarea' value={INFOuser?.undefined?.email || "loading"}></textarea>
+                        <button onClick={() => handleSaveSettings('/settings')}>Save</button>
                     </div>
+
                 </div>
 
             </main>
@@ -201,4 +232,4 @@ function SettingsPage() {
     );
 }
 
-export default SettingsPage;
+export default Homepage;

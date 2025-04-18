@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { get, set } from '../../services/firebase/database';
 import { auth } from '../../services/firebase/connect';
 import './wishlist.css';
-import logo from '../../assets/TeknosaLogo.png';
+import logo from '../../assets/teknosuLogo.jpg';
 
 function Wishlist() {
     const [wishlistItems, setWishlistItems] = useState([]);
@@ -46,7 +46,7 @@ function Wishlist() {
                 : userDataResponse;
 
             const updatedWishlist = userData.wishlist.filter(id => id !== productId);
-            
+
 
             const updatedUserData = {
                 firstname: userData.firstname,

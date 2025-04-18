@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import logo from '../../assets/TeknosaLogo.png';
+import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
@@ -201,7 +201,7 @@ function Homepage() {
                 </div>
             </header>
 
-            <main className="main-content">
+            <main className="main-content2">
                 <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
@@ -211,7 +211,11 @@ function Homepage() {
                 <div className="profile-container">
                     <div className='names'>
                         <h3>adress:  </h3>
-                        <textarea className='address-textarea' value={INFOuser?.undefined?.address.address || "loading"}></textarea>
+                        <input
+                            type="text"
+                            value={INFOuser?.undefined?.address.address || "loading"}
+                            disabled
+                        />
                         <h3>email: </h3>
                         <textarea className='email-textarea' value={INFOuser?.undefined?.email || "loading"}></textarea>
                     </div>

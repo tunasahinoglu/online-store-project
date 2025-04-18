@@ -3,7 +3,7 @@ import './login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from "../../services/firebase/connect.js"
 import { signUp } from "../../services/firebase/auth.js"
-import logo from '../../assets/TeknosaLogo.png';
+import logo from '../../assets/teknosuLogo.jpg';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import { useCart } from '../../pages/cart/cart_context';
 
