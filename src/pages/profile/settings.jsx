@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
-import { useCart } from '../../pages/cart/cart_context';
+import { useCart } from '../cart/cart_context.jsx';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { get } from '../../services/firebase/database.js';
-import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
+import NotificationDialog from '../notification/notification_dialog.jsx';
 
-function Homepage() {
+function SettingsPage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState('');
@@ -188,9 +188,18 @@ function Homepage() {
                 <div className="profile-container">
                     <h1>Welcome to your Profile</h1>
                     <div className='profile-tabs'>
-                        <button onClick={() => navigate('/profile')}>Account</button>
+                        <button onClick={() => navigate('/profile')}>AM</button>
                         <button onClick={() => navigate('/orders')}>Orders</button>
-                        <button onClick={() => navigate('/settings')}>Settings</button>
+                        <button onClick={() => navigate('/wishlist')}>Settings</button>
+                        <div>
+                            <label htmlFor="address">Address:</label>
+                            <input
+                                type="text"
+                                id="address"
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -199,4 +208,4 @@ function Homepage() {
     );
 }
 
-export default Homepage;
+export default SettingsPage;
