@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './product_detail.css';
 import { useCart } from '../../pages/cart/cart_context';
-import logo from '../../assets/TeknosaLogo.png';
-import { get, set } from '../../services/firebase/database';
+import logo from '../../assets/teknosuLogo.jpg';
+import { get, set, add } from '../../services/firebase/database';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
@@ -21,6 +21,12 @@ function ProductDetail() {
     const [isInWishlist, setIsInWishlist] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
+    const [comments, setComments] = useState([]);
+    const [userComment, setUserComment] = useState('');
+    const [userRating, setUserRating] = useState(5);
+    const [hasPurchasedAndDelivered, setHasPurchasedAndDelivered] = useState(false);
+    const [matchedOrderId, setMatchedOrderId] = useState(null);
+
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -137,8 +143,7 @@ function ProductDetail() {
                 role: userData.role,
                 country: userData.address.country,
                 city: userData.address.city,
-                address: userData.address.address
-                ,
+                address: userData.address.address,
                 wishlist: updatedWishlist
             };
 
@@ -198,6 +203,91 @@ function ProductDetail() {
 
         return unsubscribe;
     }, []);
+
+    useEffect(() => {
+        const checkOrderStatus = async () => {
+            if (!currentUser) return;
+
+            try {
+                const userOrders = await get("orders", null, [
+                    ["user", "==", currentUser.uid]
+                ]);
+
+                let found = false;
+                let matchedId = null;
+
+                for (const order of userOrders) {
+                    const orderId = Object.keys(order)[0];
+                    const orderData = order[orderId];
+
+                    if (orderData.status !== "delivered") continue;
+
+                    const productsInOrder = await get(`orders/${orderId}/products`);
+                    const productMap = productsInOrder?.[0] || {};
+
+                    const containsProduct = Object.keys(productMap).includes(id);
+
+                    if (containsProduct) {
+                        found = true;
+                        matchedId = orderId;
+                        break;
+                    }
+                }
+
+                setHasPurchasedAndDelivered(found);
+                setMatchedOrderId(matchedId);
+            } catch (err) {
+                console.error("Order check failed:", err);
+            }
+        };
+
+        checkOrderStatus();
+    }, [currentUser, id]);
+
+
+
+    const handleSubmitComment = async () => {
+        if (!userComment.trim()) {
+            alert("Comment cannot be empty.");
+            return;
+        }
+
+        const newComment = {
+            order: matchedOrderId,
+            product: id,
+            rate: userRating,
+            comment: userComment,
+        };
+
+        try {
+            await add("comments", newComment);
+            alert("Your comment has been submitted and pending approval.");
+            setUserComment('');
+            setUserRating(10);
+            fetchComments();
+        } catch (error) {
+            console.error("Failed to submit comment:", error);
+            alert("Failed to submit comment.");
+        }
+    };
+
+    useEffect(() => {
+        const fetchComments = async () => {
+            try {
+                const data = await get("comments", null, [
+                    ["approved", "==", true],
+                    ["product", "==", id]
+                ]);
+
+                const allComments = Object.values(Object.assign({}, ...data));
+                setComments(allComments);
+            } catch (error) {
+                console.error("Error fetching comments:", error);
+            }
+        };
+
+        fetchComments();
+    }, [id]);
 
 
     if (!product) {
@@ -371,12 +461,43 @@ function ProductDetail() {
 
             <div className="product-comments">
                 <h2>Comments</h2>
+
+                {comments.length === 0 && <p>No comments yet.</p>}
+
                 <ul>
-                    {product.comments?.map((comment, index) => (
-                        <li key={index}>{comment}</li>
+                    {comments.map((c, i) => (
+                        <li key={i}>
+                            <strong>{c.firstname} {c.lastname}</strong> ({c.rate}/10):<br />
+                            <span>{c.comment}</span>
+                        </li>
                     ))}
                 </ul>
+
+                {currentUser && hasPurchasedAndDelivered && (
+                    <div className="comment-form">
+                        <h3>Leave a Comment</h3>
+                        <label>
+                            Rating:
+                            <select value={userRating} onChange={(e) => setUserRating(Number(e.target.value))}>
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                                    <option key={star} value={star}>{star}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <textarea
+                            placeholder="Write your comment..."
+                            value={userComment}
+                            onChange={(e) => setUserComment(e.target.value)}
+                        />
+                        <button onClick={handleSubmitComment}>Submit Comment</button>
+                    </div>
+                )}
+
+
+                {!currentUser && <p><em>Login to comment.</em></p>}
+                {currentUser && !hasPurchasedAndDelivered && <p><em>You can comment only after the product is delivered.</em></p>}
             </div>
+
         </div>
     );
 }

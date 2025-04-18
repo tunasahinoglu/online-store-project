@@ -3,7 +3,7 @@ import './cart_page.css';
 import { useCart } from '../../pages/cart/cart_context';
 import { useNavigate } from 'react-router-dom';
 import { auth } from "../../services/firebase/connect.js";
-import logo from '../../assets/TeknosaLogo.png';
+import logo from '../../assets/teknosuLogo.jpg';
 
 const Cart = () => {
     const { cart, removeFromCart, clearCart, addToCart, isInitialized } = useCart();
