@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
-import { useCart } from '../cart/cart_context.jsx';
+import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { get } from '../../services/firebase/database.js';
-import NotificationDialog from '../notification/notification_dialog.jsx';
+import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 
-function SettingsPage() {
+function Homepage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState('default');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
-    const currentUser = auth.currentUser; //MIGHT NEED TO FIX IT LATER
+    const [currentUser, setCurrentUser] = useState(null);
+    const [firestoreProducts, setFirestoreProducts] = useState({});
+    const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
+
+
 
     useEffect(() => {
         const search = searchParams.get('search') || '';
@@ -27,7 +31,6 @@ function SettingsPage() {
         setSortOption(sort);
         setSelectedCategory(category);
     }, [searchParams]);
-
 
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
@@ -71,6 +74,11 @@ function SettingsPage() {
         updateURLParams(searchTerm, newSortOption);
     };
 
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        setSearchTerm('');
+        updateURLParams('', sortOption, category);
+    };
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -178,19 +186,11 @@ function SettingsPage() {
 
             <main className="main-content">
                 <div className="profile-container">
-                    <h1>isim soyisim</h1>
+                    <h1>Welcome to your Profile</h1>
                     <div className='profile-tabs'>
-                        <button onClick={() => navigate('/profile')}>AM</button>
+                        <button onClick={() => navigate('/profile')}>Account</button>
                         <button onClick={() => navigate('/orders')}>Orders</button>
-                        <button onClick={() => navigate('/wishlist')}>Settings</button>
-                        <div className='adress-bar'>
-                            <h3>Address</h3>
-                            <input
-                                type="text"
-                                id="adress"
-                                value={currentUser}
-                            />
-                        </div>
+                        <button onClick={() => navigate('/settings')}>Settings</button>
                     </div>
                 </div>
 
@@ -199,4 +199,4 @@ function SettingsPage() {
     );
 }
 
-export default SettingsPage;
+export default Homepage;
