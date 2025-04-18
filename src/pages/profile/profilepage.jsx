@@ -210,14 +210,30 @@ function Homepage() {
                 </div>
                 <div className="profile-container">
                     <div className='names'>
-                        <h3>adress:  </h3>
-                        <input
-                            type="text"
-                            value={INFOuser?.undefined?.address.address || "loading"}
-                            disabled
-                        />
-                        <h3>email: </h3>
-                        <textarea className='email-textarea' value={INFOuser?.undefined?.email || "loading"}></textarea>
+                        <div className='input-group'>
+                            <h3>Adress: </h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.address.address || "loading"}
+                                disabled
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Email: </h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.email || "loading"}
+                                disabled
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Account Status</h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.active ? "Active" : "Inactive"}
+                                disabled
+                            />
+                        </div>
                     </div>
 
                 </div>

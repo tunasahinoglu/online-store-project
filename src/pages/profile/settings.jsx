@@ -20,6 +20,7 @@ function Homepage() {
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
     const [ChangedAdress, SetChangedAdress] = useState('');
+    const [ChangedEmail, setChangedEmail] = useState('');
 
 
 
@@ -214,14 +215,18 @@ function Homepage() {
                 </div>
                 <div className="profile-container">
                     <div className='names'>
-                        <h3>adress:  </h3>
+                        <h3>Adress:  </h3>
                         <input
                             type="text"
                             onChange={(e) => SetChangedAdress(e.target.value)}
                             placeholder={INFOuser?.undefined?.address.address || "loading"}
                         />
-                        <h3>email: </h3>
-                        <textarea className='email-textarea' value={INFOuser?.undefined?.email || "loading"}></textarea>
+                        <h3>Email: </h3>
+                        <input
+                            type="text"
+                            onChange={(e) => setChangedEmail(e.target.value)}
+                            placeholder={INFOuser?.undefined?.email || "loading"}
+                        />
                         <button onClick={() => handleSaveSettings('/settings')}>Save</button>
                     </div>
 

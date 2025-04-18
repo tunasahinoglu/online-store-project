@@ -12,7 +12,7 @@
     justify-content: center;
     align-items: center;
     margin-bottom: 1.5rem;
-    gap: 1rem;
+    gap: 3rem;
 }
 
 .profile-container {
@@ -37,4 +37,15 @@
     font-size: 15px;
     border: 1px solid #ccc;
     border-radius: 8px;
+}
+
+.delivered-orders-box {
+    display: flex;
+    background-color: #bdbdbd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+    margin-top: 1rem;
 }

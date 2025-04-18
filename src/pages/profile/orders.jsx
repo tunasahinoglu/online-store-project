@@ -210,8 +210,12 @@ function Homepage() {
                 </div>
                 <div className="profile-container">
                     <h2>Orders</h2>
-                    <div className='order-container'>
-
+                    <div className="delivered-orders-box">
+                        <h3>Delivered Orders</h3>
+                        <ul>
+                            <li>Order #12345 - Delivered on April 10</li>
+                            <li>Order #67890 - Delivered on April 12</li>
+                        </ul>
                     </div>
 
                 </div>
