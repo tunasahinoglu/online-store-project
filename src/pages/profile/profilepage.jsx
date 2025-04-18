@@ -6,6 +6,7 @@ import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { get } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
+import './profilepage.css';
 
 function Homepage() {
     const navigate = useNavigate();
@@ -19,6 +20,7 @@ function Homepage() {
     const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
+    const [INFOuser, setUserinfo] = useState({});
 
 
 
@@ -110,6 +112,21 @@ function Homepage() {
         return unsubscribe;
     }, []);
 
+    useEffect(() => {
+        const Myuser = auth.onAuthStateChanged(async (user) => {
+            if (Myuser) {
+                const data = await get(`users/${user.uid}`);
+                console.log("Full user data:", data);
+
+                const values = Object.values(data);
+                const userInfo = values[0];
+                setUserinfo(userInfo);
+                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+            }
+        });
+        return Myuser;
+    }, []);
+
 
     return (
         <div className="homepage">
@@ -185,13 +202,20 @@ function Homepage() {
             </header>
 
             <main className="main-content">
+                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+                <div className='profile-tabs'>
+                    <button onClick={() => navigate('/profile')}>Account</button>
+                    <button onClick={() => navigate('/orders')}>Orders</button>
+                    <button onClick={() => navigate('/settings')}>Settings</button>
+                </div>
                 <div className="profile-container">
-                    <h1>Welcome to your Profile</h1>
-                    <div className='profile-tabs'>
-                        <button onClick={() => navigate('/profile')}>Account</button>
-                        <button onClick={() => navigate('/orders')}>Orders</button>
-                        <button onClick={() => navigate('/settings')}>Settings</button>
+                    <div className='names'>
+                        <h3>adress:  </h3>
+                        <textarea className='address-textarea' value={INFOuser?.undefined?.address.address || "loading"}></textarea>
+                        <h3>email: </h3>
+                        <textarea className='email-textarea' value={INFOuser?.undefined?.email || "loading"}></textarea>
                     </div>
+
                 </div>
 
             </main>

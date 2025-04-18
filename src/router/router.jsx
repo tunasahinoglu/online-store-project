@@ -8,6 +8,7 @@ import { CartProvider } from "../pages/cart/cart_context";
 import Wishlist from "../pages/wishlist/wishlist.jsx";
 import ProfilePage from "../pages/profile/profilepage.jsx";
 import SettingsPage from "../pages/profile/settings.jsx";
+import OrdersPage from "../pages/profile/orders.jsx";
 
 const AppRouter = () => {
   return (
@@ -22,6 +23,8 @@ const AppRouter = () => {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+
         </Routes>
       </Router>
     </CartProvider>

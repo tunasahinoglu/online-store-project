@@ -14,7 +14,7 @@ function SettingsPage() {
     const [sortOption, setSortOption] = useState('default');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
-    const currentUser = auth.currentUser; //MIGHT NEED TO FIX IT LATER
+    const [currentUser, setCurrentUser] = useState(null); //MIGHT NEED TO FIX IT LATER
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
 
@@ -77,6 +77,8 @@ function SettingsPage() {
             setCurrentUser(user);
             if (user) {
                 const data = await get(`users/${user.uid}/notifications`);
+                const test = await get(`users/${user.uid}/address`);
+                console.log('Notifications data:', test); // Debugging line
 
                 let merged = {};
                 if (Array.isArray(data)) {
@@ -180,9 +182,9 @@ function SettingsPage() {
                 <div className="profile-container">
                     <h1>isim soyisim</h1>
                     <div className='profile-tabs'>
-                        <button onClick={() => navigate('/profile')}>AM</button>
+                        <button onClick={() => navigate('/profile')}>Account</button>
                         <button onClick={() => navigate('/orders')}>Orders</button>
-                        <button onClick={() => navigate('/wishlist')}>Settings</button>
+                        <button onClick={() => navigate('/settings')}>Settings</button>
                         <div className='adress-bar'>
                             <h3>Address</h3>
                             <input
