@@ -335,7 +335,7 @@ function ProductDetail() {
                                     image: product.image,
                                     quantity: 1
                                 });
-                                alert('Ürün sepete eklendi');
+                                alert('Product added to cart');
                             }}
                             >
                                 Add to Cart

@@ -157,7 +157,7 @@ const Cart = () => {
                                 className="cart-buy-btn"
                                 onClick={() => {
                                     if (!currentUser) {
-                                        alert("Please log in to proceed to payment.");
+                                        alert("Please login to proceed to payment.");
                                         navigate('/login');
                                     } else {
                                         navigate('/payment');
