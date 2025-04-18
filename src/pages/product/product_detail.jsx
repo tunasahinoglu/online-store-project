@@ -363,7 +363,7 @@ function ProductDetail() {
                 <ul>
                     {product.features && Object.entries(product.features).map(([key, value]) => (
                         <li key={key}>
-                            <strong>{key}:</strong> {value}
+                            <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}
                         </li>
                     ))}
                 </ul>

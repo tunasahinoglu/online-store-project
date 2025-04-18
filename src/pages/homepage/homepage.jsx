@@ -270,6 +270,7 @@ function Homepage() {
                             {product.discount > 0 ? (
                                 <p>
                                     <span className="discounted-price">
+                                        <span className="original-price">${product.price}</span>
                                         ${(product.price * (1 - product.discount / 100))}
                                     </span>
                                 </p>

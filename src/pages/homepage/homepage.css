@@ -244,3 +244,14 @@ body {
   font-size: 12px;
   font-weight: bold;
 }
+
+.original-price {
+  text-decoration: line-through;
+  color: #999;
+  padding-right: 10px;
+}
+
+.discounted-price {
+  color: orange;
+  font-weight: bold;
+}
