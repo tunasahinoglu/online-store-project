@@ -1,34 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import './login.css';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { auth } from "../../services/firebase/connect.js"
-import { signIn } from "../../services/firebase/auth.js"
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/TeknosaLogo.png';
-import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
-import { useCart } from '../../pages/cart/cart_context';
+import { useCart } from '../cart/cart_context.jsx';
+import { auth, database } from "../../services/firebase/connect.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { get } from '../../services/firebase/database.js';
+import NotificationDialog from '../notification/notification_dialog.jsx';
 
-const LoginPage = () => {
+function SettingsPage() {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState('default');
+    const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
-    const [currentUser, setCurrentUser] = useState(null);
+    const currentUser = auth.currentUser; //MIGHT NEED TO FIX IT LATER
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
 
-    // Check if user is already logged in
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            if (user) {
-                navigate('/'); // Redirect to home if already logged in
-            }
-        });
-        return () => unsubscribe();
-    }, [navigate]);
+        const search = searchParams.get('search') || '';
+        const sort = searchParams.get('sort') || 'default';
+        const category = searchParams.get('category') || 'All';
+
+        setSearchTerm(search);
+        setSortOption(sort);
+        setSelectedCategory(category);
+    }, [searchParams]);
+
+
+    const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
+        const params = new URLSearchParams();
+        if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
+        else params.delete('search');
+
+        if (newSortOption !== 'default') params.set('sort', newSortOption);
+        else params.delete('sort');
+
+        if (newCategory !== 'All') params.set('category', newCategory);
+        else params.delete('category');
+
+        setSearchParams(params);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -49,44 +71,40 @@ const LoginPage = () => {
         updateURLParams(searchTerm, newSortOption);
     };
 
-    const handleCategoryChange = (category) => {
-        setSelectedCategory(category);
-        setSearchTerm('');
-        updateURLParams('', sortOption, category);
-    };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            setCurrentUser(user);
+            if (user) {
+                const data = await get(`users/${user.uid}/notifications`);
 
-        // Basic validation
-        if (!email || !password) {
-            setError('Please fill in all fields');
-            return;
-        }
+                let merged = {};
+                if (Array.isArray(data)) {
+                    data.forEach(obj => {
+                        if (typeof obj === 'object') {
+                            merged = { ...merged, ...obj };
+                        }
+                    });
+                } else {
+                    merged = data;
+                }
 
-        try {
-            await signIn(auth, email, password);
-            // Redirect happens automatically due to the onAuthStateChanged listener
-        } catch (error) {
-            console.error('Login error:', error);
-            switch (error.code) {
-                case 'auth/invalid-login-credentials':
-                case 'auth/invalid-email':
-                case 'auth/invalid-password':
-                    setError('Invalid email or password');
-                    break;
-                case 'auth/too-many-requests':
-                    setError('Account temporarily disabled due to too many failed attempts');
-                    break;
-                default:
-                    setError('Failed to login. Please try again later.');
+                const notificationsArray = Object.entries(merged || {}).map(([id, notif]) => ({
+                    id,
+                    ...notif,
+                }));
+
+                const unseen = notificationsArray.filter(notif => !notif.seen);
+                setUnseenCount(unseen.length);
             }
-        }
-    };
+        });
+
+        return unsubscribe;
+    }, []);
+
 
     return (
-        <div className="login-page">
+        <div className="homepage">
             <header className="app-bar">
                 <img
                     src={logo}
@@ -157,42 +175,28 @@ const LoginPage = () => {
                     )}
                 </div>
             </header>
-            <div className="login-container">
-                <form onSubmit={handleSubmit} className="login-form">
-                    <h2>Login</h2>
-                    {error && <div className="error-message">{error}</div>}
-                    <div className="input-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
 
-                    <button type="submit" className="login-button">Login</button>
-                    <Link to="/register">
-                        <button type="button" className="register-button">Register</button>
-                    </Link>
-                </form>
-                <footer>
-                    <p>&copy; Copyright 2025, CS308-Group32</p>
-                </footer>
-            </div>
+            <main className="main-content">
+                <div className="profile-container">
+                    <h1>isim soyisim</h1>
+                    <div className='profile-tabs'>
+                        <button onClick={() => navigate('/profile')}>AM</button>
+                        <button onClick={() => navigate('/orders')}>Orders</button>
+                        <button onClick={() => navigate('/wishlist')}>Settings</button>
+                        <div className='adress-bar'>
+                            <h3>Address</h3>
+                            <input
+                                type="text"
+                                id="adress"
+                                value={currentUser}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+            </main>
         </div>
     );
-};
+}
 
-export default LoginPage;
+export default SettingsPage;

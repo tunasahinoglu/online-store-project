@@ -3,6 +3,9 @@ import './login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from "../../services/firebase/connect.js"
 import { signUp } from "../../services/firebase/auth.js"
+import logo from '../../assets/TeknosaLogo.png';
+import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
+import { useCart } from '../../pages/cart/cart_context';
 
 const RegisterPage = () => {
     const [firstName, setFirstName] = useState('');
@@ -16,6 +19,16 @@ const RegisterPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortOption, setSortOption] = useState('default');
+    const [currentUser, setCurrentUser] = useState(null);
+    const { cart, addToCart } = useCart();
+
+    const handleSortChange = (e) => {
+        const newSortOption = e.target.value;
+        setSortOption(newSortOption);
+        updateURLParams(searchTerm, newSortOption);
+    };
 
     // Check if user is already logged in
     useEffect(() => {
@@ -26,6 +39,21 @@ const RegisterPage = () => {
         });
         return () => unsubscribe();
     }, [navigate]);
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const trimmedSearch = searchTerm.trim();
+        setSelectedCategory('All');
+        if (trimmedSearch) {
+            updateURLParams(trimmedSearch, sortOption, 'All');
+        } else {
+            if (searchParams.get('search')) {
+                updateURLParams('', sortOption, 'All');
+            }
+        }
+    };
+
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -64,124 +92,189 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="login-container">
-            <a href="/">
+        <div className="register-page">
+            <header className="app-bar">
                 <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/8/85/Teknosa_logo.svg"
-                    alt="Register"
-                    className="login-image"
+                    src={logo}
+                    alt="Logo"
+                    className="app-bar-logo"
+                    onClick={() => navigate('/')}
                 />
-            </a>
-            <form onSubmit={handleSubmit} className="login-form">
-                <h2>Register</h2>
-                {error && <div className="error-message">{error}</div>}
 
-                <div className="name-fields">
-                    <div className="input-group">
-                        <label htmlFor="firstName">First Name</label>
+                <div className="search-and-sort">
+                    <form className="search-bar" onSubmit={handleSearchSubmit}>
                         <input
                             type="text"
-                            id="firstName"
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            required
+                            placeholder="Search products"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                    </div>
-                    <div className="input-group">
-                        <label htmlFor="lastName">Last Name</label>
-                        <input
-                            type="text"
-                            id="lastName"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            required
-                        />
+                    </form>
+                    <div className="sort-options">
+                        <select value={sortOption} onChange={handleSortChange}>
+                            <option value="default">Default</option>
+                            <option value="priceHighToLow">High to Low</option>
+                            <option value="priceLowToHigh">Low to High</option>
+                            <option value="popularity">Popular</option>
+                        </select>
                     </div>
                 </div>
 
-                <div className="input-group">
-                    <label htmlFor="email">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
+                <div className="header-actions">
+                    {currentUser ? (
+                        <div className="user-actions">
+                            <div className="wishlist-icon" onClick={() => navigate('/wishlist')}>
+                                ❤️
+                            </div>
+                        </div>
+                    ) : null}
+                    <div className="cart-icon" onClick={() => navigate('/cart')}>
+                        🛒
+                        <span>{cart.reduce((total, product) => total + product.quantity, 0)}</span>
+                    </div>
+                    {currentUser ? (
+                        <div className="user-actions">
+                            <div className="notification-icon" onClick={() => setOpenDialog(true)}>
+                                <span role="img" aria-label="bell" className="notification-bell-icon">
+                                    🔔
+                                </span>
+                                {unseenCount > 0 && (
+                                    <span className="notification-count">{unseenCount}</span>
+                                )}
+                            </div>
 
-                <div className="input-group">
-                    <label htmlFor="password">Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
 
-                <div className="input-group">
-                    <label htmlFor="confirmPassword">Confirm Password</label>
-                    <input
-                        type="password"
-                        id="confirmPassword"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                    />
+                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <button
+                                className="profile-button"
+                                onClick={() => navigate('/profile')}
+                            >
+                                👤 {currentUser.email}
+                            </button>
+                            <button
+                                className="logout-button"
+                                onClick={handleLogout}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    ) : (
+                        <button onClick={() => navigate('/login')}>Login/Register</button>
+                    )}
                 </div>
+            </header>
+            <div className="login-container">
+                <form onSubmit={handleSubmit} className="login-form">
+                    <h2>Register</h2>
+                    {error && <div className="error-message">{error}</div>}
 
-                <div className="double-fields">
+                    <div className="name-fields">
+                        <div className="input-group">
+                            <label htmlFor="firstName">First Name</label>
+                            <input
+                                type="text"
+                                id="firstName"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label htmlFor="lastName">Last Name</label>
+                            <input
+                                type="text"
+                                id="lastName"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
                     <div className="input-group">
-                        <label htmlFor="country">Country</label>
+                        <label htmlFor="email">Email</label>
                         <input
-                            type="text"
-                            id="country"
-                            value={country}
-                            onChange={(e) => setCountry(e.target.value)}
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                         />
                     </div>
+
                     <div className="input-group">
-                        <label htmlFor="city">City</label>
+                        <label htmlFor="password">Password</label>
                         <input
-                            type="text"
-                            id="city"
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
-                </div>
 
-                <div className="input-group">
-                    <label htmlFor="address">Address</label>
-                    <input
-                        type="text"
-                        id="address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        required
-                    />
-                </div>
+                    <div className="input-group">
+                        <label htmlFor="confirmPassword">Confirm Password</label>
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                    </div>
 
-                <button
-                    type="submit"
-                    className="login-button"
-                    disabled={loading}
-                >
-                    {loading ? 'Creating account...' : 'Register'}
-                </button>
-                <Link to="/login">
-                    <button type="button" className="register-button">
-                        Already have an account? Login
+                    <div className="double-fields">
+                        <div className="input-group">
+                            <label htmlFor="country">Country</label>
+                            <input
+                                type="text"
+                                id="country"
+                                value={country}
+                                onChange={(e) => setCountry(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label htmlFor="city">City</label>
+                            <input
+                                type="text"
+                                id="city"
+                                value={city}
+                                onChange={(e) => setCity(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="input-group">
+                        <label htmlFor="address">Address</label>
+                        <input
+                            type="text"
+                            id="address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="login-button"
+                        disabled={loading}
+                    >
+                        {loading ? 'Creating account...' : 'Register'}
                     </button>
-                </Link>
-            </form>
-            <footer>
-                <p>&copy; Copyright 2025, CS308-Group32</p>
-            </footer>
+                    <Link to="/login">
+                        <button type="button" className="register-button">
+                            Already have an account? Login
+                        </button>
+                    </Link>
+                </form>
+                <footer>
+                    <p>&copy; Copyright 2025, CS308-Group32</p>
+                </footer>
+            </div>
         </div>
     );
 };

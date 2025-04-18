@@ -1,0 +1,32 @@
+//orders collection
+orderID: {
+    user: userID
+    firstname: ".+"
+    lastname: ".+"
+    totalcost: >= 0
+    totaldiscountedcost: >= 0
+    status: "processing"/"in-transit"/"delivered"/"cancelled"/"refunded"
+    address: {
+        country: ".+",
+        city: ".+",
+        address: ".+",
+    }
+    billingAddress: {
+        country: ".+",
+        city: ".+",
+        address: ".+"
+    }
+    delivery: {
+        type: "standard"/"express"
+        cost: => 0
+    }
+    notes: ".*"
+    date: timestamp
+}
+
+//order/products collection
+productID: {
+    price: >=0
+    discount: >= 0 && <= 100
+    count: > 0
+}
