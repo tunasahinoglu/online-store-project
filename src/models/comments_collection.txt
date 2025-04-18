@@ -1,0 +1,12 @@
+//comments collection
+commentID: {
+    user: userID
+    firstname: ".+"
+    lastname: ".+"
+    product: productID
+    rate: >= 0 && <= 10
+    reviewed: False
+    approved: False
+    comment: ".+"
+    date: timestamp
+}

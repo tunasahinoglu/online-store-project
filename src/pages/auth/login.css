@@ -4,12 +4,28 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #5e5e5e;
+    background-color: #ffffff;
+}
+
+.app-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    left: 0;
+    margin-top: 0 !important;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Style the form */
 .login-form {
-    background-color: #1d1d1d;
+    background-color: #ebebeb;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -32,6 +48,7 @@
     display: flex;
     gap: 20px;
 }
+
 
 .name-fields .input-group {
     flex: 1;
