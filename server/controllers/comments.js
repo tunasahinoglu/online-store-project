@@ -99,7 +99,7 @@ export const addComment = async (req, res, next) => {
         };
 
         //add the comment
-        commentDocument = await database.collection("comments").add(commentData);
+        const commentDocument = await database.collection("comments").add(commentData);
         await log(database, "ADD", `comments/${commentDocument.id}`, commentData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
