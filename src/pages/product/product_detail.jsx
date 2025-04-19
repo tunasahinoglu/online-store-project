@@ -26,6 +26,7 @@ function ProductDetail() {
     const [userRating, setUserRating] = useState(5);
     const [hasPurchasedAndDelivered, setHasPurchasedAndDelivered] = useState(false);
     const [matchedOrderId, setMatchedOrderId] = useState(null);
+    const [userHasCommented, setUserHasCommented] = useState(false);
 
 
     useEffect(() => {
@@ -264,31 +265,59 @@ function ProductDetail() {
             alert("Your comment has been submitted and pending approval.");
             setUserComment('');
             setUserRating(10);
-            fetchComments();
+            fetchComments(id);
         } catch (error) {
             console.error("Failed to submit comment:", error);
             alert("Failed to submit comment.");
         }
     };
 
+    const fetchComments = async (productId) => {
+        try {
+            const data = await get("comments", null, [
+                ["approved", "==", true],
+                ["product", "==", productId]
+            ]);
+
+            const allComments = Object.values(Object.assign({}, ...data));
+            setComments(allComments);
+        } catch (error) {
+            console.error("Error fetching comments:", error);
+        }
+    };
+
     useEffect(() => {
-        const fetchComments = async () => {
-            try {
-                const data = await get("comments", null, [
-                    ["approved", "==", true],
-                    ["product", "==", id]
-                ]);
+        if (product) {
+            fetchComments(product.id);
+        }
+    }, [product]);
 
-                const allComments = Object.values(Object.assign({}, ...data));
-                setComments(allComments);
-            } catch (error) {
-                console.error("Error fetching comments:", error);
-            }
-        };
+    const checkUserComment = async () => {
+        if (!currentUser) return;
 
-        fetchComments();
-    }, [id]);
+        try {
+            const data = await get("comments", null, [
+          
+                ["product", "==", id], 
+                ["user", "==", currentUser.uid] 
+            ]);
+            const allComments = Object.values(Object.assign({}, ...data));
 
+            const hasComment = allComments.some(
+                c => c.order === matchedOrderId
+            );
+
+            setUserHasCommented(hasComment);
+        } catch (err) {
+            console.error("Error checking user comment:", err);
+        }
+    };
+
+    useEffect(() => {
+        if (matchedOrderId && currentUser) {
+            checkUserComment();
+        }
+    }, [matchedOrderId, currentUser]);
 
     if (!product) {
         return <div className="loading">Loading...</div>;
@@ -341,8 +370,6 @@ function ProductDetail() {
                                     <span className="notification-count">{unseenCount}</span>
                                 )}
                             </div>
-
-
                             <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
                             <button
                                 className="profile-button"
@@ -473,7 +500,7 @@ function ProductDetail() {
                     ))}
                 </ul>
 
-                {currentUser && hasPurchasedAndDelivered && (
+                {currentUser && hasPurchasedAndDelivered && !userHasCommented && (
                     <div className="comment-form">
                         <h3>Leave a Comment</h3>
                         <label>
@@ -493,9 +520,17 @@ function ProductDetail() {
                     </div>
                 )}
 
+                {currentUser && hasPurchasedAndDelivered && userHasCommented && (
+                    <p><em>You have already submitted a comment for this product.</em></p>
+                )}
 
                 {!currentUser && <p><em>Login to comment.</em></p>}
-                {currentUser && !hasPurchasedAndDelivered && <p><em>You can comment only after the product is delivered.</em></p>}
+
+                {currentUser && !hasPurchasedAndDelivered && (
+                    matchedOrderId
+                        ? <p><em>You can comment only after the product is delivered.</em></p>
+                        : <p><em>You need to order this product before commenting.</em></p>
+                )}
             </div>
 
         </div>
