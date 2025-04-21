@@ -27,7 +27,7 @@ function ProductDetail() {
     const [hasPurchasedAndDelivered, setHasPurchasedAndDelivered] = useState(false);
     const [matchedOrderId, setMatchedOrderId] = useState(null);
     const [userHasCommented, setUserHasCommented] = useState(false);
-
+    const [averageRating, setAverageRating] = useState(0);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -245,19 +245,13 @@ function ProductDetail() {
         checkOrderStatus();
     }, [currentUser, id]);
 
-
-
     const handleSubmitComment = async () => {
-        if (!userComment.trim()) {
-            alert("Comment cannot be empty.");
-            return;
-        }
 
         const newComment = {
             order: matchedOrderId,
             product: id,
             rate: userRating,
-            comment: userComment,
+            ...(userComment.trim() !== '' && { comment: userComment.trim() }),
         };
 
         try {
@@ -297,9 +291,9 @@ function ProductDetail() {
 
         try {
             const data = await get("comments", null, [
-          
-                ["product", "==", id], 
-                ["user", "==", currentUser.uid] 
+
+                ["product", "==", id],
+                ["user", "==", currentUser.uid]
             ]);
             const allComments = Object.values(Object.assign({}, ...data));
 
@@ -318,6 +312,28 @@ function ProductDetail() {
             checkUserComment();
         }
     }, [matchedOrderId, currentUser]);
+
+    useEffect(() => {
+        const fetchAllRatings = async () => {
+            try {
+                const data = await get("comments", null, [
+                    ["approved", "==", true],
+                    ["product", "==", id]
+                ]);
+
+                const allComments = Object.values(Object.assign({}, ...data));
+                const ratings = allComments.map(c => c.rate);
+                const total = ratings.reduce((sum, rate) => sum + rate, 0);
+                const avg = ratings.length ? total / ratings.length : 0;
+
+                setAverageRating(avg);
+            } catch (error) {
+                console.error("Error fetching ratings:", error);
+            }
+        };
+
+        if (id) fetchAllRatings();
+    }, [id]);
 
     if (!product) {
         return <div className="loading">Loading...</div>;
@@ -487,6 +503,12 @@ function ProductDetail() {
             </div>
 
             <div className="product-comments">
+
+                {averageRating !== 0 && (
+                    <div className="average-rating">
+                        <h3>Average Rating: {averageRating.toFixed(1)}/10</h3>
+                    </div>
+                )}
                 <h2>Comments</h2>
 
                 {comments.length === 0 && <p>No comments yet.</p>}
