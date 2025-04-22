@@ -1,59 +1,54 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCart } from '../../pages/cart/cart_context';
 import './purchase_page.css';
-import { handleCheckout } from '../../services/checkout.js'
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { handleCheckout } from '../../services/checkout.js';
+import { get } from '../../services/firebase/database.js';
 
 const Checkout = () => {
-  const { cart, removeFromCart, clearCart, addToCart, isInitialized } = useCart();
+  const { cart } = useCart();
   const [deliveryCompanies, setDeliveryCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [loading, setLoading] = useState(true);
-  const totalPrice = cart.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+  const [selectedOption, setSelectedOption] = useState(null); // { companyId, type, price }
+
+  const totalPrice = cart.reduce(
+    (sum, product) => sum + product.price * product.quantity,
+    0
+  );
+  const deliveryFee = selectedOption?.price || 0;
+  const total = totalPrice + deliveryFee;
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-  
     const fetchDelivery = async () => {
       try {
-        const deliveryRes = await axios.get("/api/deliveryCompanies", {
-          headers: { Authorization: token },
+        const [deliveryRes] = await Promise.all([
+          get("deliverycompanies")
+        ]);
+        console.log(deliveryRes)
+        const deliveryItems = deliveryRes.map((doc) => {
+          const id = Object.keys(doc)[0];
+          return { id, ...doc[id] };
         });
-  
-        setDeliveryCompanies(deliveryRes.data);
-  
-        if (deliveryRes.data.length > 0) {
-          setSelectedCompany(deliveryRes.data[0].id);
+
+        setDeliveryCompanies(deliveryItems);
+
+        if (deliveryItems.length > 0) {
+          setSelectedCompany(deliveryItems[0].id);
         }
-  
+
         setLoading(false);
       } catch (err) {
         console.error("Error loading delivery companies:", err);
         setLoading(false);
       }
     };
-  
+
     fetchDelivery();
   }, []);
-  
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem("token");
-
     try {
-      await axios.post(
-        "/api/orders",
-        {
-          delivery: {
-            company: selectedCompany,
-          },
-          notes: null,
-        },
-        {
-          headers: { Authorization: token },
-        }
-      );
+      await handleCheckout({ delivery: { company: selectedCompany }, notes: null });
       alert("Order placed successfully!");
     } catch (err) {
       console.error("Order placement failed:", err);
@@ -62,40 +57,81 @@ const Checkout = () => {
   };
 
   if (loading) return <p>Loading checkout...</p>;
-
   return (
-    <div className="max-w-xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Checkout</h2>
+    <div className="max-w-xl mx-auto p-4 space-y-6">
+      <h2 className="text-2xl font-bold">Checkout</h2>
 
-      <div className="mb-6">
+      <div>
         <h3 className="text-lg font-semibold mb-2">Cart Summary</h3>
-
-        <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
-          <span>Total:</span>
-          <span>${totalPrice}</span>
+        <div className="flex justify-between">
+          <span>Items Total:</span>
+          <span>${totalPrice.toFixed(2)}</span>
         </div>
       </div>
 
-      <div className="mb-6">
+      <div>
         <h3 className="text-lg font-semibold mb-2">Choose Delivery Company</h3>
         {deliveryCompanies.map((company) => (
-          <label key={company.id} className="block mb-1">
-            <input
-              type="radio"
-              name="deliveryCompany"
-              value={company.id}
-              checked={selectedCompany === company.id}
-              onChange={() => setSelectedCompany(company.id)}
-              className="mr-2"
-            />
-            {company.name}
-          </label>
+          <div
+            key={company.id}
+            className="flex justify-between items-center border rounded p-3 mb-3 bg-neutral-100 dark:bg-neutral-800"
+          >
+            <span className="font-medium">{company.name}</span>
+            <div className="space-x-2">
+              <button
+                className={`px-3 py-1 rounded border ${
+                  selectedOption?.companyId === company.id && selectedOption.type === "standard"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white dark:bg-neutral-700 text-black dark:text-white"
+                }`}
+                onClick={() =>
+                  setSelectedOption({
+                    companyId: company.id,
+                    type: "standard",
+                    price: company.costs[0],
+                  })
+                }
+              >
+                ${company.costs[0]} Standard
+              </button>
+              <button
+                className={`px-3 py-1 rounded border ${
+                  selectedOption?.companyId === company.id && selectedOption.type === "express"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white dark:bg-neutral-700 text-black dark:text-white"
+                }`}
+                onClick={() =>
+                  setSelectedOption({
+                    companyId: company.id,
+                    type: "express",
+                    price: company.costs[1],
+                  })
+                }
+              >
+                ${company.costs[1]} Express
+              </button>
+            </div>
+          </div>
         ))}
       </div>
 
+      {selectedOption && (
+        <div className="border-t pt-3">
+          <div className="flex justify-between">
+            <span>Delivery Fee:</span>
+            <span>${deliveryFee.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between font-semibold text-lg">
+            <span>Total:</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
+
       <button
-        onClick={handleSubmit}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        disabled={!selectedOption}
+        onClick={() => alert("Order placed!")}
+        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
       >
         Place Order
       </button>
