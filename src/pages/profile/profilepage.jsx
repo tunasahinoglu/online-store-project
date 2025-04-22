@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/teknosuLogo.jpg';
-import './homepage.css';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { get } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
+import './profilepage.css';
 
 function Homepage() {
     const navigate = useNavigate();
@@ -20,36 +20,9 @@ function Homepage() {
     const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
+    const [INFOuser, setUserinfo] = useState({});
 
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const productsData = await get('products', ["category", "subcategory"]);
-                const productsObj = Object.assign({}, ...productsData);
-                setFirestoreProducts(productsObj);
-
-                const allCategories = new Set(['All']);
-
-                Object.values(productsObj).forEach(product => {
-                    if (product.category) allCategories.add(product.category.charAt(0).toUpperCase() + product.category.slice(1));
-                    if (product.subcategory) allCategories.add(product.subcategory.charAt(0).toUpperCase() + product.subcategory.slice(1));
-                });
-
-                setDynamicCategories(Array.from(allCategories));
-            } catch (error) {
-                console.error('Error fetching products:', error);
-            }
-        };
-        fetchProducts();
-    }, []);
-
-    useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(user => {
-            setCurrentUser(user);
-        });
-        return unsubscribe;
-    }, []);
 
     useEffect(() => {
         const search = searchParams.get('search') || '';
@@ -83,36 +56,6 @@ function Homepage() {
             console.error('Logout error:', error);
         }
     };
-
-    const productList = Object.entries(firestoreProducts).map(([id, product]) => ({
-        ...product,
-        id: id
-    }));
-
-    const filteredProducts = productList.filter(product => {
-        const searchTermLower = searchTerm.toLowerCase();
-        const matchesSearch =
-            product.name.toLowerCase().includes(searchTermLower) ||
-            product.description.toLowerCase().includes(searchTermLower);
-        const matchesCategory = selectedCategory === 'All' ||
-            product.category === selectedCategory ||
-            product.subcategory === selectedCategory;
-        return matchesSearch && matchesCategory;
-    });
-
-    const sortedProducts = [...filteredProducts].sort((a, b) => {
-        if (sortOption === 'priceHighToLow') {
-            return b.price - a.price;
-        } else if (sortOption === 'priceLowToHigh') {
-            return a.price - b.price;
-        }
-        else if (sortOption === 'popularity') {
-            return (b.popularity || 0) - (a.popularity || 0);
-        }
-        else {
-            return 0;
-        }
-    });
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -167,6 +110,21 @@ function Homepage() {
         });
 
         return unsubscribe;
+    }, []);
+
+    useEffect(() => {
+        const Myuser = auth.onAuthStateChanged(async (user) => {
+            if (Myuser) {
+                const data = await get(`users/${user.uid}`);
+                console.log("Full user data:", data);
+
+                const values = Object.values(data);
+                const userInfo = values[0];
+                setUserinfo(userInfo);
+                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+            }
+        });
+        return Myuser;
     }, []);
 
 
@@ -243,71 +201,43 @@ function Homepage() {
                 </div>
             </header>
 
-            <div className="categories-bar">
-                <div className="categories">
-                    {dynamicCategories.map((category) => (
-                        <button
-                            key={category}
-                            className={`category-item ${selectedCategory === category ? 'active' : ''}`}
-                            onClick={() => handleCategoryChange(category)}
-                        >
-                            {category}
-                        </button>
-                    ))}
+            <main className="main-content2">
+                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+                <div className='profile-tabs'>
+                    <button onClick={() => navigate('/profile')}>Account</button>
+                    <button onClick={() => navigate('/orders')}>Orders</button>
+                    <button onClick={() => navigate('/settings')}>Settings</button>
                 </div>
-            </div>
-
-            <main className="main-content">
-                <section className="product-list">
-                    {sortedProducts.map((product) => (
-                        <div
-                            key={product.id}
-                            className="product-card"
-                            onClick={() => navigate(`/product/${product.id}`)}
-                        >
-                            <img src={product.image} alt={product.name} className="product-image" />
-                            <h3>{product.name}</h3>
-                            {product.discount > 0 ? (
-                                <p>
-                                    <span className="discounted-price">
-                                        <span className="original-price">${product.price}</span>
-                                        ${(product.price * (1 - product.discount / 100))}
-                                    </span>
-                                </p>
-                            ) : (
-                                <p>${product.price}</p>
-                            )}
-
-                            {product.stock > 0 ? (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        const finalPrice = product.discount > 0
-                                            ? product.price * (1 - product.discount / 100)
-                                            : product.price;
-
-                                        addToCart({
-                                            id: product.id,
-                                            name: product.name,
-                                            price: finalPrice,
-                                            image: product.image
-                                        });
-                                        alert('Product added to cart');
-                                    }}
-                                >
-                                    Add to Cart
-                                </button>
-                            ) : (
-                                <button
-                                    className="out-of-stock-btn"
-                                    disabled
-                                >
-                                    Out of Stock
-                                </button>
-                            )}
+                <div className="profile-container">
+                    <div className='names'>
+                        <div className='input-group'>
+                            <h3>Adress: </h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.address.address || "loading"}
+                                disabled
+                            />
                         </div>
-                    ))}
-                </section>
+                        <div className='input-group'>
+                            <h3>Email: </h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.email || "loading"}
+                                disabled
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Account Status</h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.active ? "Active" : "Inactive"}
+                                disabled
+                            />
+                        </div>
+                    </div>
+
+                </div>
+
             </main>
         </div>
     );

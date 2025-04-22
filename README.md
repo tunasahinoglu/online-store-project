@@ -2,7 +2,8 @@
 React based online store project.
 
 ## Technologies
-- React
+- React.js
+- Node.js
 - Firebase
 
 ## Contributors

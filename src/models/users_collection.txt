@@ -19,10 +19,3 @@ userID: {
 productID: {
     count: > 0
 }
-
-//users/notifications collection
-notificationID: {
-    message: ".+"
-    seen: false
-    date: timestamp
-}

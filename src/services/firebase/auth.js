@@ -2,7 +2,7 @@ import { signInWithCustomToken, signInWithEmailAndPassword } from "https://www.g
 
 export const signUp = async (auth, firstname, lastname, email, password, country, city, address) => {
     //send request to register
-    const res = await fetch("http://localhost:5000/api/auth/signup", {
+    const res = await fetch("http://localhost:5001/api/auth/signup", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

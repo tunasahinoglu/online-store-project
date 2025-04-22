@@ -3,7 +3,6 @@ commentID: {
     user: userID
     firstname: ".+"
     lastname: ".+"
-    order: orderID
     product: productID
     rate: >= 0 && <= 10
     reviewed: False

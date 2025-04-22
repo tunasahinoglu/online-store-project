@@ -1,10 +1,6 @@
 //orders collection
 requestID: {
     user: userID
-    firstname: ".+"
-    lastname: ".+"
-    revievew: boolean
-    approved: boolean
     order: orderID
     request: "refund"
     date: timestamp

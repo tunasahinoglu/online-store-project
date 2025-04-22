@@ -182,7 +182,7 @@ export const addOrder = async (req, res, next) => {
 }
 
 
-//  @desc   user/salesmanager/admin sets an order
+//  @desc   user/productmanager/admin sets an order
 //  @route  PUT  /api/orders/:orderID
 export const setOrder = async (req, res, next) => {
     const token = req.headers.authorization;
@@ -190,7 +190,7 @@ export const setOrder = async (req, res, next) => {
     const orderID = req.params.orderID;
     
 
-    //add the product
+    //set the order
     try {
         //token check
         let decodedToken;
@@ -206,7 +206,7 @@ export const setOrder = async (req, res, next) => {
             const user = await userReference.get();
             tokenRole = user.data().role;
             isUser = user.id === decodedToken.uid;
-            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "salesmanager" && !isUser)) {
+            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "productmanager" && !isUser)) {
                 const error = new Error("Unauthorized access");
                 error.status = 401;
                 return next(error);
@@ -217,7 +217,7 @@ export const setOrder = async (req, res, next) => {
             const error = new Error("All fields are required");
             error.status = 400;
             return next(error);
-        } else if (typeof status !== "string" || !["cancelled", "refunded", "in-transit", "delivered"].includes(status)) {
+        } else if (typeof status !== "string" || !["cancelled", "in-transit", "delivered"].includes(status)) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
@@ -232,29 +232,33 @@ export const setOrder = async (req, res, next) => {
             return next(error);
         }
         const orderData = orderDocument.data();
-        if (!(((tokenRole === "admin" || isUser) && orderData.status === "processing" && status === "cancelled") || (tokenRole === "salesmanager" && (orderData.status === "delivered" && status === "refunded")) || (tokenRole === "productmanager" && ((orderData.status === "processing" && status === "in-transit") || (orderData.status === "in-transit" && status === "delivered"))))) {
+        if (!(((tokenRole === "admin" || isUser) && orderData.status === "processing" && status === "cancelled") || (tokenRole === "productmanager" && ((orderData.status === "processing" && status === "in-transit") || (orderData.status === "in-transit" && status === "delivered"))))) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
         }
-        if (status === "refunded") {
-            //get request
-            const requestReference = database.collection("requests").where("order", "==", orderID).where("request", "==", "refund").where("reviewed", "==", "false");
-            const requestSnapshot = await requestReference.get();
-            if (requestSnapshot.empty) {
-                const error = new Error(`Request was not found`);
-                error.status = 400;
-                return next(error);
+        if (status === "cancelled") {
+            //check existence of products
+            const productsReference = orderReference.collection("products");
+            const productsSnapshot = await productsReference.get();
+            const productDocuments = productsSnapshot.docs;
+            for (let productDocument of productDocuments) {
+                const reference = database.collection("products").doc(productDocument.id);
+                const document = await reference.get();
+                if (!document.exists) {
+                    const error = new Error("Some products are not suitable for the cancellation request");
+                    error.status = 400;
+                    return next(error);
+                }
             }
-            const requestData = requestSnapshot.docs[0].data();
-            requestData["reviewed"] = true;
-            requestData["approved"] = true;
-            await requestReference.set(requestData);
+        }
+        if (status === "delivered") {
+            orderData["deliverydate"] = Date();
         }
         orderData["status"] = status;
         await orderReference.set(orderData);
         await log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
-        if (status === "cancelled" || status === "refunded") {
+        if (status === "cancelled") {
             //update product stocks
             const productsReference = orderReference.collection("products");
             const productsSnapshot = await productsReference.get();
@@ -268,28 +272,6 @@ export const setOrder = async (req, res, next) => {
                 await reference.set(productData);
                 await log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }
-        }
-        if (status === "refunded") {
-            const userReference = database.collection("users").doc(orderData.user);
-            const userDocument = await userReference.get();
-            const content = `
-                <p>Hello ${userDocument.data().firstname},</p>
-                
-                <p>We’re reaching out to confirm that your refund for order #${orderDocument.id} has been successfully processed.</p>
-            
-                <h3>Refund Details:</h3>
-                <ul>
-                    <li><strong>Order ID:</strong> ${orderDocument.id}</li>
-                    <li><strong>Refund Amount:</strong> $${orderData.totaldiscountedcost.toFixed(2)}</li>
-                    <li><strong>Refund Date:</strong> ${Date()}</li>
-                </ul>
-            
-                <p>The amount will be credited back within 3-5 business days, depending on your bank’s processing time.</p>
-            
-                <p>Best regards,</p>
-                <p><strong>Teknosu Team</strong></p>
-            `;
-            await sendEmail(userDocument.data().email, "Refund request has been confirmed", content);
         }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
