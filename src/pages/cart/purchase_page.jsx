@@ -58,55 +58,43 @@ const Checkout = () => {
 
   if (loading) return <p>Loading checkout...</p>;
   return (
-    <div className="max-w-xl mx-auto p-4 space-y-6">
-      <h2 className="text-2xl font-bold">Checkout</h2>
-
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Cart Summary</h3>
-        <div className="flex justify-between">
+    <div className="checkout-container">
+      <h2 className="text-2xl font-bold mb-6">Checkout</h2>
+  
+      <div className="checkout-summary">
+        <h3 className="text-lg font-semibold">Cart Summary</h3>
+        <div className="flex justify-between font-medium">
           <span>Items Total:</span>
           <span>${totalPrice.toFixed(2)}</span>
         </div>
       </div>
-
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Choose Delivery Company</h3>
+  
+      <div className="checkout-summary">
+        <h3 className="text-lg font-semibold">Choose Delivery Company</h3>
         {deliveryCompanies.map((company) => (
           <div
             key={company.id}
-            className="flex justify-between items-center border rounded p-3 mb-3 bg-neutral-100 dark:bg-neutral-800"
+            className="delivery-company"
           >
-            <span className="font-medium">{company.name}</span>
-            <div className="space-x-2">
+            <span className="delivery-company-name">{company.name}</span>
+            <div className="delivery-options">
               <button
-                className={`px-3 py-1 rounded border ${
-                  selectedOption?.companyId === company.id && selectedOption.type === "standard"
-                    ? "bg-blue-500 text-white"
-                    : "bg-white dark:bg-neutral-700 text-black dark:text-white"
-                }`}
-                onClick={() =>
-                  setSelectedOption({
-                    companyId: company.id,
-                    type: "standard",
-                    price: company.costs[0],
-                  })
-                }
+                className={`delivery-option-btn ${selectedCompany?.companyId === company.id && selectedCompany.type === "standard" ? "selected" : ""}`}
+                onClick={() => setSelectedCompany({
+                  companyId: company.id,
+                  type: "standard",
+                  price: company.costs[0],
+                })}
               >
                 ${company.costs[0]} Standard
               </button>
               <button
-                className={`px-3 py-1 rounded border ${
-                  selectedOption?.companyId === company.id && selectedOption.type === "express"
-                    ? "bg-blue-500 text-white"
-                    : "bg-white dark:bg-neutral-700 text-black dark:text-white"
-                }`}
-                onClick={() =>
-                  setSelectedOption({
-                    companyId: company.id,
-                    type: "express",
-                    price: company.costs[1],
-                  })
-                }
+                className={`delivery-option-btn ${selectedCompany?.companyId === company.id && selectedCompany.type === "express" ? "selected" : ""}`}
+                onClick={() => setSelectedCompany({
+                  companyId: company.id,
+                  type: "express",
+                  price: company.costs[1],
+                })}
               >
                 ${company.costs[1]} Express
               </button>
@@ -114,29 +102,31 @@ const Checkout = () => {
           </div>
         ))}
       </div>
-
-      {selectedOption && (
-        <div className="border-t pt-3">
-          <div className="flex justify-between">
+  
+      {selectedCompany && (
+        <div className="checkout-payment">
+          <h3 className="text-lg font-semibold">Order Summary</h3>
+          <div className="checkout-totals">
             <span>Delivery Fee:</span>
-            <span>${deliveryFee.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between font-semibold text-lg">
+            <span>${selectedCompany.price ? selectedCompany.price.toFixed(2) : "0.00"}</span>
+            </div>
+          <div className="checkout-totals font-semibold text-lg">
             <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
+            <span>${selectedCompany.price ? ((totalPrice + selectedCompany.price).toFixed(2)) : totalPrice.toFixed(2)}</span>
           </div>
         </div>
       )}
-
+  
       <button
-        disabled={!selectedOption}
-        onClick={() => alert("Order placed!")}
+        disabled={!selectedCompany.price}
+        onClick={() => pass}
         className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
       >
         Place Order
       </button>
     </div>
   );
-};
+  
+}
 
 export default Checkout;
