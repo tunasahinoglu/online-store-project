@@ -25,8 +25,8 @@ function ProductDetail() {
     const [userComment, setUserComment] = useState('');
     const [userRating, setUserRating] = useState(5);
     const [hasPurchasedAndDelivered, setHasPurchasedAndDelivered] = useState(false);
-    const [matchedOrderId, setMatchedOrderId] = useState(null);
-    const [userHasCommented, setUserHasCommented] = useState(false);
+    const [matchedOrderIds, setMatchedOrderIds] = useState([]);
+    const [userCommentCount, setUserCommentCount] = useState(0);
     const [averageRating, setAverageRating] = useState(0);
 
     useEffect(() => {
@@ -214,8 +214,7 @@ function ProductDetail() {
                     ["user", "==", currentUser.uid]
                 ]);
 
-                let found = false;
-                let matchedId = null;
+                let matchedIds = [];
 
                 for (const order of userOrders) {
                     const orderId = Object.keys(order)[0];
@@ -223,20 +222,20 @@ function ProductDetail() {
 
                     if (orderData.status !== "delivered") continue;
 
-                    const productsInOrder = await get(`orders/${orderId}/products`);
-                    const productMap = productsInOrder?.[0] || {};
+                    const productsInOrderObj = await get(`orders/${orderId}/products`);
 
-                    const containsProduct = Object.keys(productMap).includes(id);
+                    const containsProduct = productsInOrderObj.some(productObj => {
+                        const productId = Object.keys(productObj)[0];
+                        return productId === id;
+                    });
 
                     if (containsProduct) {
-                        found = true;
-                        matchedId = orderId;
-                        break;
+                        matchedIds.push(orderId);
                     }
                 }
 
-                setHasPurchasedAndDelivered(found);
-                setMatchedOrderId(matchedId);
+                setHasPurchasedAndDelivered(matchedIds.length > 0);
+                setMatchedOrderIds(matchedIds);
             } catch (err) {
                 console.error("Order check failed:", err);
             }
@@ -246,9 +245,12 @@ function ProductDetail() {
     }, [currentUser, id]);
 
     const handleSubmitComment = async () => {
+        if (matchedOrderIds.length === 0) return;
+
+        const targetOrderId = matchedOrderIds[userCommentCount];
 
         const newComment = {
-            order: matchedOrderId,
+            order: targetOrderId,
             product: id,
             rate: userRating,
             ...(userComment.trim() !== '' && { comment: userComment.trim() }),
@@ -260,6 +262,7 @@ function ProductDetail() {
             setUserComment('');
             setUserRating(10);
             fetchComments(id);
+            setUserCommentCount(prev => prev + 1);
         } catch (error) {
             console.error("Failed to submit comment:", error);
             alert("Failed to submit comment.");
@@ -287,31 +290,31 @@ function ProductDetail() {
     }, [product]);
 
     const checkUserComment = async () => {
-        if (!currentUser) return;
+        if (!currentUser || matchedOrderIds.length === 0) return;
 
         try {
             const data = await get("comments", null, [
-
                 ["product", "==", id],
                 ["user", "==", currentUser.uid]
             ]);
+
             const allComments = Object.values(Object.assign({}, ...data));
 
-            const hasComment = allComments.some(
-                c => c.order === matchedOrderId
+            const userCommentsForOrders = allComments.filter(c =>
+                matchedOrderIds.includes(c.order)
             );
 
-            setUserHasCommented(hasComment);
+            setUserCommentCount(userCommentsForOrders.length);
         } catch (err) {
             console.error("Error checking user comment:", err);
         }
     };
 
     useEffect(() => {
-        if (matchedOrderId && currentUser) {
+        if (matchedOrderIds.length > 0 && currentUser) {
             checkUserComment();
         }
-    }, [matchedOrderId, currentUser]);
+    }, [matchedOrderIds, currentUser]);
 
     useEffect(() => {
         const fetchAllRatings = async () => {
@@ -503,7 +506,6 @@ function ProductDetail() {
             </div>
 
             <div className="product-comments">
-
                 {averageRating !== 0 && (
                     <div className="average-rating">
                         <h3>Average Rating: {averageRating.toFixed(1)}/10</h3>
@@ -522,41 +524,41 @@ function ProductDetail() {
                     ))}
                 </ul>
 
-                {currentUser && hasPurchasedAndDelivered && !userHasCommented && (
-                    <div className="comment-form">
-                        <h3>Leave a Comment</h3>
-                        <label>
-                            Rating:
-                            <select value={userRating} onChange={(e) => setUserRating(Number(e.target.value))}>
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
-                                    <option key={star} value={star}>{star}</option>
-                                ))}
-                            </select>
-                        </label>
-                        <textarea
-                            placeholder="Write your comment..."
-                            value={userComment}
-                            onChange={(e) => setUserComment(e.target.value)}
-                        />
-                        <button onClick={handleSubmitComment}>Submit Comment</button>
-                    </div>
-                )}
-
-                {currentUser && hasPurchasedAndDelivered && userHasCommented && (
-                    <p><em>You have already submitted a comment for this product.</em></p>
+                {currentUser && hasPurchasedAndDelivered && (
+                    userCommentCount < matchedOrderIds.length ? (
+                        <div className="comment-form">
+                            <h3>
+                                Leave a Comment ({userCommentCount + 1}/{matchedOrderIds.length})
+                            </h3>
+                            <label>
+                                Rating:
+                                <select value={userRating} onChange={(e) => setUserRating(Number(e.target.value))}>
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                                        <option key={star} value={star}>{star}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <textarea
+                                placeholder="Write your comment..."
+                                value={userComment}
+                                onChange={(e) => setUserComment(e.target.value)}
+                            />
+                            <button onClick={handleSubmitComment}>Submit Comment</button>
+                        </div>
+                    ) : (
+                        <p><em>You've used all your comments ({matchedOrderIds.length} allowed).</em></p>
+                    )
                 )}
 
                 {!currentUser && <p><em>Login to comment.</em></p>}
 
                 {currentUser && !hasPurchasedAndDelivered && (
-                    matchedOrderId
+                    matchedOrderIds.length > 0
                         ? <p><em>You can comment only after the product is delivered.</em></p>
                         : <p><em>You need to order this product before commenting.</em></p>
                 )}
             </div>
-
         </div>
     );
 }
-
 export default ProductDetail;
