@@ -1,30 +1,96 @@
 .checkout-container {
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 700px;
+    margin: 2rem auto;
     padding: 2rem;
+    font-family: sans-serif;
 }
 
-.checkout-summary, .checkout-payment {
-    border: 1px solid orange;
-    padding: 1rem;
+.checkout-summary, 
+.checkout-payment {
+    border: 1px solid #ccc;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    background-color: var(--bg-color, #f9f9f9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.checkout-summary h3, 
+.checkout-payment h3 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.delivery-company {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
     margin-bottom: 1.5rem;
-    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background-color: var(--bg-color, #fff);
+}
+
+.delivery-company-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    flex: 1 1 100%;
+    margin-bottom: 0.8rem;
+}
+
+.delivery-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.delivery-option-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.delivery-option-btn.selected {
+    background-color: #0070f3;
+    color: white;
+    border-color: #0070f3;
 }
 
 .checkout-payment input {
     display: block;
-    width: 95%;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
+    width: 100%;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
     font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }
 
 .checkout-payment button {
-    padding: 0.7rem 1.5rem;
+    padding: 0.8rem 2rem;
     font-size: 1rem;
     background-color: #0070f3;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.checkout-payment button:hover {
+    background-color: #005ec4;
+}
+
+.checkout-totals {
+    margin-top: 2rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
 }
