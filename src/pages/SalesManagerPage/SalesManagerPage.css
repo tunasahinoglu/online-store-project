@@ -1,0 +1,158 @@
+/* SalesManagerPage.css */
+
+.sales-page {
+    min-height: 100vh;
+    background-color: #f3f4f6;
+    padding: 2rem;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: start;
+  }
+  
+  .sales-container {
+    width: 100%;
+    max-width: 900px;
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    color: #111827;
+  }
+  
+  .sales-title {
+    font-size: 2rem;
+    color: #1f2937;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .sales-section {
+    margin-bottom: 2.5rem;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+    color: #374151;
+    margin-bottom: 1rem;
+  }
+  
+  .product-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* add spacing between input and button */
+    margin-bottom: 1rem; /* spacing between rows */
+  }
+  
+  .product-name {
+    width: 8rem;
+    color: #374151;
+  }
+  
+  .input {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    width: 8rem;
+  }
+  
+  .discount-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center; /* center contents */
+    flex-wrap: wrap;
+  }
+  
+  .button {
+    background-color: #1f2937;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .button:hover {
+    background-color: #374151;
+  }
+  
+  .invoice-list {
+    list-style: none;
+    padding: 0;
+    color: #1f2937;
+  }
+  
+  .invoice-item {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .revenue-box {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    border-radius: 6px;
+    line-height: 1.6;
+    color: #1f2937;
+  }
+  
+  .slider-box,
+  .discount-list-box,
+  .pending-box {
+    background-color: #edf2f7;
+    border: 1px solid #cbd5e0;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 6px;
+    color: #1a202c;
+    max-height: 250px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .slider-box-inner,
+  .discount-list-inner,
+  .pending-box-inner {
+    max-height: 200px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .product-selector {
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center product items */
+  }
+  
+  .selector-item {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #1a202c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }

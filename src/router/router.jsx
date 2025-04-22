@@ -9,6 +9,7 @@ import Wishlist from "../pages/wishlist/wishlist.jsx";
 import ProfilePage from "../pages/profile/profilepage.jsx";
 import SettingsPage from "../pages/profile/settings.jsx";
 import OrdersPage from "../pages/profile/orders.jsx";
+import SalesManagerPage from "../pages/SalesManagerPage/SalesManagerPage.jsx"; // ✅ Add import
 
 const AppRouter = () => {
   return (
@@ -24,7 +25,7 @@ const AppRouter = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/orders" element={<OrdersPage />} />
-
+          <Route path="/sales" element={<SalesManagerPage />} />
         </Routes>
       </Router>
     </CartProvider>
