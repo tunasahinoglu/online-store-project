@@ -11,6 +11,12 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOption, setSelectedOption] = useState(null); // { companyId, type, price }
 
+  const [cardDetails, setCardDetails] = useState({
+    cardNumber: '',
+    cvv: '',
+    expirationDate: '',
+  });
+
   const totalPrice = cart.reduce(
     (sum, product) => sum + product.price * product.quantity,
     0
@@ -21,10 +27,7 @@ const Checkout = () => {
   useEffect(() => {
     const fetchDelivery = async () => {
       try {
-        const [deliveryRes] = await Promise.all([
-          get("deliverycompanies")
-        ]);
-        console.log(deliveryRes)
+        const [deliveryRes] = await Promise.all([get("deliverycompanies")]);
         const deliveryItems = deliveryRes.map((doc) => {
           const id = Object.keys(doc)[0];
           return { id, ...doc[id] };
@@ -47,8 +50,25 @@ const Checkout = () => {
   }, []);
 
   const handleSubmit = async () => {
+    // Mock payment validation
+    if (!cardDetails.cardNumber || !cardDetails.cvv || !cardDetails.expirationDate) {
+      alert("Please enter valid payment details.");
+      return;
+    }
+
+    // Add the payment info to the order data
+    const paymentInfo = {
+      cardNumber: cardDetails.cardNumber,
+      cvv: cardDetails.cvv,
+      expirationDate: cardDetails.expirationDate,
+    };
+
     try {
-      await handleCheckout({ delivery: { company: selectedCompany }, notes: null });
+      await handleCheckout({
+        delivery: { company: selectedCompany },
+        notes: null,
+        paymentInfo, // Add payment info to the request
+      });
       alert("Order placed successfully!");
     } catch (err) {
       console.error("Order placement failed:", err);
@@ -57,10 +77,11 @@ const Checkout = () => {
   };
 
   if (loading) return <p>Loading checkout...</p>;
+
   return (
     <div className="checkout-container">
       <h2 className="text-2xl font-bold mb-6">Checkout</h2>
-  
+
       <div className="checkout-summary">
         <h3 className="text-lg font-semibold">Cart Summary</h3>
         <div className="flex justify-between font-medium">
@@ -68,14 +89,11 @@ const Checkout = () => {
           <span>${totalPrice.toFixed(2)}</span>
         </div>
       </div>
-  
+
       <div className="checkout-summary">
         <h3 className="text-lg font-semibold">Choose Delivery Company</h3>
         {deliveryCompanies.map((company) => (
-          <div
-            key={company.id}
-            className="delivery-company"
-          >
+          <div key={company.id} className="delivery-company">
             <span className="delivery-company-name">{company.name}</span>
             <div className="delivery-options">
               <button
@@ -102,31 +120,55 @@ const Checkout = () => {
           </div>
         ))}
       </div>
-  
+
       {selectedCompany && (
         <div className="checkout-payment">
           <h3 className="text-lg font-semibold">Order Summary</h3>
           <div className="checkout-totals">
             <span>Delivery Fee:</span>
             <span>${selectedCompany.price ? selectedCompany.price.toFixed(2) : "0.00"}</span>
-            </div>
+          </div>
           <div className="checkout-totals font-semibold text-lg">
             <span>Total:</span>
             <span>${selectedCompany.price ? ((totalPrice + selectedCompany.price).toFixed(2)) : totalPrice.toFixed(2)}</span>
           </div>
         </div>
       )}
-  
+
+      <div className="payment-section">
+        <h3 className="text-lg font-semibold">Payment Method</h3>
+        <input
+          type="text"
+          placeholder="Card Number"
+          value={cardDetails.cardNumber}
+          onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value })}
+          className="input-field"
+        />
+        <input
+          type="text"
+          placeholder="CVV"
+          value={cardDetails.cvv}
+          onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+          className="input-field"
+        />
+        <input
+          type="text"
+          placeholder="Expiration Date (MM/YY)"
+          value={cardDetails.expirationDate}
+          onChange={(e) => setCardDetails({ ...cardDetails, expirationDate: e.target.value })}
+          className="input-field"
+        />
+      </div>
+
       <button
-        disabled={!selectedCompany.price}
-        onClick={() => pass}
+        disabled={!selectedCompany?.price || !cardDetails.cardNumber || !cardDetails.cvv || !cardDetails.expirationDate}
+        onClick={handleSubmit}
         className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
       >
         Place Order
       </button>
     </div>
   );
-  
-}
+};
 
 export default Checkout;
