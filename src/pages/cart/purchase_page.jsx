@@ -1,50 +1,42 @@
 import React from 'react';
 import { useCart } from '../../pages/cart/cart_context';
 import './purchase_page.css';
-import handleCheckout from '../../services/checkout.js'
+import { handleCheckout } from '../../services/checkout.js'
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 const Checkout = () => {
-  const [cart, setCart] = useState([]);
+  const { cart, removeFromCart, clearCart, addToCart, isInitialized } = useCart();
   const [deliveryCompanies, setDeliveryCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [loading, setLoading] = useState(true);
+  const totalPrice = cart.reduce((sum, product) => sum + (product.price * product.quantity), 0);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
-    const fetchCartAndDelivery = async () => {
+  
+    const fetchDelivery = async () => {
       try {
-        const [cartRes, deliveryRes] = await Promise.all([
-          axios.get("/api/cart", {
-            headers: { Authorization: token },
-          }),
-          axios.get("/api/deliveryCompanies", {
-            headers: { Authorization: token },
-          }),
-        ]);
-
-        setCart(cartRes.data);
+        const deliveryRes = await axios.get("/api/deliveryCompanies", {
+          headers: { Authorization: token },
+        });
+  
         setDeliveryCompanies(deliveryRes.data);
-
+  
         if (deliveryRes.data.length > 0) {
           setSelectedCompany(deliveryRes.data[0].id);
         }
-
+  
         setLoading(false);
       } catch (err) {
-        console.error("Error loading cart or delivery companies:", err);
+        console.error("Error loading delivery companies:", err);
         setLoading(false);
       }
     };
-
-    fetchCartAndDelivery();
+  
+    fetchDelivery();
   }, []);
-
-  const calculateTotal = () => {
-    return cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2);
-  };
+  
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("token");
@@ -77,17 +69,10 @@ const Checkout = () => {
 
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Cart Summary</h3>
-        {cart.map((item) => (
-          <div key={item.product.id} className="flex justify-between py-1">
-            <span>
-              {item.product.name} × {item.quantity}
-            </span>
-            <span>${(item.product.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
+
         <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
           <span>Total:</span>
-          <span>${calculateTotal()}</span>
+          <span>${totalPrice}</span>
         </div>
       </div>
 
