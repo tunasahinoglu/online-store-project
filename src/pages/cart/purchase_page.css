@@ -114,10 +114,13 @@
     border-radius: 0.375rem;
     border: 1px solid #cbd5e0;
     background-color: lightgray;
-    color: darkgray;
+    color: black;
     font-size: 1rem;
   }
   
+  .input-field:placeholder-shown{
+    color: darkgray;
+  }
   .input-field:focus {
     border-color: #38a169;
     outline: none;

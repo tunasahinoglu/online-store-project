@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../pages/cart/cart_context';
 import './purchase_page.css';
-import { handleCheckout } from '../../services/checkout.js';
+import { handleCheckout} from '../../services/checkout.js';
 import { get } from '../../services/firebase/database.js';
+import { auth } from "../../services/firebase/connect.js";
 
 const Checkout = () => {
+  const navigate = useNavigate();
   const { cart } = useCart();
   const [deliveryCompanies, setDeliveryCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -50,24 +53,13 @@ const Checkout = () => {
   }, []);
 
   const handleSubmit = async () => {
-    // Mock payment validation
-    if (!cardDetails.cardNumber || !cardDetails.cvv || !cardDetails.expirationDate) {
-      alert("Please enter valid payment details.");
-      return;
-    }
-
-    // Add the payment info to the order data
-    const paymentInfo = {
-      cardNumber: cardDetails.cardNumber,
-      cvv: cardDetails.cvv,
-      expirationDate: cardDetails.expirationDate,
-    };
-
     try {
-      await handleCheckout({
-        delivery: { company: selectedCompany },
-        notes: null,
-        paymentInfo, // Add payment info to the request
+      await handleCheckout({ 
+        cart: cart, 
+        selectedDeliveryCompany: selectedCompany.companyId, // Ensure correct delivery company is passed
+        selectedDeliveryType: selectedCompany.type, // Add the delivery type here
+        notes: null, 
+        navigate // Pass navigate as a parameter to handleCheckout,
       });
       alert("Order placed successfully!");
     } catch (err) {
@@ -77,11 +69,10 @@ const Checkout = () => {
   };
 
   if (loading) return <p>Loading checkout...</p>;
-
   return (
     <div className="checkout-container">
       <h2 className="text-2xl font-bold mb-6">Checkout</h2>
-
+  
       <div className="checkout-summary">
         <h3 className="text-lg font-semibold">Cart Summary</h3>
         <div className="flex justify-between font-medium">
@@ -89,7 +80,7 @@ const Checkout = () => {
           <span>${totalPrice.toFixed(2)}</span>
         </div>
       </div>
-
+  
       <div className="checkout-summary">
         <h3 className="text-lg font-semibold">Choose Delivery Company</h3>
         {deliveryCompanies.map((company) => (
@@ -120,7 +111,7 @@ const Checkout = () => {
           </div>
         ))}
       </div>
-
+  
       {selectedCompany && (
         <div className="checkout-payment">
           <h3 className="text-lg font-semibold">Order Summary</h3>
@@ -134,7 +125,6 @@ const Checkout = () => {
           </div>
         </div>
       )}
-
       <div className="payment-section">
         <h3 className="text-lg font-semibold">Payment Method</h3>
         <input
@@ -162,7 +152,7 @@ const Checkout = () => {
 
       <button
         disabled={!selectedCompany?.price || !cardDetails.cardNumber || !cardDetails.cvv || !cardDetails.expirationDate}
-        onClick={handleSubmit}
+        onClick={handleSubmit} // Call handleSubmit directly here
         className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
       >
         Place Order
