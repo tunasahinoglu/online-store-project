@@ -202,6 +202,7 @@ export default function SalesManagerPage() {
       }
   
       // Invoice header
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(18).text("INVOICE", 220, y, { underline: true });
       y += 30;
   
