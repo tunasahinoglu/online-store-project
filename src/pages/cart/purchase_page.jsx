@@ -13,6 +13,7 @@ const Checkout = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedOption, setSelectedOption] = useState(null); // { companyId, type, price }
+  const [processing, setProcessing] = useState(false);
 
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
@@ -54,6 +55,7 @@ const Checkout = () => {
 
   const handleSubmit = async () => {
     try {
+      setProcessing(true);
       await handleCheckout({ 
         cart: cart, 
         selectedDeliveryCompany: selectedCompany.companyId, // Ensure correct delivery company is passed
@@ -65,11 +67,15 @@ const Checkout = () => {
       console.error("Order placement failed:", err);
       alert("Failed to place order.");
     }
+    finally{
+      setProcessing(false);
+    }
   };
 
   if (loading) return <p>Loading checkout...</p>;
   return (
     <div className="checkout-container">
+      
       <h2 className="text-2xl font-bold mb-6">Checkout</h2>
   
       <div className="checkout-summary">
@@ -132,6 +138,7 @@ const Checkout = () => {
           value={cardDetails.cardNumber}
           onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value })}
           className="input-field"
+          disabled={processing}
         />
         <input
           type="text"
@@ -139,6 +146,7 @@ const Checkout = () => {
           value={cardDetails.cvv}
           onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
           className="input-field"
+          disabled={processing}
         />
         <input
           type="text"
@@ -146,16 +154,25 @@ const Checkout = () => {
           value={cardDetails.expirationDate}
           onChange={(e) => setCardDetails({ ...cardDetails, expirationDate: e.target.value })}
           className="input-field"
+          disabled={processing}
         />
       </div>
 
       <button
-        disabled={!selectedCompany?.price || !cardDetails.cardNumber || !cardDetails.cvv || !cardDetails.expirationDate}
+        disabled={!selectedCompany?.price || !cardDetails.cardNumber || !cardDetails.cvv || !cardDetails.expirationDate || processing}
         onClick={handleSubmit} // Call handleSubmit directly here
         className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
       >
         Place Order
       </button>
+      {processing && (
+        <div className="overlay">
+          <div className="popup">
+            <h2>Processing Your Order</h2>
+            <p>Please wait patiently while we finalize your order.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
