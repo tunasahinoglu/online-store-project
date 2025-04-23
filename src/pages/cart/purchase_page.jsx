@@ -61,7 +61,6 @@ const Checkout = () => {
         notes: null, 
         navigate // Pass navigate as a parameter to handleCheckout,
       });
-      alert("Order placed successfully!");
     } catch (err) {
       console.error("Order placement failed:", err);
       alert("Failed to place order.");

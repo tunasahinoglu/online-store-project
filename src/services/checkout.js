@@ -4,7 +4,7 @@ export const handleCheckout = async ({ cart, selectedDeliveryCompany, selectedDe
   const auth = getAuth(); // Get Firebase auth instance
   const token = await auth.currentUser.getIdToken(); // Firebase auth
   try {
-    const res = await fetch("/api/orders", {
+    const res = await fetch("http://localhost:5001/api/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
