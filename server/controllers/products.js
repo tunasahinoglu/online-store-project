@@ -248,15 +248,22 @@ export const setProduct = async (req, res, next) => {
         //set the product
         await database.collection("products").doc(productID).set(productData);
         await log(database, "SET", `products/${productID}`, productData, decodedToken.uid);
+        //send notifications to users with the product in their wishlist upon price decrease
         if (tokenRole === "salesmanager" && oldPrice*(100-oldDiscount)/100 > price*(100-discount)/100) {
-            const notificationData = {
-                message: `${productData["name"]} is on sale`,
-                seen: false,
-                date: Date()
-            };
-            //add the notification
-            const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
-            await log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+            const userReference = database.collection("users").where("wishlist", "array-contains", productID);
+            const usersSnapshot = await userReference.get();
+            const userDocuments = usersSnapshot.docs;
+            for (const userDocument of userDocuments) {
+                const userID = userDocument.id;
+                const notificationData = {
+                    message: `${productData["name"]} is on sale`,
+                    seen: false,
+                    date: Date()
+                };
+                //add the notification
+                const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
+                await log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+            }
         }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {

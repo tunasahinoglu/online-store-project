@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import OrderHistoryPage from "../pages/orderHistory/OrderHistoryPage.jsx";  // import order history page
+import OrderDetailPage from "../pages/orderHistory/OrderDetailPage.jsx";  // import order detail page
 import Homepage from "../pages/homepage/homepage.jsx";
 import ProductDetail from "../pages/product/product_detail.jsx";
 import LoginPage from "../pages/auth/login.jsx";
@@ -9,6 +11,7 @@ import Wishlist from "../pages/wishlist/wishlist.jsx";
 import ProfilePage from "../pages/profile/profilepage.jsx";
 import SettingsPage from "../pages/profile/settings.jsx";
 import OrdersPage from "../pages/profile/orders.jsx";
+import SalesManagerPage from "../pages/SalesManagerPage/SalesManagerPage.jsx"; // ✅ Add import
 
 const AppRouter = () => {
   return (
@@ -24,7 +27,7 @@ const AppRouter = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/orders" element={<OrdersPage />} />
-
+          <Route path="/sales" element={<SalesManagerPage />} />
         </Routes>
       </Router>
     </CartProvider>
