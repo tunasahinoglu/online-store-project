@@ -15,6 +15,20 @@ const Checkout = () => {
   const [selectedOption, setSelectedOption] = useState(null); // { companyId, type, price }
   const [processing, setProcessing] = useState(false);
 
+  //unsigned users redirect to login
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {  
+      if (!user) {
+        navigate("/login");
+      }
+    });
+  
+    return unsubscribe;
+  }, [navigate]);
+
+
+  
+
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
     cvv: '',
