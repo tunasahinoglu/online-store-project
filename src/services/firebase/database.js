@@ -17,7 +17,6 @@ export const get = async (path, selectConditions = null, whereConditions = null,
     } else {
         queryReference = collection(database, ...path);
         //apply queries
-        let queryReference = collection(database, ...path);
         const constraints = [];
         if (whereConditions) {
           whereConditions.forEach(([field, operator, value]) => {
