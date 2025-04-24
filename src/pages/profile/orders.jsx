@@ -8,6 +8,9 @@ import { get } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import './profilepage.css';
 
+
+
+
 function Homepage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +24,16 @@ function Homepage() {
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
+
+        // dummy orders
+        const orders = [
+          { id: 1, name: 'Order #001', status: 'Processing' },
+          { id: 2, name: 'Order #002', status: 'In Transit' },
+          { id: 3, name: 'Order #003', status: 'Delivered' },
+          { id: 4, name: 'Order #004', status: 'Processing' },
+          { id: 5, name: 'Order #005', status: 'Delivered' },
+        ];
+
 
 
 

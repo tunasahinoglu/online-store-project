@@ -211,7 +211,7 @@ function Homepage() {
                 <div className="profile-container">
                     <div className='names'>
                         <div className='input-group'>
-                            <h3>Adress: </h3>
+                            <h3>Adress </h3>
                             <input
                                 type="text"
                                 value={INFOuser?.undefined?.address.address || "loading"}
@@ -219,7 +219,7 @@ function Homepage() {
                             />
                         </div>
                         <div className='input-group'>
-                            <h3>Email: </h3>
+                            <h3>Email </h3>
                             <input
                                 type="text"
                                 value={INFOuser?.undefined?.email || "loading"}
@@ -234,6 +234,23 @@ function Homepage() {
                                 disabled
                             />
                         </div>
+                        <div className='input-group'>
+                            <h3>City</h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.address.city}
+                                disabled
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Country</h3>
+                            <input
+                                type="text"
+                                value={INFOuser?.undefined?.address.country}
+                                disabled
+                            />
+                        </div>
+                        
                     </div>
 
                 </div>
