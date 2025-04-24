@@ -1,9 +1,10 @@
 import { add } from "./firebase/database.js"
+import { auth } from "./firebase/connect.js";
 
 export const handleCheckout = async ({ cart, selectedDeliveryCompany, selectedDeliveryType, notes, navigate }) => {
   const token = await auth.currentUser.getIdToken(); // Firebase auth
   try {
-    const res = add("orders" , 
+    const message = await add("orders" , 
       {
         cart, // Pass the cart as part of the request body
         delivery: {
@@ -13,14 +14,12 @@ export const handleCheckout = async ({ cart, selectedDeliveryCompany, selectedDe
         notes: notes || null,
       });
 
-    // Check if the response is valid JSON
-    const data = await res.json().catch(() => null);
 
-    if (res.ok && data) {
+    if (message=="Successfully added") {
       alert("Order placed!");
       navigate("/orders");
     } else {
-      alert("Failed: " + (data?.message || "Unknown error"));
+      alert("Failed: " + message);
     }
   } catch (err) {
     console.error(err);
