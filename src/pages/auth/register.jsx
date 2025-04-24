@@ -85,7 +85,10 @@ const RegisterPage = () => {
             navigate('/');
         } catch (error) {
             console.log(error);
-            setError(error.message);
+            if (error.message == "Failed to fetch")
+                setError("Registration failed. Please try again.");
+            else
+                setError(error.message);
         } finally {
             setLoading(false);
         }
