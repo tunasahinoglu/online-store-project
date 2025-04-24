@@ -165,7 +165,7 @@ export const addOrder = async (req, res, next) => {
         await sendEmail(userDocument.data().email, "We have received your order", content, [attachment]);
         //send notification
         const notificationData = {
-            message: `Order #${orderDocument.id} has been successfully placed.`,
+            message: `Order #${orderDocument.id} has been placed.`,
             seen: false,
             date: Date()
         };
@@ -280,15 +280,29 @@ export const setOrder = async (req, res, next) => {
                 await reference.set(productData);
                 await log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }
-            //send notification
-            const notificationData = {
-                message: `Order #${orderDocument.id} has been cancelled.`,
-                seen: false,
-                date: Date()
-            };
-            const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
-            await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         }
+        //send notification
+        let message;
+        switch (orderStatus) {
+          case "cancelled":
+            message = `Order #${orderDocument.id} has been cancelled.`;
+            break;
+          case "in-transit":
+            message = `Order #${orderDocument.id} is on the way.`;
+            break;
+          case "delivered":
+            message = `Order #${orderDocument.id} has been delivered.`;
+            break;
+          default:
+            message = `Order #${orderDocument.id} status has been updated.`;
+        }
+        const notificationData = {
+            message: message,
+            seen: false,
+            date: Date()
+        };
+        const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
+        await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);

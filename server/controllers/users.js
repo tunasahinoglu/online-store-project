@@ -210,6 +210,15 @@ export const setUser = async (req, res, next) => {
         //set the user
         await database.collection("users").doc(userID).set(userData);
         await log(database, "SET", `users/${userDocument.uid}`, userData, decodedToken.uid);
+        if (tokenRole === "admin" && userDocument.data().active !== active) {
+            const notificationData = {
+                message: `Your account has been ${active ? "suspended" : "activated"}.`,
+                seen: false,
+                date: Date()
+            };
+            const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
+            await log(database, "ADD", `users/${userID}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
