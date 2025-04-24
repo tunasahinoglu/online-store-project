@@ -1,4 +1,4 @@
-import { doc, getDoc, collection, getDocs, query, where, orderBy, select, startAfter, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, query, where, orderBy, startAfter, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { app, database } from "./connect.js"
 
@@ -28,9 +28,6 @@ export const get = async (path, selectConditions = null, whereConditions = null,
           orderByConditions.forEach(([field, direction]) => {
             constraints.push(orderBy(field, direction));
           });
-        }
-        if (selectConditions) {
-          constraints.push(select(...selectConditions));
         }
         if (startAfterDocument) {
           constraints.push(startAfter(startAfterDocument));
