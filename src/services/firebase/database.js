@@ -1,4 +1,4 @@
-import { doc, getDoc, collection, getDocs, query, where, orderBy, startAfter, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, query, where, orderBy, select, startAfter, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { app, database } from "./connect.js"
 
@@ -12,26 +12,34 @@ export const get = async (path, selectConditions = null, whereConditions = null,
     if (isDocument) {
         queryReference = doc(database, ...path);
         const snapshot = await getDoc(queryReference);
-        return snapshot.exists() ? [{[document.id]:snapshot.data()}] : [];
+        return snapshot.exists() ? [{[snapshot.id]:snapshot.data()}] : [];
     //collection
     } else {
         queryReference = collection(database, ...path);
         //apply queries
+        let queryReference = collection(database, ...path);
+        const constraints = [];
         if (whereConditions) {
-            whereConditions.forEach(([field, operator, value]) => {
-                queryReference = query(queryReference, where(field, operator, value));
-            });
+          whereConditions.forEach(([field, operator, value]) => {
+            constraints.push(where(field, operator, value));
+          });
         }
         if (orderByConditions) {
-            orderByConditions.forEach(([field, direction]) => {
-                queryReference = query(queryReference, orderBy(field, direction));
-            });
+          orderByConditions.forEach(([field, direction]) => {
+            constraints.push(orderBy(field, direction));
+          });
+        }
+        if (selectConditions) {
+          constraints.push(select(...selectConditions));
         }
         if (startAfterDocument) {
-            queryReference = query(queryReference, startAfter(startAfterDocument));
+          constraints.push(startAfter(startAfterDocument));
         }
         if (limitValue) {
-            queryReference = query(queryReference, limit(limitValue));
+          constraints.push(limit(limitValue));
+        }
+        if (constraints.length > 0) {
+          queryReference = query(queryReference, ...constraints);
         }
         const snapshot = await getDocs(queryReference);
         return snapshot.docs.length > 0
