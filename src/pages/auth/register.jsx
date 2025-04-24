@@ -274,9 +274,6 @@ const RegisterPage = () => {
                         </button>
                     </Link>
                 </form>
-                <footer>
-                    <p>&copy; Copyright 2025, CS308-Group32</p>
-                </footer>
             </div>
         </div>
     );

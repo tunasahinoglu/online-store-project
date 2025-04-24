@@ -187,9 +187,6 @@ const LoginPage = () => {
                         <button type="button" className="register-button">Register</button>
                     </Link>
                 </form>
-                <footer>
-                    <p>&copy; Copyright 2025, CS308-Group32</p>
-                </footer>
             </div>
         </div>
     );
