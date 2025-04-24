@@ -87,6 +87,14 @@ export const addRequest = async (req, res, next) => {
         //add the request
         const requestDocument = await database.collection("requests").add(requestData);
         await log(database, "ADD", `requests/${requestDocument.id}`, requestData, decodedToken.uid);
+        //send notification
+        const notificationData = {
+            message: `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been successfully added.`,
+            seen: false,
+            date: Date()
+        };
+        const notificationDocument = await database.collection("users").doc(decodedToken.uid).collection("notifications").add(notificationData);
+        await log(database, "ADD", `users/${decodedToken.uid}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -234,6 +242,16 @@ export const setRequest = async (req, res, next) => {
                 <p><strong>Teknosu Team</strong></p>
             `;
             await sendEmail(userDocument.data().email, "Refund request has been confirmed", content);
+        }
+        if (approved) {
+            //send notification
+            const notificationData = {
+                message: `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been accepted.`,
+                seen: false,
+                date: Date()
+            };
+            const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
+            await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         }
         res.status(200).json({message: "Successfully set", alert:alertMessage});
     } catch (error) {

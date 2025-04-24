@@ -163,6 +163,14 @@ export const addOrder = async (req, res, next) => {
             <p><strong>Teknosu Team</strong></p>
         `;
         await sendEmail(userDocument.data().email, "We have received your order", content, [attachment]);
+        //send notification
+        const notificationData = {
+            message: `Order #${orderDocument.id} has been successfully placed.`,
+            seen: false,
+            date: Date()
+        };
+        const notificationDocument = await database.collection("users").doc(decodedToken.uid).collection("notifications").add(notificationData);
+        await log(database, "ADD", `users/${decodedToken.uid}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -272,6 +280,14 @@ export const setOrder = async (req, res, next) => {
                 await reference.set(productData);
                 await log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }
+            //send notification
+            const notificationData = {
+                message: `Order #${orderDocument.id} has been successfully cancelled.`,
+                seen: false,
+                date: Date()
+            };
+            const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
+            await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         }
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
