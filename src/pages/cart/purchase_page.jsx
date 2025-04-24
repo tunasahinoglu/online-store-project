@@ -14,10 +14,12 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOption, setSelectedOption] = useState(null); // { companyId, type, price }
   const [processing, setProcessing] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   //unsigned users redirect to login
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {  
+    const unsubscribe = auth.onAuthStateChanged(user => { 
+      setCurrentUser(user);
       if (!user) {
         navigate("/login");
       }
@@ -26,7 +28,13 @@ const Checkout = () => {
     return unsubscribe;
   }, [navigate]);
 
-
+  useEffect(() => {
+    if (!loading && currentUser) {
+      if (!cart || cart.length === 0) {
+        navigate("/cart");
+      }
+    }
+  }, [loading, currentUser, cart, navigate]);
   
 
   const [cardDetails, setCardDetails] = useState({
