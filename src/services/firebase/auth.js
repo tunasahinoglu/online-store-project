@@ -24,6 +24,8 @@ export const signUp = async (auth, firstname, lastname, email, password, country
 
     //sign in with the custom token
     signInWithCustomToken(auth, response.token);
+    
+    if (response.alert) {alert(response.alert);}
 }
 
 export const signIn = async (auth, email, password) => signInWithEmailAndPassword(auth, email, password);
