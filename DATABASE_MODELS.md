@@ -93,7 +93,8 @@ orderID: {
         company: deliverycompanyID
     },
     notes: string,
-    date: timestamp
+    date: timestamp,
+    deliverydate: timestamp
 }
 ```
 
