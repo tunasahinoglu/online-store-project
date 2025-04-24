@@ -89,7 +89,7 @@ export const addRequest = async (req, res, next) => {
         await log(database, "ADD", `requests/${requestDocument.id}`, requestData, decodedToken.uid);
         //send notification
         const notificationData = {
-            message: `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been successfully added.`,
+            message: `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`,
             seen: false,
             date: Date()
         };
@@ -243,16 +243,14 @@ export const setRequest = async (req, res, next) => {
             `;
             await sendEmail(userDocument.data().email, "Refund request has been confirmed", content);
         }
-        if (approved) {
-            //send notification
-            const notificationData = {
-                message: `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been accepted.`,
-                seen: false,
-                date: Date()
-            };
-            const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
-            await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
-        }
+        //send notification
+        const notificationData = {
+            message: `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been ${approved ? "accepted" : "rejected"}.`,
+            seen: false,
+            date: Date()
+        };
+        const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
+        await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         res.status(200).json({message: "Successfully set", alert:alertMessage});
     } catch (error) {
         console.error(error);

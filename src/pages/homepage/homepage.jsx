@@ -101,15 +101,16 @@ function Homepage() {
     });
 
     const sortedProducts = [...filteredProducts].sort((a, b) => {
+        const aFinalPrice = a.discount > 0 ? a.price * (1 - a.discount / 100) : a.price;
+        const bFinalPrice = b.discount > 0 ? b.price * (1 - b.discount / 100) : b.price;
+    
         if (sortOption === 'priceHighToLow') {
-            return b.price - a.price;
+            return bFinalPrice - aFinalPrice;
         } else if (sortOption === 'priceLowToHigh') {
-            return a.price - b.price;
-        }
-        else if (sortOption === 'popularity') {
+            return aFinalPrice - bFinalPrice;
+        } else if (sortOption === 'popularity') {
             return (b.popularity || 0) - (a.popularity || 0);
-        }
-        else {
+        } else {
             return 0;
         }
     });
