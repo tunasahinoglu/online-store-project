@@ -282,7 +282,7 @@ export const setOrder = async (req, res, next) => {
             }
             //send notification
             const notificationData = {
-                message: `Order #${orderDocument.id} has been successfully cancelled.`,
+                message: `Order #${orderDocument.id} has been cancelled.`,
                 seen: false,
                 date: Date()
             };
