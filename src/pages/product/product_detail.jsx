@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import './product_detail.css';
 import { useCart } from '../../pages/cart/cart_context';
 import logo from '../../assets/teknosuLogo.jpg';
@@ -28,6 +28,8 @@ function ProductDetail() {
     const [matchedOrderIds, setMatchedOrderIds] = useState([]);
     const [userCommentCount, setUserCommentCount] = useState(0);
     const [averageRating, setAverageRating] = useState(0);
+    const [searchParams] = useSearchParams();
+    const [sortOption, setSortOption] = useState(searchParams.get('sort') || 'default');
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -100,6 +102,7 @@ function ProductDetail() {
         const params = new URLSearchParams();
         if (searchTerm) params.set('search', searchTerm);
         if (selectedCategory !== 'All') params.set('category', selectedCategory);
+        if (sortOption !== 'default') params.set('sort', sortOption);
         navigate(`/?${params.toString()}`);
     };
 
@@ -108,6 +111,7 @@ function ProductDetail() {
         const params = new URLSearchParams();
         if (searchTerm) params.set('search', searchTerm);
         if (category !== 'All') params.set('category', category);
+        if (sortOption !== 'default') params.set('sort', sortOption);
         navigate(`/?${params.toString()}`);
     };
 
@@ -338,6 +342,23 @@ function ProductDetail() {
         if (id) fetchAllRatings();
     }, [id]);
 
+    const handleSortChange = (e) => {
+        const newSortOption = e.target.value;
+        const params = new URLSearchParams();
+        if (searchTerm) params.set('search', searchTerm);
+        if (selectedCategory !== 'All') params.set('category', selectedCategory);
+        if (newSortOption !== 'default') params.set('sort', newSortOption);
+        navigate(`/?${params.toString()}`);
+    };
+
+    useEffect(() => {
+        const sort = searchParams.get('sort') || 'default';
+        const category = searchParams.get('category') || 'All';
+
+        setSortOption(sort);
+        setSelectedCategory(category);
+    }, [searchParams]);
+
     if (!product) {
         return <div className="loading">Loading...</div>;
     }
@@ -354,14 +375,23 @@ function ProductDetail() {
                     onClick={() => navigate('/')}
                 />
 
-                <div className="search-bar">
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
-                    />
+                <div className="search-and-sort">
+                    <form className="search-bar" onSubmit={handleSearchSubmit}>
+                        <input
+                            type="text"
+                            placeholder="Search products"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </form>
+                    <div className="sort-options">
+                        <select value={sortOption} onChange={handleSortChange}>
+                            <option value="default">Default</option>
+                            <option value="priceHighToLow">High to Low</option>
+                            <option value="priceLowToHigh">Low to High</option>
+                            <option value="popularity">Popular</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div className="header-actions">
