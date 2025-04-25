@@ -365,6 +365,9 @@ function ProductDetail() {
 
     const discountedPrice = product.price - (product.price * product.discount) / 100;
 
+    const cartItem = cart.find(item => item.id === product?.id);
+    const currentQuantity = cart.find(item => item.id === product.id)?.quantity || 0;
+
     return (
         <div className="product-detail-container">
             <div className="app-bar">
@@ -477,7 +480,10 @@ function ProductDetail() {
                     <p className="description">{product.description}</p>
                     <div className="stock">
                         {product.stock > 0 ? (
-                            <span className="in-stock">{product.stock} stock left</span>
+                            <span className="in-stock">
+                                {product.stock - currentQuantity} left in stock
+                                {currentQuantity > 0 && ` (${currentQuantity} in your cart)`}
+                            </span>
                         ) : (
                             <span className="out-of-stock">Out of Stock</span>
                         )}
@@ -490,21 +496,30 @@ function ProductDetail() {
                     </div>
                     {product.stock > 0 && (
                         <div className="buttons">
-                            <button className="add-to-cart" onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart({
-                                    id: product.id,
-                                    name: product.name,
-                                    price: product.discount > 0
-                                        ? discountedPrice
-                                        : product.price,
-                                    image: product.image,
-                                    quantity: 1
-                                });
-                                alert('Product added to cart');
-                            }}
+                            <button
+                                className="add-to-cart"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (currentQuantity < product.stock) {
+                                        addToCart({
+                                            id: product.id,
+                                            name: product.name,
+                                            price: product.discount > 0
+                                                ? discountedPrice
+                                                : product.price,
+                                            image: product.image,
+                                            quantity: 1
+                                        });
+                                        alert('Product added to cart');
+                                    }
+                                }}
+                                disabled={product.stock <= 0 || currentQuantity >= product.stock}
                             >
-                                Add to Cart
+                                {product.stock > 0
+                                    ? (currentQuantity >= product.stock
+                                        ? "Out of Stock"
+                                        : "Add to Cart")
+                                    : "Out of Stock"}
                             </button>
                             {currentUser && (
                                 <button

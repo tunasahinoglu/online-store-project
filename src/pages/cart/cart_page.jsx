@@ -41,7 +41,8 @@ const Cart = () => {
                         name: productData.name,
                         price: productData.price,
                         image: productData.image,
-                        discount: productData.discount
+                        discount: productData.discount,
+                        stock: productData.stock
                     } : null;
                 }).filter(Boolean);
 
@@ -191,7 +192,7 @@ const Cart = () => {
                                                 e.stopPropagation();
                                                 handleAddToCart(product);
                                             }}
-                                            disabled={loading}
+                                            disabled={loading || product.quantity >= product.stock} 
                                         >
                                             +
                                         </button>
