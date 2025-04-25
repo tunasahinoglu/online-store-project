@@ -19,6 +19,7 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     // Check if user is already logged in
     useEffect(() => {
@@ -42,6 +43,18 @@ const LoginPage = () => {
             }
         }
     };
+
+    const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
+        const params = new URLSearchParams();
+        if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
+        if (newSortOption !== 'default') params.set('sort', newSortOption);
+        if (newCategory !== 'All') params.set('category', newCategory);
+    
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
+    }; 
 
     const handleSortChange = (e) => {
         const newSortOption = e.target.value;

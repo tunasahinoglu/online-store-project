@@ -37,16 +37,14 @@ function Homepage() {
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
         if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
-        else params.delete('search');
-
         if (newSortOption !== 'default') params.set('sort', newSortOption);
-        else params.delete('sort');
-
         if (newCategory !== 'All') params.set('category', newCategory);
-        else params.delete('category');
-
-        setSearchParams(params);
-    };
+    
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
+    };    
 
     const handleLogout = async () => {
         try {

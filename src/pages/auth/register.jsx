@@ -23,6 +23,19 @@ const RegisterPage = () => {
     const [sortOption, setSortOption] = useState('default');
     const [currentUser, setCurrentUser] = useState(null);
     const { cart, addToCart } = useCart();
+    const [selectedCategory, setSelectedCategory] = useState('All');
+
+    const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
+        const params = new URLSearchParams();
+        if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
+        if (newSortOption !== 'default') params.set('sort', newSortOption);
+        if (newCategory !== 'All') params.set('category', newCategory);
+    
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
+    };    
 
     const handleSortChange = (e) => {
         const newSortOption = e.target.value;
