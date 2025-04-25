@@ -118,8 +118,8 @@ function ProductDetail() {
     const addToWishlist = async (productId) => {
         try {
             const userDataResponse = await get(`users/${currentUser.uid}`);
-            const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
-                ? userDataResponse[0].undefined
+            const userData = Array.isArray(userDataResponse)
+                ? userDataResponse[0]?.[currentUser.uid]
                 : userDataResponse;
 
             if (!userData) {
@@ -139,7 +139,7 @@ function ProductDetail() {
                 setIsInWishlist(true);
                 alert('Product added to your wishlist!');
             }
-
+    
             const updatedUserData = {
                 firstname: userData.firstname,
                 lastname: userData.lastname,
@@ -164,8 +164,8 @@ function ProductDetail() {
         const checkWishlist = async () => {
             if (currentUser) {
                 const userDataResponse = await get(`users/${currentUser.uid}`);
-                const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
-                    ? userDataResponse[0].undefined
+                const userData = Array.isArray(userDataResponse)
+                    ? userDataResponse[0]?.[currentUser.uid]
                     : userDataResponse;
 
                 if (userData?.wishlist?.includes(id)) {
