@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
@@ -20,7 +20,8 @@ function Homepage() {
     const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
-    const [INFOuser, setUserinfo] = useState({});
+    const [INFOuser, setUserinfo] = useState([]);
+    const [userID, setUserID] = useState('');
 
 
 
@@ -74,12 +75,6 @@ function Homepage() {
         updateURLParams(searchTerm, newSortOption);
     };
 
-    const handleCategoryChange = (category) => {
-        setSelectedCategory(category);
-        setSearchTerm('');
-        updateURLParams('', sortOption, category);
-    };
-
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setCurrentUser(user);
@@ -114,12 +109,13 @@ function Homepage() {
         const Myuser = auth.onAuthStateChanged(async (user) => {
             if (Myuser) {
                 const data = await get(`users/${user.uid}`);
-                console.log("Full user data:", data);
-
+                setUserID(user.uid);
+                console.log("User ID:", userID);
+                
                 const values = Object.values(data);
                 const userInfo = values[0];
                 setUserinfo(userInfo);
-                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+                console.log("Full user data:", userInfo);
             }
         });
         return Myuser;
@@ -204,7 +200,8 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+            <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser?.lastname ?? "loading"}</h1>
+                <pre>{JSON.stringify(INFOuser, null, 2)}</pre>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
@@ -216,7 +213,7 @@ function Homepage() {
                             <h3>Adress </h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.address.address || "loading"}
+                                value={INFOuser?.address?.address || "loading"}
                                 disabled
                             />
                         </div>

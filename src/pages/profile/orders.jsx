@@ -8,9 +8,6 @@ import { get } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import './profilepage.css';
 
-
-
-
 function Homepage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -19,22 +16,13 @@ function Homepage() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
     const [currentUser, setCurrentUser] = useState(null);
-    const [firestoreProducts, setFirestoreProducts] = useState({});
-    const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
-
-        // dummy orders
-        const orders = [
-          { id: 1, name: 'Order #001', status: 'Processing' },
-          { id: 2, name: 'Order #002', status: 'In Transit' },
-          { id: 3, name: 'Order #003', status: 'Delivered' },
-          { id: 4, name: 'Order #004', status: 'Processing' },
-          { id: 5, name: 'Order #005', status: 'Delivered' },
-        ];
+    const [UserOrders, setUserOrderd] = useState([]);
 
 
+    
 
 
     useEffect(() => {
@@ -46,6 +34,9 @@ function Homepage() {
         setSortOption(sort);
         setSelectedCategory(category);
     }, [searchParams]);
+      
+
+    
 
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
@@ -124,19 +115,46 @@ function Homepage() {
     }, []);
 
     useEffect(() => {
-        const Myuser = auth.onAuthStateChanged(async (user) => {
-            if (Myuser) {
-                const data = await get(`users/${user.uid}`);
-                console.log("Full user data:", data);
-
-                const values = Object.values(data);
-                const userInfo = values[0];
-                setUserinfo(userInfo);
-                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const data = await get(`users/${user.uid}`);
+                    const userInfo = data[0];
+                    setUserinfo(userInfo);
+                    console.log(userInfo);
+                } catch (error) {
+                    console.error("Error fetching user info:", error);
+                }
+            } else {
+                console.error("No user is logged in.");
             }
         });
-        return Myuser;
+    
+        return unsubscribe; // Cleanup the listener on component unmount
     }, []);
+
+    useEffect(() => {
+        console.log("Updated INFOuser:", INFOuser);
+    }, [INFOuser]);
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const orders = await get("orders", null, [["user", "==", user.uid]]);
+                    setUserOrderd(orders); // Update the state with the fetched orders
+                    console.log("User orders:", orders);
+                } catch (error) {
+                    console.error("Error fetching user orders:", error);
+                }
+            } else {
+                console.error("No user is logged in.");
+            }
+        });
+    
+        return unsubscribe; // Cleanup the listener on component unmount
+    }, []);
+   
 
 
     return (
@@ -217,7 +235,7 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+                <h1>{INFOuser?.firstname || "loading"}  {INFOuser?.lastname || "loading"}</h1>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
@@ -225,13 +243,6 @@ function Homepage() {
                 </div>
                 <div className="profile-container">
                     <h2>Orders</h2>
-                    <div className="delivered-orders-box">
-                        <h3>Delivered Orders</h3>
-                        <ul>
-                            <li>Order #12345 - Delivered on April 10</li>
-                            <li>Order #67890 - Delivered on April 12</li>
-                        </ul>
-                    </div>
 
                 </div>
 
