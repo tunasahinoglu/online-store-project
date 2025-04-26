@@ -39,12 +39,12 @@ function Homepage() {
         if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
         if (newSortOption !== 'default') params.set('sort', newSortOption);
         if (newCategory !== 'All') params.set('category', newCategory);
-    
+
         navigate({
             pathname: '/',
             search: `?${params.toString()}`
         });
-    };    
+    };
 
     const handleLogout = async () => {
         try {
@@ -179,7 +179,11 @@ function Homepage() {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -248,7 +252,7 @@ function Homepage() {
                                 disabled
                             />
                         </div>
-                        
+
                     </div>
 
                 </div>

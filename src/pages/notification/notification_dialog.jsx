@@ -4,7 +4,7 @@ import { get, set } from '../../services/firebase/database';
 import { auth } from '../../services/firebase/connect';
 import './notification_dialog.css';
 
-function NotificationDialog({ open, onClose }) {
+function NotificationDialog({ open, onClose, onSeen }) {
     const [notifications, setNotifications] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
 
@@ -46,11 +46,16 @@ function NotificationDialog({ open, onClose }) {
 
     const markAsSeen = async (notificationId) => {
         await set(`users/${currentUser.uid}/notifications/${notificationId}`, { seen: true });
-        setNotifications((prev) =>
-            prev.map((notif) =>
+        setNotifications((prev) => {
+            const updated = prev.map((notif) =>
                 notif.id === notificationId ? { ...notif, seen: true } : notif
-            )
-        );
+            );
+            if (onSeen) {
+                const newUnseenCount = updated.filter(n => !n.seen).length;
+                onSeen(newUnseenCount);
+            }
+            return updated;
+        });
     };
 
     return (

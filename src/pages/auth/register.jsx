@@ -30,12 +30,12 @@ const RegisterPage = () => {
         if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
         if (newSortOption !== 'default') params.set('sort', newSortOption);
         if (newCategory !== 'All') params.set('category', newCategory);
-    
+
         navigate({
             pathname: '/',
             search: `?${params.toString()}`
         });
-    };    
+    };
 
     const handleSortChange = (e) => {
         const newSortOption = e.target.value;
@@ -160,7 +160,11 @@ const RegisterPage = () => {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}

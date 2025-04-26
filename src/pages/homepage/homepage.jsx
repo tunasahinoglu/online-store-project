@@ -103,7 +103,7 @@ function Homepage() {
     const sortedProducts = [...filteredProducts].sort((a, b) => {
         const aFinalPrice = a.discount > 0 ? a.price * (1 - a.discount / 100) : a.price;
         const bFinalPrice = b.discount > 0 ? b.price * (1 - b.discount / 100) : b.price;
-    
+
         if (sortOption === 'priceHighToLow') {
             return bFinalPrice - aFinalPrice;
         } else if (sortOption === 'priceLowToHigh') {
@@ -224,7 +224,11 @@ function Homepage() {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
