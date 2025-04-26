@@ -11,6 +11,7 @@ import Wishlist from "../pages/wishlist/wishlist.jsx";
 import ProfilePage from "../pages/profile/profilepage.jsx";
 import SettingsPage from "../pages/profile/settings.jsx";
 import OrdersPage from "../pages/profile/orders.jsx";
+import CheckoutPage from "../pages/cart/purchase_page.jsx"
 import SalesManagerPage from "../pages/SalesManagerPage/SalesManagerPage.jsx"; // ✅ Add import
 
 const AppRouter = () => {
@@ -27,6 +28,7 @@ const AppRouter = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/payment" element={<CheckoutPage />} />
           <Route path="/sales" element={<SalesManagerPage />} />
         </Routes>
       </Router>
