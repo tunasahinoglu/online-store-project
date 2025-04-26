@@ -33,7 +33,7 @@ This project is an online store developed by a team of 5 members as part of the 
 - **Weekly Meetings** and **sprint retrospectives** conducted to ensure alignment.
 
 ## Contributors
-- Hasan Can Sağlam (Back-end and Database Developer) - APIs, Firestore security rules 
+- Hasan Can Sağlam (Back-end and Database Developer) - APIs, Database, Security
 - Tuna Şahinoğlu (Front-end Developer) - Homepage, product detail page, comments, wishlist, cart page, notification page, search and filtering.
 - Muhammed Akgöçmen (Front-end Developer) - Admin Page, Checkout Page
 - Şahan Sağlam (Front-end Developer) - Product Manager Page, Sales Manager Page
