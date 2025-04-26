@@ -8,7 +8,7 @@ import { auth } from "../../services/firebase/connect.js";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { cart } = useCart();
+  const { cart, clearCart } = useCart();
   const [deliveryCompanies, setDeliveryCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +85,7 @@ const Checkout = () => {
         notes: null, 
         navigate // Pass navigate as a parameter to handleCheckout,
       });
+      await clearCart();
     } catch (err) {
       console.error("Order placement failed:", err);
       alert("Failed to place order.");
