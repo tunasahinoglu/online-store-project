@@ -4,6 +4,7 @@
     justify-content: flex-start;
     align-items: center;
     height: 80vh;
+    overflow-y: auto;
 }
 
 .names {
@@ -16,13 +17,10 @@
 }
 
 .profile-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100vh;
-    height: 20vh;
-}
+    height: auto; /* Make sure it's big enough */
+    padding: 20px;
+    max-width: 100%; /* Or any value you prefer */
+  }
 
 .adress-bar {
     display: flex;
@@ -48,3 +46,63 @@
     max-width: 500px;
     margin-top: 1rem;
 }
+
+.orders-list {
+    max-height: 200px; /* Increase the height */
+    overflow-y: auto;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .order-card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .order-card:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .order-card h3 {
+    margin-top: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+  
+  .order-card p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: #555;
+  }
+  
+  .order-card p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .order-card .order-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .order-card .order-info div {
+    flex: 1;
+  }
+  
+  .order-card .order-info span {
+    font-weight: bold;
+  }
+  
+  h2 {
+    margin-bottom: 20px;
+  }
+  
+  .profile-container {
+    padding: 20px;
+  }

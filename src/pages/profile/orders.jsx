@@ -19,7 +19,7 @@ function Homepage() {
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
-    const [orders, setOrders] = useState([]);
+    const [orders,setOrders  ] = useState([]);
     const [userID, setUserID] = useState('');
 
 
@@ -140,7 +140,7 @@ function Homepage() {
 
     useEffect(() => {
         async function fetchOrders() {
-          if (!userID) return;  // 🛑 If no userID yet, don't fetch
+          if (!userID) return; 
       
           try {
             const fetchedOrders = await get("orders", null, [["user", "==", userID]]);
@@ -150,6 +150,7 @@ function Homepage() {
                 ...order
               }));
               setOrders(ordersArray);
+              console.log(ordersArray);
             }
           } catch (error) {
             console.error('Error fetching orders:', error);
@@ -248,18 +249,32 @@ function Homepage() {
                 <div className="profile-container">
                     <h2>Orders</h2>
                     <div className="orders-list">
-                    {orders.map((order) => (
-                        <div key={order.id} className="order-card">
-                        <h3>Order ID: {order.id}</h3>
-                        <p>Name: {order.firstname} {order.lastname}</p>
-                        <p>Status: {order.status}</p>
-                                        <p>Total Cost: {order.totalcost}₺</p>
-                        <p>Delivery City: {order.address?.city}</p>
-                        <p>Billing City: {order.billingaddress?.city}</p>
-                         <p>Date: {order.date}</p>
-                     </div>
-                    ))}
-                    </div>
+  {orders.map((order) => {
+    // Get the dynamic key (like xJMRSZVLJuyxhdQVTtEe)
+    const orderKey = Object.keys(order)[1]; // Assuming the second key is the actual order key
+    const orderData = order[orderKey]; // Get the order data using the dynamic key
+
+    return (
+      <div key={order.id} className="order-card">
+        <h3>Order ID: {order.id}</h3>
+        <div className="order-info">
+          <div>
+            <p><span>Name:</span> {orderData.firstname} {orderData.lastname}</p>
+            <p><span>Status:</span> {orderData.status}</p>
+            <p><span>Total Cost:</span> {orderData.totalcost}₺</p>
+            <p><span>Date:</span> {new Date(orderData.date).toLocaleString()}</p>
+          </div>
+          <div>
+            <p><span>Delivery City:</span> {orderData.address?.city ?? 'No Delivery City'}</p>
+            <p><span>Billing City:</span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
+            <p><span>Delivery Company:</span> {orderData.delivery?.company ?? 'No Delivery Company'}</p>
+            <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
                 </div>
 
             </main>
