@@ -19,7 +19,8 @@ function Homepage() {
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
-    const [UserOrders, setUserOrderd] = useState([]);
+    const [orders, setOrders] = useState([]);
+    const [userID, setUserID] = useState('');
 
 
     
@@ -120,6 +121,7 @@ function Homepage() {
                 try {
                     const data = await get(`users/${user.uid}`);
                     const userInfo = data[0];
+                    setUserID(user.uid);
                     setUserinfo(userInfo);
                     console.log(userInfo);
                 } catch (error) {
@@ -130,30 +132,32 @@ function Homepage() {
             }
         });
     
-        return unsubscribe; // Cleanup the listener on component unmount
+        return unsubscribe;
     }, []);
 
-    useEffect(() => {
-        console.log("Updated INFOuser:", INFOuser);
-    }, [INFOuser]);
+
+    //const orders = await get("orders", null, [["user", "==", user.uid]]);
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                try {
-                    const orders = await get("orders", null, [["user", "==", user.uid]]);
-                    setUserOrderd(orders); // Update the state with the fetched orders
-                    console.log("User orders:", orders);
-                } catch (error) {
-                    console.error("Error fetching user orders:", error);
-                }
-            } else {
-                console.error("No user is logged in.");
+        async function fetchOrders() {
+          if (!userID) return;  // 🛑 If no userID yet, don't fetch
+      
+          try {
+            const fetchedOrders = await get("orders", null, [["user", "==", userID]]);
+            if (fetchedOrders) {
+              const ordersArray = Object.entries(fetchedOrders).map(([id, order]) => ({
+                id,
+                ...order
+              }));
+              setOrders(ordersArray);
             }
-        });
-    
-        return unsubscribe; // Cleanup the listener on component unmount
-    }, []);
+          } catch (error) {
+            console.error('Error fetching orders:', error);
+          }
+        }
+      
+        fetchOrders();
+      }, [userID]);
    
 
 
@@ -235,7 +239,7 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser?.firstname || "loading"}  {INFOuser?.lastname || "loading"}</h1>
+            <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
@@ -243,7 +247,19 @@ function Homepage() {
                 </div>
                 <div className="profile-container">
                     <h2>Orders</h2>
-
+                    <div className="orders-list">
+                    {orders.map((order) => (
+                        <div key={order.id} className="order-card">
+                        <h3>Order ID: {order.id}</h3>
+                        <p>Name: {order.firstname} {order.lastname}</p>
+                        <p>Status: {order.status}</p>
+                                        <p>Total Cost: {order.totalcost}₺</p>
+                        <p>Delivery City: {order.address?.city}</p>
+                        <p>Billing City: {order.billingaddress?.city}</p>
+                         <p>Date: {order.date}</p>
+                     </div>
+                    ))}
+                    </div>
                 </div>
 
             </main>

@@ -16,8 +16,6 @@ function Homepage() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
     const [currentUser, setCurrentUser] = useState(null);
-    const [firestoreProducts, setFirestoreProducts] = useState({});
-    const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState([]);
@@ -110,7 +108,7 @@ function Homepage() {
             if (Myuser) {
                 const data = await get(`users/${user.uid}`);
                 setUserID(user.uid);
-                console.log("User ID:", userID);
+                console.log("User ID:", user.uid);
                 
                 const values = Object.values(data);
                 const userInfo = values[0];
@@ -200,8 +198,7 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-            <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser?.lastname ?? "loading"}</h1>
-                <pre>{JSON.stringify(INFOuser, null, 2)}</pre>
+            <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
@@ -213,7 +210,7 @@ function Homepage() {
                             <h3>Adress </h3>
                             <input
                                 type="text"
-                                value={INFOuser?.address?.address || "loading"}
+                                value={INFOuser[userID]?.address.address || "loading"}
                                 disabled
                             />
                         </div>
@@ -221,7 +218,7 @@ function Homepage() {
                             <h3>Email </h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.email || "loading"}
+                                value={INFOuser[userID]?.email || "loading"}
                                 disabled
                             />
                         </div>
@@ -229,7 +226,7 @@ function Homepage() {
                             <h3>Account Status</h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.active ? "Active" : "Inactive"}
+                                value={INFOuser[userID]?.active ? "Active" : "Inactive"}
                                 disabled
                             />
                         </div>
@@ -237,7 +234,7 @@ function Homepage() {
                             <h3>City</h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.address.city}
+                                value={INFOuser[userID]?.address.city}
                                 disabled
                             />
                         </div>
@@ -245,7 +242,7 @@ function Homepage() {
                             <h3>Country</h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.address.country}
+                                value={INFOuser[userID]?.address.country}
                                 disabled
                             />
                         </div>
