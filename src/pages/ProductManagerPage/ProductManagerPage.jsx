@@ -1,134 +1,106 @@
 import React, { useState, useEffect } from "react";
 import "./ProductManagerPage.css";
-
-const dummyProducts = [
-  { id: 1, name: "Laptop", model: "XPS 13", serial: "12345", description: "Powerful laptop", stock: 10, price: 1200, warranty: "24", distributor: "Dell", category: "Electronics" },
-  { id: 2, name: "Smartphone", model: "Galaxy S21", serial: "67890", description: "Latest phone", stock: 5, price: 800, warranty: "12", distributor: "Samsung", category: "Electronics" }
-];
-
-const dummyInvoices = [
-  {
-    id: "order101",
-    data: () => ({
-      user: "user123",
-      firstname: "John",
-      lastname: "Doe",
-      totalcost: 500,
-      totaldiscountedcost: 430,
-      status: "Processing",
-      address: {
-        country: "USA",
-        city: "New York",
-        address: "123 Main St"
-      },
-      delivery: {
-        type: "standard",
-        company: "deliveryCo1"
-      },
-      notes: "Leave at front door",
-      date: "2025-04-10",
-      deliverydate: "2025-04-13"
-    }),
-    products: [
-      { data: () => ({ name: "Keyboard", count: 2, price: 50, discount: 0 }) },
-      { data: () => ({ name: "Monitor", count: 1, price: 200, discount: 10 }) },
-    ],
-  },
-  {
-    id: "order102",
-    data: () => ({
-      user: "user456",
-      firstname: "Alice",
-      lastname: "Smith",
-      totalcost: 200,
-      totaldiscountedcost: 180,
-      status: "In-transit",
-      address: {
-        country: "USA",
-        city: "Los Angeles",
-        address: "456 Elm St"
-      },
-      delivery: {
-        type: "express",
-        company: "deliveryCo2"
-      },
-      notes: "Ring the bell once",
-      date: "2025-04-15",
-      deliverydate: "2025-04-17"
-    }),
-    products: [
-      { data: () => ({ name: "Monitor", count: 1, price: 200, discount: 10 }) },
-    ],
-  },
-];
-
-const dummyComments = [
-  { id: 1, productId: 1, content: "Amazing laptop!", approved: false },
-  { id: 2, productId: 2, content: "Battery could be better.", approved: false }
-];
+import { get, add, set, del } from "../../services/firebase/database.js"; //  Import backend functions
 
 function ProductManagerPage() {
-  const [products, setProducts] = useState(dummyProducts);
-  const [invoices, setInvoices] = useState(dummyInvoices);
-  const [comments, setComments] = useState(dummyComments);
-  const [categories, setCategories] = useState(["Electronics"]);
+  const [products, setProducts] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState("");
   const [newProduct, setNewProduct] = useState({ name: "", model: "", serial: "", description: "", stock: "", price: "", warranty: "", distributor: "", category: "" });
   const [draftStocks, setDraftStocks] = useState({});
 
+  //  Load everything from Firestore on page load
   useEffect(() => {
-    const initialDrafts = {};
-    dummyProducts.forEach(p => { initialDrafts[p.id] = p.stock; });
-    setDraftStocks(initialDrafts);
+    loadProducts();
+    loadOrders();
+    loadComments();
   }, []);
 
-  const addProduct = () => {
-    const id = products.length + 1;
-    const product = { id, ...newProduct, stock: Number(newProduct.stock), price: Number(newProduct.price) };
-    setProducts([...products, product]);
-    setDraftStocks({ ...draftStocks, [id]: product.stock });
+  const loadProducts = async () => {
+    const data = await get("products");
+    setProducts(data);
+    setDraftStocks(
+      Object.fromEntries(data.map((p) => [p.id, p.stock]))
+    );
+    const uniqueCategories = [...new Set(data.map((p) => p.category))];
+    setCategories(uniqueCategories.filter((cat) => cat));
+  };
+
+  const loadOrders = async () => {
+    const data = await get("orders");
+    setInvoices(data);
+  };
+
+  const loadComments = async () => {
+    const data = await get("comments");
+    setComments(data);
+  };
+
+  // ✅ Add a new product
+  const addProduct = async () => {
+    if (!newProduct.name || !newProduct.category || !newProduct.serial) {
+      alert("Name, Category, and Serial number are required.");
+      return;
+    }
+    await add("products", {
+      name: newProduct.name,
+      model: newProduct.model,
+      serialnumber: newProduct.serial,
+      description: newProduct.description,
+      stock: Number(newProduct.stock),
+      price: Number(newProduct.price),
+      warranty: Number(newProduct.warranty),
+      distributorname: newProduct.distributor,
+      category: newProduct.category,
+      image: "", // You can later connect image upload
+      features: {}
+    });
     setNewProduct({ name: "", model: "", serial: "", description: "", stock: "", price: "", warranty: "", distributor: "", category: "" });
+    await loadProducts();
   };
 
-  const removeProduct = (id) => {
-    setProducts(products.filter(p => p.id !== id));
-    const updatedDrafts = { ...draftStocks };
-    delete updatedDrafts[id];
-    setDraftStocks(updatedDrafts);
+  //  Remove a product
+  const removeProduct = async (id) => {
+    await del(`products/${id}`);
+    await loadProducts();
   };
 
-  const updateStock = (id, newStock) => {
-    setProducts(products.map(p => p.id === id ? { ...p, stock: newStock } : p));
+  //  Update stock
+  const updateStock = async (id, newStock) => {
+    await set(`products/${id}`, { stock: newStock });
+    await loadProducts();
   };
 
-  const updateDeliveryStatus = (id) => {
-    setInvoices(invoices.map(inv => {
-      if (inv.id === id) {
-        const currentStatus = inv.data().status;
-        let newStatus = currentStatus;
-        if (currentStatus === "Processing") newStatus = "In-transit";
-        else if (currentStatus === "In-transit") newStatus = "Delivered";
+  //  Update order delivery status
+  const updateDeliveryStatus = async (id) => {
+    const order = invoices.find((inv) => inv.id === id);
+    if (!order) return;
+    const currentStatus = order.data().status;
+    let newStatus = currentStatus;
+    if (currentStatus === "Processing") newStatus = "In-transit";
+    else if (currentStatus === "In-transit") newStatus = "Delivered";
 
-        return {
-          ...inv,
-          data: () => ({
-            ...inv.data(),
-            status: newStatus
-          })
-        };
-      }
-      return inv;
-    }));
+    if (newStatus !== currentStatus) {
+      await set(`orders/${id}`, { status: newStatus });
+      await loadOrders();
+    }
   };
 
-  const approveComment = (id) => {
-    setComments(comments.map(c => c.id === id ? { ...c, approved: true } : c));
+  //  Approve comment
+  const approveComment = async (id) => {
+    await set(`comments/${id}`, { approved: true });
+    await loadComments();
   };
 
-  const disapproveComment = (id) => {
-    setComments(comments.filter(c => c.id !== id));
+  //  Disapprove (delete) comment
+  const disapproveComment = async (id) => {
+    await del(`comments/${id}`);
+    await loadComments();
   };
 
+  // Add category locally (no backend category table needed)
   const addCategory = () => {
     if (newCategory && !categories.includes(newCategory)) {
       setCategories([...categories, newCategory]);
@@ -138,7 +110,6 @@ function ProductManagerPage() {
 
   const removeCategory = (categoryToRemove) => {
     setCategories(categories.filter(cat => cat !== categoryToRemove));
-    setProducts(products.map(p => p.category === categoryToRemove ? { ...p, category: "" } : p));
   };
 
   return (
@@ -175,15 +146,26 @@ function ProductManagerPage() {
         <section className="product-section">
           <h2 className="section-title">Add New Product</h2>
           <div className="product-row">
-            <input type="text" placeholder="Name" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="input" />
-            <input type="text" placeholder="Model" value={newProduct.model} onChange={(e) => setNewProduct({ ...newProduct, model: e.target.value })} className="input" />
-            <input type="text" placeholder="Serial" value={newProduct.serial} onChange={(e) => setNewProduct({ ...newProduct, serial: e.target.value })} className="input" />
-            <input type="text" placeholder="Description" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} className="input" />
-            <input type="number" placeholder="Stock" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} className="input small" />
-            <input type="number" placeholder="Price" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} className="input small" />
-            <input type="text" placeholder="Warranty" value={newProduct.warranty} onChange={(e) => setNewProduct({ ...newProduct, warranty: e.target.value })} className="input" />
-            <input type="text" placeholder="Distributor" value={newProduct.distributor} onChange={(e) => setNewProduct({ ...newProduct, distributor: e.target.value })} className="input" />
-            <input type="text" placeholder="Category" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} className="input" />
+            {[
+              { placeholder: "Name", key: "name" },
+              { placeholder: "Model", key: "model" },
+              { placeholder: "Serial", key: "serial" },
+              { placeholder: "Description", key: "description" },
+              { placeholder: "Stock", key: "stock", small: true },
+              { placeholder: "Price", key: "price", small: true },
+              { placeholder: "Warranty", key: "warranty" },
+              { placeholder: "Distributor", key: "distributor" },
+              { placeholder: "Category", key: "category" },
+            ].map((field) => (
+              <input
+                key={field.key}
+                type={field.key === "stock" || field.key === "price" ? "number" : "text"}
+                placeholder={field.placeholder}
+                value={newProduct[field.key]}
+                onChange={(e) => setNewProduct({ ...newProduct, [field.key]: e.target.value })}
+                className={`input ${field.small ? "small" : ""}`}
+              />
+            ))}
           </div>
           <button className="button" onClick={addProduct}>Add Product</button>
         </section>
@@ -247,6 +229,8 @@ function ProductManagerPage() {
               <div key={c.id} className="comment-row">
                 <span>
                   {c.content} {c.approved && <span style={{ color: "green" }}>✅</span>}
+                  <br />
+                  <small>Product ID: {c.productId}</small> {/* ➡️ NEW LINE */}
                 </span>
                 {!c.approved && (
                   <button className="button small" onClick={() => approveComment(c.id)}>Approve</button>
@@ -256,7 +240,6 @@ function ProductManagerPage() {
             ))}
           </div>
         </section>
-
       </div>
     </div>
   );
