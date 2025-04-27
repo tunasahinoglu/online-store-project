@@ -1,0 +1,144 @@
+/* ProductManagerPage.css */
+
+.product-page {
+    min-height: 100vh;
+    background-color: #f3f4f6;
+    padding: 2rem;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: start;
+  }
+  
+  .product-container {
+    width: 100%;
+    max-width: 900px;
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    color: #111827;
+  }
+  
+  .product-title {
+    font-size: 2rem;
+    color: #1f2937;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .product-section {
+    margin-bottom: 2.5rem;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+    color: #374151;
+    margin-bottom: 1rem;
+  }
+  
+  /* Flexible Row Styles */
+  .product-row,
+  .delivery-row,
+  .comment-row {
+    display: flex;
+    flex-wrap: wrap; /* <-- allow wrapping to new line */
+    gap: 1rem; /* spacing between elements */
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+  
+  /* Inputs */
+  .input {
+    flex: 1 1 180px; /* flexible, min width 180px */
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    min-width: 180px;
+  }
+  
+  .input.small {
+    width: 100px; /* smaller for stock and price fields */
+  }
+  
+  /* Buttons */
+  .button {
+    background-color: #1f2937;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    white-space: nowrap; /* prevent button text breaking */
+  }
+  
+  .button.small {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
+  }
+  
+  .button:hover {
+    background-color: #374151;
+  }
+  
+  /* Box Containers */
+  .product-box,
+  .delivery-box,
+  .comment-box {
+    background-color: #edf2f7;
+    border: 1px solid #cbd5e0;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 6px;
+    color: #1a202c;
+    max-height: 250px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .product-box-inner,
+  .delivery-box-inner,
+  .comment-box-inner {
+    max-height: 200px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Animation */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .scroll-box {
+    background-color: #edf2f7;
+    border: 1px solid #cbd5e0;
+    padding: 1rem;
+    border-radius: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column; /* NEW: stack items vertically */
+    gap: 0.5rem;             /* Optional: add space between rows */
+  }
+  
+  .category-box-inner {
+    max-height: 250px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
