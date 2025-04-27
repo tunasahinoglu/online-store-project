@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./ProductManagerPage.css";
+import logo from '../../assets/teknosuLogo.jpg';
+import { useNavigate } from "react-router-dom";
 
 const dummyProducts = [
   { id: 1, name: "Laptop", model: "XPS 13", serial: "12345", description: "Powerful laptop", stock: 10, price: 1200, warranty: "24", distributor: "Dell", category: "Electronics" },
@@ -76,6 +78,8 @@ function ProductManagerPage() {
   const [newProduct, setNewProduct] = useState({ name: "", model: "", serial: "", description: "", stock: "", price: "", warranty: "", distributor: "", category: "" });
   const [draftStocks, setDraftStocks] = useState({});
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const initialDrafts = {};
     dummyProducts.forEach(p => { initialDrafts[p.id] = p.stock; });
@@ -141,7 +145,14 @@ function ProductManagerPage() {
     setProducts(products.map(p => p.category === categoryToRemove ? { ...p, category: "" } : p));
   };
 
-  return (
+  return (<div>  <div className="app-bar">
+    <img
+        src={logo}
+        alt="Logo"
+        className="app-bar-logo"
+        onClick={() => navigate('/')}
+    />
+</div>
     <div className="product-page">
       <div className="product-container">
         <h1 className="product-title">Product Manager Dashboard</h1>
@@ -265,7 +276,7 @@ function ProductManagerPage() {
 
 
       </div>
-    </div>
+    </div></div>
   );
 }
 
