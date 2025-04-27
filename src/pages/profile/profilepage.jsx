@@ -109,7 +109,7 @@ function Homepage() {
                 const data = await get(`users/${user.uid}`);
                 setUserID(user.uid);
                 console.log("User ID:", user.uid);
-                
+
                 const values = Object.values(data);
                 const userInfo = values[0];
                 setUserinfo(userInfo);
@@ -198,11 +198,20 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-            <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
+                <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
+                    {INFOuser[userID]?.role === 'salesmanager' && (
+                        <button onClick={() => navigate('/sales')}>Sales Page</button>
+                    )}
+                    {INFOuser[userID]?.role === 'productmanager' && (
+                        <button onClick={() => navigate('/product')}>Product Page</button>
+                    )}
+                    {INFOuser[userID]?.role === 'admin' && (
+                        <button onClick={() => navigate('/admin')}>Admin Page</button>
+                    )}
                 </div>
                 <div className="profile-container">
                     <div className='names'>
