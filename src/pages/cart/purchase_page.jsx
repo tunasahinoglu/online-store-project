@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../pages/cart/cart_context';
 import './purchase_page.css';
-import { handleCheckout} from '../../services/checkout.js';
+import { handleCheckout } from '../../services/checkout.js';
 import { get } from '../../services/firebase/database.js';
 import { auth } from "../../services/firebase/connect.js";
+import logo from '../../assets/teknosuLogo.jpg';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -18,13 +19,13 @@ const Checkout = () => {
 
   //unsigned users redirect to login
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => { 
+    const unsubscribe = auth.onAuthStateChanged(user => {
       setCurrentUser(user);
       if (!user) {
         navigate("/login");
       }
     });
-  
+
     return unsubscribe;
   }, [navigate]);
 
@@ -35,7 +36,7 @@ const Checkout = () => {
       }
     }
   }, [loading, currentUser, cart, navigate]);
-  
+
 
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
@@ -78,11 +79,11 @@ const Checkout = () => {
   const handleSubmit = async () => {
     try {
       setProcessing(true);
-      await handleCheckout({ 
-        cart: cart, 
+      await handleCheckout({
+        cart: cart,
         selectedDeliveryCompany: selectedCompany.companyId, // Ensure correct delivery company is passed
         selectedDeliveryType: selectedCompany.type, // Add the delivery type here
-        notes: null, 
+        notes: null,
         navigate // Pass navigate as a parameter to handleCheckout,
       });
       await clearCart();
@@ -90,17 +91,24 @@ const Checkout = () => {
       console.error("Order placement failed:", err);
       alert("Failed to place order.");
     }
-    finally{
+    finally {
       setProcessing(false);
     }
   };
 
   if (loading) return <p>Loading checkout...</p>;
-  return (
+  return (<div> <div className="app-bar">
+    <img
+      src={logo}
+      alt="Logo"
+      className="app-bar-logo"
+      onClick={() => navigate('/')}
+    />
+  </div>
     <div className="checkout-container">
-      
+
       <h2 className="text-2xl font-bold mb-6">Checkout</h2>
-  
+
       <div className="checkout-summary">
         <h3 className="text-lg font-semibold">Cart Summary</h3>
         <div className="flex justify-between font-medium">
@@ -108,7 +116,7 @@ const Checkout = () => {
           <span>${totalPrice.toFixed(2)}</span>
         </div>
       </div>
-  
+
       <div className="checkout-summary">
         <h3 className="text-lg font-semibold">Choose Delivery Company</h3>
         {deliveryCompanies.map((company) => (
@@ -139,7 +147,7 @@ const Checkout = () => {
           </div>
         ))}
       </div>
-  
+
       {selectedCompany && (
         <div className="checkout-payment">
           <h3 className="text-lg font-semibold">Order Summary</h3>
@@ -196,7 +204,7 @@ const Checkout = () => {
           </div>
         </div>
       )}
-    </div>
+    </div></div>
   );
 };
 
