@@ -258,13 +258,20 @@ function Homepage() {
                     </div>
                     <div className="orders-list">
                         {(() => {
-                            const filteredOrders = selectedStatus === 'All'
+                            const filteredOrders = (selectedStatus === 'All'
                                 ? orders
                                 : orders.filter(order => {
                                     const orderKey = Object.keys(order)[1];
                                     const orderData = order[orderKey];
                                     return orderData.status?.toLowerCase() === selectedStatus.toLowerCase();
-                                });
+                                })
+                            ).sort((a, b) => {
+                                const aKey = Object.keys(a)[1];
+                                const bKey = Object.keys(b)[1];
+                                const aDate = new Date(a[aKey].date);
+                                const bDate = new Date(b[bKey].date);
+                                return bDate - aDate; // Newest first (descending)
+                            });
 
                             return filteredOrders.length > 0 ? (
                                 filteredOrders.map((order) => {
@@ -273,7 +280,7 @@ function Homepage() {
 
                                     return (
                                         <div key={order.id} className="order-card">
-                                            <h3>Order ID: {order.id}</h3>
+                                            <h3>Order Number: {parseInt(order.id, 10) + 1}</h3>
                                             <div className="order-info">
                                                 <div>
                                                     <p><span>Name:</span> {orderData.firstname} {orderData.lastname}</p>

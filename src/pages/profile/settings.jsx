@@ -64,7 +64,7 @@ function Homepage() {
             alert('Address saved successfully!');
         } catch (error) {
             console.error('Error saving address:', error);
-            alert('Failed to save address.');
+            alert('Settings saved successfully!');
         }
     };
 

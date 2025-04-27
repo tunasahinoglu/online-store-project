@@ -98,6 +98,10 @@ function Homepage() {
                 const unseen = notificationsArray.filter(notif => !notif.seen);
                 setUnseenCount(unseen.length);
             }
+            else {
+                navigate('/login');
+            }
+
         });
 
         return unsubscribe;
