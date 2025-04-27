@@ -1,7 +1,7 @@
 .product-detail-container {
     margin: 0 auto;
     font-family: Arial, sans-serif;
-    color: #333;
+
 }
 
 .product-detail {
@@ -34,30 +34,30 @@
 .product-info h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    color: #ffffff;
+
 }
 
 .category {
     font-size: 1rem;
-    color: #ffffff;
+
     margin-bottom: 10px;
 }
 
 .price {
     font-size: 1.5rem;
     margin-bottom: 20px;
-    color: #ffffff;
+
 }
 
 .price .original-price {
     text-decoration: line-through;
-    color: #ffffff;
+
     margin-right: 10px;
 }
 
 .price .discounted-price {
     font-weight: bold;
-    color: #ffffff;
+
     margin-right: 10px;
 }
 
@@ -69,7 +69,7 @@
 .description {
     font-size: 1.1rem;
     line-height: 1.6;
-    color: #ffffff;
+
     margin-bottom: 20px;
 }
 
@@ -86,7 +86,7 @@
 .warranty,
 .distributor {
     font-size: 1rem;
-    color: #ffffff;
+
     margin-bottom: 10px;
 }
 
@@ -109,7 +109,7 @@
 
 .add-to-cart {
     background-color: #ffd814;
-    color: #ffffff;
+
 }
 
 .add-to-cart:hover {
@@ -138,7 +138,7 @@
 
 .product-specifications,
 .product-comments {
-    background-color: #f7f7f7;
+    background-color: rgb(159, 159, 159);
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 20px;
@@ -148,7 +148,7 @@
 .product-comments h2 {
     font-size: 1.8rem;
     margin-bottom: 20px;
-    color: #000;
+
 }
 
 .product-specifications ul,
@@ -161,11 +161,7 @@
 .product-comments li {
     font-size: 1.1rem;
     margin-bottom: 10px;
-    color: #555;
-}
 
-.product-specifications strong {
-    color: #000;
 }
 
 .cart-icon {
@@ -179,7 +175,7 @@
     top: -10px;
     right: -10px;
     background-color: red;
-    color: white;
+
     border-radius: 50%;
     padding: 2px 6px;
     font-size: 12px;
