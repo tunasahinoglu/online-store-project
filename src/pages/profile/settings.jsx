@@ -213,7 +213,7 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
+                <h2>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h2>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
@@ -234,7 +234,7 @@ function Homepage() {
                             <h3>First Name </h3>
                             <input
                                 type="text"
-                                placeholder={INFOuser[userID]?.address.firstname || "loading"}
+                                placeholder={INFOuser[userID]?.firstname || "loading"}
                                 onChange={(e) => setFirstnameSave(e.target.value)}
                                 className="disabled-input"
                             />

@@ -17,10 +17,14 @@
 }
 
 .profile-container {
-  height: 600%;
+  height: auto;
   padding: 20px;
   max-width: 100%;
-
+  border-radius: 10px;
+  /* Ensures the corners are rounded */
+  background-color: #d3d3d3;
+  border: 1px solid rgb(172, 172, 172);
+  /* Defines a solid black border with width */
 }
 
 .adress-bar {
@@ -55,6 +59,7 @@
   padding: 15px;
   background-color: #f9f9f9;
   border-radius: 8px;
+  width: 100%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -87,7 +92,7 @@
 .order-card p {
   margin: 5px 0;
   font-size: 0.9em;
-  color: #555;
+  color: #161616;
 }
 
 .order-card p:last-child {
@@ -132,11 +137,12 @@ input:disabled {
 }
 
 .save-button {
-  background-color: #505050;
+  background-color: #2c2c2c;
   color: white;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  margin-top: 50px;
 }

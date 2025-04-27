@@ -202,7 +202,7 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
+                <h2>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h2>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
@@ -211,7 +211,7 @@ function Homepage() {
                         <button onClick={() => navigate('/sales')}>Sales Page</button>
                     )}
                     {INFOuser[userID]?.role === 'productmanager' && (
-                        <button onClick={() => navigate('/product')}>Product Page</button>
+                        <button onClick={() => navigate('/productmanager')}>Product Page</button>
                     )}
                     {INFOuser[userID]?.role === 'admin' && (
                         <button onClick={() => navigate('/admin')}>Admin Page</button>

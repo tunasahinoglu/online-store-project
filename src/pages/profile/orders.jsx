@@ -92,6 +92,7 @@ function Homepage() {
 
             console.log(`Order ${orderId} cancelled successfully.`);
             alert('cancelled successfully');
+            window.location.reload();
         } catch (error) {
             alert('cancelled error');
             console.error('Error cancelling order:', error);
@@ -103,8 +104,9 @@ function Homepage() {
     useEffect(() => {
         async function fetchDeliveryCompanies() {
             try {
-                const companiesData = await get('delivery_companies'); // Adjust path if needed
+                const companiesData = await get('deliverycompanies');
                 setDeliveryCompanies(companiesData);
+                console.log("Delivery companies fetched:", companiesData);
             } catch (error) {
                 console.error("Error fetching delivery companies:", error);
             }
@@ -269,18 +271,21 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
+                <h2>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h2>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
                 </div>
-                <div className="profile-container">
+                <div className="order-container">
                     <h2>Orders</h2>
                     <div className="order-filters">
+                        <button onClick={() => setSelectedStatus('All')}>All</button>
                         <button onClick={() => setSelectedStatus('processing')}>Processing</button>
                         <button onClick={() => setSelectedStatus('in transit')}>In Transit</button>
                         <button onClick={() => setSelectedStatus('delivered')}>Delivered</button>
+                        <button onClick={() => setSelectedStatus('cancelled')}>Cancelled</button>
+
                     </div>
                     <div className="orders-list">
                         {(() => {
@@ -306,22 +311,27 @@ function Homepage() {
                                     const orderKey = Object.keys(order)[1];
                                     const orderData = order[orderKey];
 
+                                    const deliveryCompanyId = orderData.delivery?.company;
+                                    const deliveryCompanyName = deliveryCompanies.find(
+                                        company => Object.keys(company)[0] === deliveryCompanyId
+                                    )?.[deliveryCompanyId]?.name ?? 'No Delivery Company';
+
                                     return (
                                         <div key={order.id} className="order-card">
                                             <h3>Order Number: {parseInt(order.id, 10) + 1}</h3>
                                             <div className="order-info">
                                                 <div>
-                                                    <p><span>Name:</span> {orderData.firstname} {orderData.lastname}</p>
-                                                    <p><span>Status:</span> {orderData.status}</p>
-                                                    <p><span>Total Cost:</span> {orderData.totalcost}₺</p>
-                                                    <p><span>Date:</span> {new Date(orderData.date).toLocaleString()}</p>
+                                                    <p><span>Name: </span> {orderData.firstname} {orderData.lastname}</p>
+                                                    <p><span>Status: </span> {orderData.status}</p>
+                                                    <p><span>Total Cost: </span> {orderData.totalcost}₺</p>
+                                                    <p><span>Date: </span> {new Date(orderData.date).toLocaleString()}</p>
                                                 </div>
                                                 <div>
-                                                    <p><span>Delivery City:</span> {orderData.address?.city ?? 'No Delivery City'}</p>
-                                                    <p><span>Billing City:</span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
+                                                    <p><span>Delivery City: </span> {orderData.address?.city ?? 'No Delivery City'}</p>
+                                                    <p><span>Billing City: </span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
                                                     <p>
-                                                        <span>Delivery Company:</span>
-                                                        {deliveryCompanies[orderData.delivery?.company]?.name ?? 'No Delivery Company'}
+                                                        <span>Delivery Company: </span>
+                                                        {deliveryCompanyName}
                                                     </p>
                                                     <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
                                                 </div>
@@ -331,7 +341,7 @@ function Homepage() {
                                                 <button
                                                     color='red'
                                                     className="cancel-order-button"
-                                                    onClick={() => handleCancelOrder(order.id)}
+                                                    onClick={() => handleCancelOrder(orderKey)}
                                                 >
                                                     Cancel Order
                                                 </button>
