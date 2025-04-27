@@ -4,7 +4,7 @@ import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { get } from '../../services/firebase/database.js';
+import { get, set } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import './profilepage.css';
 
@@ -86,6 +86,32 @@ function Homepage() {
         updateURLParams('', sortOption, category);
     };
 
+    const handleCancelOrder = async (orderId) => {
+        try {
+            set(`orders/${orderId}`, { status: "cancelled" })
+
+            console.log(`Order ${orderId} cancelled successfully.`);
+            alert('cancelled successfully');
+        } catch (error) {
+            alert('cancelled error');
+            console.error('Error cancelling order:', error);
+        }
+    };
+
+    const [deliveryCompanies, setDeliveryCompanies] = useState({});
+
+    useEffect(() => {
+        async function fetchDeliveryCompanies() {
+            try {
+                const companiesData = await get('delivery_companies'); // Adjust path if needed
+                setDeliveryCompanies(companiesData);
+            } catch (error) {
+                console.error("Error fetching delivery companies:", error);
+            }
+        }
+
+        fetchDeliveryCompanies();
+    }, []);
 
 
     useEffect(() => {
@@ -270,8 +296,10 @@ function Homepage() {
                                 const bKey = Object.keys(b)[1];
                                 const aDate = new Date(a[aKey].date);
                                 const bDate = new Date(b[bKey].date);
-                                return bDate - aDate; // Newest first (descending)
+                                return bDate - aDate;
                             });
+
+
 
                             return filteredOrders.length > 0 ? (
                                 filteredOrders.map((order) => {
@@ -291,10 +319,23 @@ function Homepage() {
                                                 <div>
                                                     <p><span>Delivery City:</span> {orderData.address?.city ?? 'No Delivery City'}</p>
                                                     <p><span>Billing City:</span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
-                                                    <p><span>Delivery Company:</span> {orderData.delivery?.company ?? 'No Delivery Company'}</p>
+                                                    <p>
+                                                        <span>Delivery Company:</span>
+                                                        {deliveryCompanies[orderData.delivery?.company]?.name ?? 'No Delivery Company'}
+                                                    </p>
                                                     <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
                                                 </div>
                                             </div>
+
+                                            {orderData.status?.toLowerCase() === 'processing' && (
+                                                <button
+                                                    color='red'
+                                                    className="cancel-order-button"
+                                                    onClick={() => handleCancelOrder(order.id)}
+                                                >
+                                                    Cancel Order
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })

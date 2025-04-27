@@ -4,7 +4,7 @@ import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { get } from '../../services/firebase/database.js';
+import { get, set } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import './profilepage.css';
 
@@ -20,7 +20,11 @@ function Homepage() {
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState([]);
     const [userID, setUserID] = useState('');
-    const [addressInput, setAddressInput] = useState('');
+    const [FirstnameSave, setFirstnameSave] = useState('');
+    const [LastnameSave, setLastnameSave] = useState('');
+    const [CountrySave, setCountrySave] = useState('');
+    const [CitySave, setCitySave] = useState('');
+    const [AddressSave, setAddressSave] = useState('');
 
 
 
@@ -55,16 +59,13 @@ function Homepage() {
         }
     };
 
-    const handleSaveAddress = async () => {
+    const handleSave = async () => {
         if (!currentUser || !userID) return;
         try {
-            await database.ref(`users/${userID}/address`).update({
-                address: addressInput
-            });
+            await set(`users/${userID}`, { firstname: FirstnameSave, lastname: LastnameSave, country: CountrySave, city: CitySave, address: AddressSave, wishlist: [] })
             alert('Address saved successfully!');
         } catch (error) {
             console.error('Error saving address:', error);
-            alert('Settings saved successfully!');
         }
     };
 
@@ -230,30 +231,29 @@ function Homepage() {
                 <div className="profile-container">
                     <div className='names'>
                         <div className='input-group'>
-                            <h3>Adress </h3>
+                            <h3>First Name </h3>
                             <input
                                 type="text"
-                                value={addressInput}
-                                placeholder={INFOuser[userID]?.address.address || "loading"}
-                                onChange={(e) => setAddressInput(e.target.value)}
+                                placeholder={INFOuser[userID]?.address.firstname || "loading"}
+                                onChange={(e) => setFirstnameSave(e.target.value)}
                                 className="disabled-input"
                             />
                         </div>
                         <div className='input-group'>
-                            <h3>Email </h3>
+                            <h3>Last Name </h3>
                             <input
                                 type="text"
-                                placeholder={INFOuser[userID]?.email || "loading"}
-
+                                placeholder={INFOuser[userID]?.lastname || "loading"}
+                                onChange={(e) => setLastnameSave(e.target.value)}
                                 className="disabled-input"
                             />
                         </div>
                         <div className='input-group'>
-                            <h3>Account Status</h3>
+                            <h3>Country</h3>
                             <input
                                 type="text"
-                                placeholder={INFOuser[userID]?.active ? "Active" : "Inactive"}
-
+                                placeholder={INFOuser[userID]?.address.country || "loading"}
+                                onChange={(e) => setCountrySave(e.target.value)}
                                 className="disabled-input"
                             />
                         </div>
@@ -262,20 +262,20 @@ function Homepage() {
                             <input
                                 type="text"
                                 placeholder={INFOuser[userID]?.address.city}
-
+                                onChange={(e) => setCitySave(e.target.value)}
                                 className="disabled-input"
                             />
                         </div>
                         <div className='input-group'>
-                            <h3>Country</h3>
+                            <h3>Address</h3>
                             <input
                                 type="text"
-                                placeholder={INFOuser[userID]?.address.country}
-
+                                placeholder={INFOuser[userID]?.address.address || "loading"}
+                                onChange={(e) => setAddressSave(e.target.value)}
                                 className="disabled-input"
                             />
                         </div>
-                        <button onClick={handleSaveAddress} className="save-button">
+                        <button onClick={handleSave} className="save-button">
                             Save
                         </button>
 
