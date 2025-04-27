@@ -19,11 +19,12 @@ function Homepage() {
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
-    const [orders,setOrders  ] = useState([]);
+    const [orders, setOrders] = useState([]);
     const [userID, setUserID] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('All');
 
 
-    
+
 
 
     useEffect(() => {
@@ -35,21 +36,21 @@ function Homepage() {
         setSortOption(sort);
         setSelectedCategory(category);
     }, [searchParams]);
-      
 
-    
+
+
 
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
         if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
         if (newSortOption !== 'default') params.set('sort', newSortOption);
         if (newCategory !== 'All') params.set('category', newCategory);
-    
+
         navigate({
             pathname: '/',
             search: `?${params.toString()}`
         });
-    };    
+    };
 
     const handleLogout = async () => {
         try {
@@ -84,6 +85,8 @@ function Homepage() {
         setSearchTerm('');
         updateURLParams('', sortOption, category);
     };
+
+
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -131,7 +134,7 @@ function Homepage() {
                 console.error("No user is logged in.");
             }
         });
-    
+
         return unsubscribe;
     }, []);
 
@@ -140,26 +143,26 @@ function Homepage() {
 
     useEffect(() => {
         async function fetchOrders() {
-          if (!userID) return; 
-      
-          try {
-            const fetchedOrders = await get("orders", null, [["user", "==", userID]]);
-            if (fetchedOrders) {
-              const ordersArray = Object.entries(fetchedOrders).map(([id, order]) => ({
-                id,
-                ...order
-              }));
-              setOrders(ordersArray);
-              console.log(ordersArray);
+            if (!userID) return;
+
+            try {
+                const fetchedOrders = await get("orders", null, [["user", "==", userID]]);
+                if (fetchedOrders) {
+                    const ordersArray = Object.entries(fetchedOrders).map(([id, order]) => ({
+                        id,
+                        ...order
+                    }));
+                    setOrders(ordersArray);
+                    console.log(ordersArray);
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
             }
-          } catch (error) {
-            console.error('Error fetching orders:', error);
-          }
         }
-      
+
         fetchOrders();
-      }, [userID]);
-   
+    }, [userID]);
+
 
 
     return (
@@ -240,7 +243,7 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-            <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
+                <h1>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h1>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
@@ -248,33 +251,51 @@ function Homepage() {
                 </div>
                 <div className="profile-container">
                     <h2>Orders</h2>
+                    <div className="order-filters">
+                        <button onClick={() => setSelectedStatus('processing')}>Processing</button>
+                        <button onClick={() => setSelectedStatus('in transit')}>In Transit</button>
+                        <button onClick={() => setSelectedStatus('delivered')}>Delivered</button>
+                    </div>
                     <div className="orders-list">
-  {orders.map((order) => {
-    // Get the dynamic key (like xJMRSZVLJuyxhdQVTtEe)
-    const orderKey = Object.keys(order)[1]; // Assuming the second key is the actual order key
-    const orderData = order[orderKey]; // Get the order data using the dynamic key
+                        {(() => {
+                            const filteredOrders = selectedStatus === 'All'
+                                ? orders
+                                : orders.filter(order => {
+                                    const orderKey = Object.keys(order)[1];
+                                    const orderData = order[orderKey];
+                                    return orderData.status?.toLowerCase() === selectedStatus.toLowerCase();
+                                });
 
-    return (
-      <div key={order.id} className="order-card">
-        <h3>Order ID: {order.id}</h3>
-        <div className="order-info">
-          <div>
-            <p><span>Name:</span> {orderData.firstname} {orderData.lastname}</p>
-            <p><span>Status:</span> {orderData.status}</p>
-            <p><span>Total Cost:</span> {orderData.totalcost}₺</p>
-            <p><span>Date:</span> {new Date(orderData.date).toLocaleString()}</p>
-          </div>
-          <div>
-            <p><span>Delivery City:</span> {orderData.address?.city ?? 'No Delivery City'}</p>
-            <p><span>Billing City:</span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
-            <p><span>Delivery Company:</span> {orderData.delivery?.company ?? 'No Delivery Company'}</p>
-            <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
+                            return filteredOrders.length > 0 ? (
+                                filteredOrders.map((order) => {
+                                    const orderKey = Object.keys(order)[1];
+                                    const orderData = order[orderKey];
+
+                                    return (
+                                        <div key={order.id} className="order-card">
+                                            <h3>Order ID: {order.id}</h3>
+                                            <div className="order-info">
+                                                <div>
+                                                    <p><span>Name:</span> {orderData.firstname} {orderData.lastname}</p>
+                                                    <p><span>Status:</span> {orderData.status}</p>
+                                                    <p><span>Total Cost:</span> {orderData.totalcost}₺</p>
+                                                    <p><span>Date:</span> {new Date(orderData.date).toLocaleString()}</p>
+                                                </div>
+                                                <div>
+                                                    <p><span>Delivery City:</span> {orderData.address?.city ?? 'No Delivery City'}</p>
+                                                    <p><span>Billing City:</span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
+                                                    <p><span>Delivery Company:</span> {orderData.delivery?.company ?? 'No Delivery Company'}</p>
+                                                    <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p>No orders found for "{selectedStatus}".</p>
+                            );
+                        })()}
+                    </div>
                 </div>
 
             </main>
