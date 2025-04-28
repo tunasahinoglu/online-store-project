@@ -220,15 +220,6 @@ function Homepage() {
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
-                    {INFOuser[userID]?.role === 'salesmanager' && (
-                        <button onClick={() => navigate('/sales')}>Sales Page</button>
-                    )}
-                    {INFOuser[userID]?.role === 'productmanager' && (
-                        <button onClick={() => navigate('/productmanager')}>Product Page</button>
-                    )}
-                    {INFOuser[userID]?.role === 'admin' && (
-                        <button onClick={() => navigate('/admin')}>Admin Page</button>
-                    )}
                 </div>
                 <div className="profile-container">
                     <div className='names'>

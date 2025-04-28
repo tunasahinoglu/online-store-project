@@ -277,9 +277,6 @@ function Homepage() {
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
-                    {INFOuser[userID]?.role === 'productmanager' && (
-                        <button onClick={() => navigate('/productmanager')}>Product Page</button>
-                    )}
                 </div>
                 <div className="order-container">
                     <h2>Orders</h2>
