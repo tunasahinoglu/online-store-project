@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { get } from '../../services/firebase/database.js';
+import { get, set } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import './profilepage.css';
 
@@ -18,9 +18,13 @@ function Homepage() {
     const [currentUser, setCurrentUser] = useState(null);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
-    const [INFOuser, setUserinfo] = useState({});
-    const [ChangedAdress, SetChangedAdress] = useState('');
-    const [ChangedEmail, setChangedEmail] = useState('');
+    const [INFOuser, setUserinfo] = useState([]);
+    const [userID, setUserID] = useState('');
+    const [FirstnameSave, setFirstnameSave] = useState('');
+    const [LastnameSave, setLastnameSave] = useState('');
+    const [CountrySave, setCountrySave] = useState('');
+    const [CitySave, setCitySave] = useState('');
+    const [AddressSave, setAddressSave] = useState('');
 
 
 
@@ -37,15 +41,13 @@ function Homepage() {
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
         if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
-        else params.delete('search');
-
         if (newSortOption !== 'default') params.set('sort', newSortOption);
-        else params.delete('sort');
-
         if (newCategory !== 'All') params.set('category', newCategory);
-        else params.delete('category');
 
-        setSearchParams(params);
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
     };
 
     const handleLogout = async () => {
@@ -57,10 +59,15 @@ function Homepage() {
         }
     };
 
-    const handleSaveSettings = (e) => {
-        e.preventDefault();
+    const handleSave = async () => {
+        if (!currentUser || !userID) return;
+        try {
+            await set(`users/${userID}`, { firstname: FirstnameSave, lastname: LastnameSave, country: CountrySave, city: CitySave, address: AddressSave, wishlist: [] })
+            alert('Address saved successfully!');
+        } catch (error) {
+            console.error('Error saving address:', error);
+        }
     };
-
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -79,12 +86,6 @@ function Homepage() {
         const newSortOption = e.target.value;
         setSortOption(newSortOption);
         updateURLParams(searchTerm, newSortOption);
-    };
-
-    const handleCategoryChange = (category) => {
-        setSelectedCategory(category);
-        setSearchTerm('');
-        updateURLParams('', sortOption, category);
     };
 
     useEffect(() => {
@@ -121,12 +122,13 @@ function Homepage() {
         const Myuser = auth.onAuthStateChanged(async (user) => {
             if (Myuser) {
                 const data = await get(`users/${user.uid}`);
-                console.log("Full user data:", data);
+                setUserID(user.uid);
+                console.log("User ID:", user.uid);
 
                 const values = Object.values(data);
                 const userInfo = values[0];
                 setUserinfo(userInfo);
-                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+                console.log("Full user data:", userInfo);
             }
         });
         return Myuser;
@@ -186,7 +188,11 @@ function Homepage() {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -207,27 +213,72 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+                <h2>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h2>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
+                    {INFOuser[userID]?.role === 'salesmanager' && (
+                        <button onClick={() => navigate('/sales')}>Sales Page</button>
+                    )}
+                    {INFOuser[userID]?.role === 'productmanager' && (
+                        <button onClick={() => navigate('/product')}>Product Page</button>
+                    )}
+                    {INFOuser[userID]?.role === 'admin' && (
+                        <button onClick={() => navigate('/admin')}>Admin Page</button>
+                    )}
                 </div>
                 <div className="profile-container">
                     <div className='names'>
-                        <h3>Adress:  </h3>
-                        <input
-                            type="text"
-                            onChange={(e) => SetChangedAdress(e.target.value)}
-                            placeholder={INFOuser?.undefined?.address.address || "loading"}
-                        />
-                        <h3>Email: </h3>
-                        <input
-                            type="text"
-                            onChange={(e) => setChangedEmail(e.target.value)}
-                            placeholder={INFOuser?.undefined?.email || "loading"}
-                        />
-                        <button onClick={() => handleSaveSettings('/settings')}>Save</button>
+                        <div className='input-group'>
+                            <h3>First Name </h3>
+                            <input
+                                type="text"
+                                placeholder={INFOuser[userID]?.firstname || "loading"}
+                                onChange={(e) => setFirstnameSave(e.target.value)}
+                                className="disabled-input"
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Last Name </h3>
+                            <input
+                                type="text"
+                                placeholder={INFOuser[userID]?.lastname || "loading"}
+                                onChange={(e) => setLastnameSave(e.target.value)}
+                                className="disabled-input"
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Country</h3>
+                            <input
+                                type="text"
+                                placeholder={INFOuser[userID]?.address.country || "loading"}
+                                onChange={(e) => setCountrySave(e.target.value)}
+                                className="disabled-input"
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>City</h3>
+                            <input
+                                type="text"
+                                placeholder={INFOuser[userID]?.address.city}
+                                onChange={(e) => setCitySave(e.target.value)}
+                                className="disabled-input"
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Address</h3>
+                            <input
+                                type="text"
+                                placeholder={INFOuser[userID]?.address.address || "loading"}
+                                onChange={(e) => setAddressSave(e.target.value)}
+                                className="disabled-input"
+                            />
+                        </div>
+                        <button onClick={handleSave} className="save-button">
+                            Save
+                        </button>
+
                     </div>
 
                 </div>

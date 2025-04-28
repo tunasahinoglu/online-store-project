@@ -10,7 +10,7 @@ const database = admin.firestore();
 //  @desc   creates account
 //  @route  POST  /api/auth/signup
 export const createAccount = async (req, res, next) => {
-    const { firstname, lastname, email, password, country, city, address, basket } = req.body;
+    const { firstname, lastname, email, password, country, city, address } = req.body;
 
     if (firstname === undefined || lastname === undefined || email === undefined || password === undefined || country === undefined || city === undefined || address === undefined) {
         const error = new Error("All fields are required");
@@ -74,37 +74,9 @@ export const createAccount = async (req, res, next) => {
         await userReference.set(userData);
         await log(database, "ADD", `users/${user.uid}`, userData, user.uid);
 
-        //add its basket to the database
-        let invalidProduct = false;
-        if (basket || typeof basket === "object") {
-            for (let [productID, count] of Object.entries(basket)) {
-                //product check
-                if (typeof productID !== 'string' || !Number.isInteger(count) || count <= 0) {
-                    invalidProduct = true;
-                    continue;
-                }
-                const productReference = database.collection("products").doc(productID);
-                const product = await productReference.get();
-                if (!product.exists || product.exists && (product.data().price === 0 || count > product.data().stock)) {
-                    invalidProduct = true;
-                    continue;
-                }
-
-                const basketReference = userReference.collection("basket").doc(productID);
-                try {
-                    const productData = {count: count};
-                    await basketReference.set(productData);
-                    await log(database, "ADD", `users/${user.uid}/basket/${productID}`, productData, user.uid);
-                } catch (error) {
-                    invalidProduct = true;
-                }
-            };
-        }
-
         //return response
         res.status(201).json({
             message: "Successfully added",
-            alert: invalidProduct ? "Some products in your basket may get lost" : "",
             token: token,
         });
     } catch (error) {

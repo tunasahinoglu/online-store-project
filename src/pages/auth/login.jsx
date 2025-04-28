@@ -19,6 +19,7 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     // Check if user is already logged in
     useEffect(() => {
@@ -41,6 +42,18 @@ const LoginPage = () => {
                 updateURLParams('', sortOption, 'All');
             }
         }
+    };
+
+    const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
+        const params = new URLSearchParams();
+        if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
+        if (newSortOption !== 'default') params.set('sort', newSortOption);
+        if (newCategory !== 'All') params.set('category', newCategory);
+
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
     };
 
     const handleSortChange = (e) => {
@@ -138,7 +151,11 @@ const LoginPage = () => {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -187,9 +204,6 @@ const LoginPage = () => {
                         <button type="button" className="register-button">Register</button>
                     </Link>
                 </form>
-                <footer>
-                    <p>&copy; Copyright 2025, CS308-Group32</p>
-                </footer>
             </div>
         </div>
     );

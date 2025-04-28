@@ -1,0 +1,152 @@
+/* Checkout Container */
+.checkout-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #fff;
+    color: #333;
+  }
+  
+  .checkout-container.dark {
+    background-color: #2d2d2d;
+    color: #f4f4f4;
+  }
+  
+  /* Checkout Summary and Payment */
+  .checkout-summary, .checkout-payment {
+    border: 1px solid orange;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    background-color: #fff;
+  }
+  
+  .checkout-summary.dark, .checkout-payment.dark {
+    background-color: #333;
+    border-color: #444;
+  }
+  
+  .checkout-summary h3, .checkout-payment h3 {
+    font-weight: bold;
+  }
+  
+  .checkout-payment input {
+    display: block;
+    width: 95%;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .checkout-payment button {
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    background-color: #0070f3;
+    color: black;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .checkout-payment button:disabled {
+    opacity: 0.5;
+  }
+  
+  /* Delivery Company Styles */
+  .delivery-company {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    margin-bottom: 1rem;
+    color: black;
+  }
+  
+  .delivery-company-name {
+    font-weight: bold;
+  }
+  
+  .delivery-options {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .delivery-option-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    background-color: white;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    color:black;
+  }
+  
+  .delivery-option-btn.selected {
+    background-color: #0070f3;
+    color: white;
+  }
+  
+  .delivery-option-btn:hover {
+    background-color: #ddd;
+  }
+  
+  /* Total Calculation */
+  .checkout-totals {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  
+  .checkout-totals font-semibold {
+    font-weight: bold;
+  }
+  
+  .checkout-totals.text-lg {
+    font-size: 1.2rem;
+  }
+  
+  .input-field {
+    width: 80%;
+    padding: 0.75rem;
+    margin: 10px 0;
+    border-radius: 0.375rem;
+    border: 1px solid #cbd5e0;
+    background-color: lightgray;
+    color: black;
+    font-size: 1rem;
+  }
+  
+  .input-field:placeholder-shown{
+    color: darkgray;
+  }
+  .input-field:focus {
+    border-color: #38a169;
+    outline: none;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .popup {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    font-family: sans-serif;
+  }
+  

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
@@ -16,11 +16,10 @@ function Homepage() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
     const [currentUser, setCurrentUser] = useState(null);
-    const [firestoreProducts, setFirestoreProducts] = useState({});
-    const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
-    const [INFOuser, setUserinfo] = useState({});
+    const [INFOuser, setUserinfo] = useState([]);
+    const [userID, setUserID] = useState('');
 
 
 
@@ -37,15 +36,13 @@ function Homepage() {
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
         if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
-        else params.delete('search');
-
         if (newSortOption !== 'default') params.set('sort', newSortOption);
-        else params.delete('sort');
-
         if (newCategory !== 'All') params.set('category', newCategory);
-        else params.delete('category');
 
-        setSearchParams(params);
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
     };
 
     const handleLogout = async () => {
@@ -76,12 +73,6 @@ function Homepage() {
         updateURLParams(searchTerm, newSortOption);
     };
 
-    const handleCategoryChange = (category) => {
-        setSelectedCategory(category);
-        setSearchTerm('');
-        updateURLParams('', sortOption, category);
-    };
-
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setCurrentUser(user);
@@ -107,6 +98,10 @@ function Homepage() {
                 const unseen = notificationsArray.filter(notif => !notif.seen);
                 setUnseenCount(unseen.length);
             }
+            else {
+                navigate('/login');
+            }
+
         });
 
         return unsubscribe;
@@ -116,12 +111,13 @@ function Homepage() {
         const Myuser = auth.onAuthStateChanged(async (user) => {
             if (Myuser) {
                 const data = await get(`users/${user.uid}`);
-                console.log("Full user data:", data);
+                setUserID(user.uid);
+                console.log("User ID:", user.uid);
 
                 const values = Object.values(data);
                 const userInfo = values[0];
                 setUserinfo(userInfo);
-                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+                console.log("Full user data:", userInfo);
             }
         });
         return Myuser;
@@ -181,7 +177,11 @@ function Homepage() {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -202,27 +202,36 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+                <h2>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h2>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
+                    {INFOuser[userID]?.role === 'salesmanager' && (
+                        <button onClick={() => navigate('/sales')}>Sales Page</button>
+                    )}
+                    {INFOuser[userID]?.role === 'productmanager' && (
+                        <button onClick={() => navigate('/productmanager')}>Product Page</button>
+                    )}
+                    {INFOuser[userID]?.role === 'admin' && (
+                        <button onClick={() => navigate('/admin')}>Admin Page</button>
+                    )}
                 </div>
                 <div className="profile-container">
                     <div className='names'>
                         <div className='input-group'>
-                            <h3>Adress: </h3>
+                            <h3>Adress </h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.address.address || "loading"}
+                                value={INFOuser[userID]?.address.address || "loading"}
                                 disabled
                             />
                         </div>
                         <div className='input-group'>
-                            <h3>Email: </h3>
+                            <h3>Email </h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.email || "loading"}
+                                value={INFOuser[userID]?.email || "loading"}
                                 disabled
                             />
                         </div>
@@ -230,10 +239,27 @@ function Homepage() {
                             <h3>Account Status</h3>
                             <input
                                 type="text"
-                                value={INFOuser?.undefined?.active ? "Active" : "Inactive"}
+                                value={INFOuser[userID]?.active ? "Active" : "Inactive"}
                                 disabled
                             />
                         </div>
+                        <div className='input-group'>
+                            <h3>City</h3>
+                            <input
+                                type="text"
+                                value={INFOuser[userID]?.address.city}
+                                disabled
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Country</h3>
+                            <input
+                                type="text"
+                                value={INFOuser[userID]?.address.country}
+                                disabled
+                            />
+                        </div>
+
                     </div>
 
                 </div>

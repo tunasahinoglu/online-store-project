@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import './product_detail.css';
 import { useCart } from '../../pages/cart/cart_context';
 import logo from '../../assets/teknosuLogo.jpg';
@@ -25,9 +25,11 @@ function ProductDetail() {
     const [userComment, setUserComment] = useState('');
     const [userRating, setUserRating] = useState(5);
     const [hasPurchasedAndDelivered, setHasPurchasedAndDelivered] = useState(false);
-    const [matchedOrderId, setMatchedOrderId] = useState(null);
-    const [userHasCommented, setUserHasCommented] = useState(false);
+    const [matchedOrderIds, setMatchedOrderIds] = useState([]);
+    const [userCommentCount, setUserCommentCount] = useState(0);
     const [averageRating, setAverageRating] = useState(0);
+    const [searchParams] = useSearchParams();
+    const [sortOption, setSortOption] = useState(searchParams.get('sort') || 'default');
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -100,6 +102,7 @@ function ProductDetail() {
         const params = new URLSearchParams();
         if (searchTerm) params.set('search', searchTerm);
         if (selectedCategory !== 'All') params.set('category', selectedCategory);
+        if (sortOption !== 'default') params.set('sort', sortOption);
         navigate(`/?${params.toString()}`);
     };
 
@@ -108,14 +111,15 @@ function ProductDetail() {
         const params = new URLSearchParams();
         if (searchTerm) params.set('search', searchTerm);
         if (category !== 'All') params.set('category', category);
+        if (sortOption !== 'default') params.set('sort', sortOption);
         navigate(`/?${params.toString()}`);
     };
 
     const addToWishlist = async (productId) => {
         try {
             const userDataResponse = await get(`users/${currentUser.uid}`);
-            const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
-                ? userDataResponse[0].undefined
+            const userData = Array.isArray(userDataResponse)
+                ? userDataResponse[0]?.[currentUser.uid]
                 : userDataResponse;
 
             if (!userData) {
@@ -135,7 +139,7 @@ function ProductDetail() {
                 setIsInWishlist(true);
                 alert('Product added to your wishlist!');
             }
-
+    
             const updatedUserData = {
                 firstname: userData.firstname,
                 lastname: userData.lastname,
@@ -160,8 +164,8 @@ function ProductDetail() {
         const checkWishlist = async () => {
             if (currentUser) {
                 const userDataResponse = await get(`users/${currentUser.uid}`);
-                const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
-                    ? userDataResponse[0].undefined
+                const userData = Array.isArray(userDataResponse)
+                    ? userDataResponse[0]?.[currentUser.uid]
                     : userDataResponse;
 
                 if (userData?.wishlist?.includes(id)) {
@@ -214,8 +218,7 @@ function ProductDetail() {
                     ["user", "==", currentUser.uid]
                 ]);
 
-                let found = false;
-                let matchedId = null;
+                let matchedIds = [];
 
                 for (const order of userOrders) {
                     const orderId = Object.keys(order)[0];
@@ -223,20 +226,20 @@ function ProductDetail() {
 
                     if (orderData.status !== "delivered") continue;
 
-                    const productsInOrder = await get(`orders/${orderId}/products`);
-                    const productMap = productsInOrder?.[0] || {};
+                    const productsInOrderObj = await get(`orders/${orderId}/products`);
 
-                    const containsProduct = Object.keys(productMap).includes(id);
+                    const containsProduct = productsInOrderObj.some(productObj => {
+                        const productId = Object.keys(productObj)[0];
+                        return productId === id;
+                    });
 
                     if (containsProduct) {
-                        found = true;
-                        matchedId = orderId;
-                        break;
+                        matchedIds.push(orderId);
                     }
                 }
 
-                setHasPurchasedAndDelivered(found);
-                setMatchedOrderId(matchedId);
+                setHasPurchasedAndDelivered(matchedIds.length > 0);
+                setMatchedOrderIds(matchedIds);
             } catch (err) {
                 console.error("Order check failed:", err);
             }
@@ -246,9 +249,12 @@ function ProductDetail() {
     }, [currentUser, id]);
 
     const handleSubmitComment = async () => {
+        if (matchedOrderIds.length === 0) return;
+
+        const targetOrderId = matchedOrderIds[userCommentCount];
 
         const newComment = {
-            order: matchedOrderId,
+            order: targetOrderId,
             product: id,
             rate: userRating,
             ...(userComment.trim() !== '' && { comment: userComment.trim() }),
@@ -260,6 +266,7 @@ function ProductDetail() {
             setUserComment('');
             setUserRating(10);
             fetchComments(id);
+            setUserCommentCount(prev => prev + 1);
         } catch (error) {
             console.error("Failed to submit comment:", error);
             alert("Failed to submit comment.");
@@ -287,31 +294,31 @@ function ProductDetail() {
     }, [product]);
 
     const checkUserComment = async () => {
-        if (!currentUser) return;
+        if (!currentUser || matchedOrderIds.length === 0) return;
 
         try {
             const data = await get("comments", null, [
-
                 ["product", "==", id],
                 ["user", "==", currentUser.uid]
             ]);
+
             const allComments = Object.values(Object.assign({}, ...data));
 
-            const hasComment = allComments.some(
-                c => c.order === matchedOrderId
+            const userCommentsForOrders = allComments.filter(c =>
+                matchedOrderIds.includes(c.order)
             );
 
-            setUserHasCommented(hasComment);
+            setUserCommentCount(userCommentsForOrders.length);
         } catch (err) {
             console.error("Error checking user comment:", err);
         }
     };
 
     useEffect(() => {
-        if (matchedOrderId && currentUser) {
+        if (matchedOrderIds.length > 0 && currentUser) {
             checkUserComment();
         }
-    }, [matchedOrderId, currentUser]);
+    }, [matchedOrderIds, currentUser]);
 
     useEffect(() => {
         const fetchAllRatings = async () => {
@@ -335,11 +342,31 @@ function ProductDetail() {
         if (id) fetchAllRatings();
     }, [id]);
 
+    const handleSortChange = (e) => {
+        const newSortOption = e.target.value;
+        const params = new URLSearchParams();
+        if (searchTerm) params.set('search', searchTerm);
+        if (selectedCategory !== 'All') params.set('category', selectedCategory);
+        if (newSortOption !== 'default') params.set('sort', newSortOption);
+        navigate(`/?${params.toString()}`);
+    };
+
+    useEffect(() => {
+        const sort = searchParams.get('sort') || 'default';
+        const category = searchParams.get('category') || 'All';
+
+        setSortOption(sort);
+        setSelectedCategory(category);
+    }, [searchParams]);
+
     if (!product) {
         return <div className="loading">Loading...</div>;
     }
 
     const discountedPrice = product.price - (product.price * product.discount) / 100;
+
+    const cartItem = cart.find(item => item.id === product?.id);
+    const currentQuantity = cart.find(item => item.id === product.id)?.quantity || 0;
 
     return (
         <div className="product-detail-container">
@@ -351,14 +378,23 @@ function ProductDetail() {
                     onClick={() => navigate('/')}
                 />
 
-                <div className="search-bar">
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
-                    />
+                <div className="search-and-sort">
+                    <form className="search-bar" onSubmit={handleSearchSubmit}>
+                        <input
+                            type="text"
+                            placeholder="Search products"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </form>
+                    <div className="sort-options">
+                        <select value={sortOption} onChange={handleSortChange}>
+                            <option value="default">Default</option>
+                            <option value="priceHighToLow">High to Low</option>
+                            <option value="priceLowToHigh">Low to High</option>
+                            <option value="popularity">Popular</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div className="header-actions">
@@ -386,7 +422,11 @@ function ProductDetail() {
                                     <span className="notification-count">{unseenCount}</span>
                                 )}
                             </div>
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -444,7 +484,10 @@ function ProductDetail() {
                     <p className="description">{product.description}</p>
                     <div className="stock">
                         {product.stock > 0 ? (
-                            <span className="in-stock">{product.stock} stock left</span>
+                            <span className="in-stock">
+                                {product.stock - currentQuantity} left in stock
+                                {currentQuantity > 0 && ` (${currentQuantity} in your cart)`}
+                            </span>
                         ) : (
                             <span className="out-of-stock">Out of Stock</span>
                         )}
@@ -457,21 +500,30 @@ function ProductDetail() {
                     </div>
                     {product.stock > 0 && (
                         <div className="buttons">
-                            <button className="add-to-cart" onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart({
-                                    id: product.id,
-                                    name: product.name,
-                                    price: product.discount > 0
-                                        ? discountedPrice
-                                        : product.price,
-                                    image: product.image,
-                                    quantity: 1
-                                });
-                                alert('Product added to cart');
-                            }}
+                            <button
+                                className="add-to-cart"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (currentQuantity < product.stock) {
+                                        addToCart({
+                                            id: product.id,
+                                            name: product.name,
+                                            price: product.discount > 0
+                                                ? discountedPrice
+                                                : product.price,
+                                            image: product.image,
+                                            quantity: 1
+                                        });
+                                        alert('Product added to cart');
+                                    }
+                                }}
+                                disabled={product.stock <= 0 || currentQuantity >= product.stock}
                             >
-                                Add to Cart
+                                {product.stock > 0
+                                    ? (currentQuantity >= product.stock
+                                        ? "Out of Stock"
+                                        : "Add to Cart")
+                                    : "Out of Stock"}
                             </button>
                             {currentUser && (
                                 <button
@@ -503,7 +555,6 @@ function ProductDetail() {
             </div>
 
             <div className="product-comments">
-
                 {averageRating !== 0 && (
                     <div className="average-rating">
                         <h3>Average Rating: {averageRating.toFixed(1)}/10</h3>
@@ -522,41 +573,41 @@ function ProductDetail() {
                     ))}
                 </ul>
 
-                {currentUser && hasPurchasedAndDelivered && !userHasCommented && (
-                    <div className="comment-form">
-                        <h3>Leave a Comment</h3>
-                        <label>
-                            Rating:
-                            <select value={userRating} onChange={(e) => setUserRating(Number(e.target.value))}>
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
-                                    <option key={star} value={star}>{star}</option>
-                                ))}
-                            </select>
-                        </label>
-                        <textarea
-                            placeholder="Write your comment..."
-                            value={userComment}
-                            onChange={(e) => setUserComment(e.target.value)}
-                        />
-                        <button onClick={handleSubmitComment}>Submit Comment</button>
-                    </div>
-                )}
-
-                {currentUser && hasPurchasedAndDelivered && userHasCommented && (
-                    <p><em>You have already submitted a comment for this product.</em></p>
+                {currentUser && hasPurchasedAndDelivered && (
+                    userCommentCount < matchedOrderIds.length ? (
+                        <div className="comment-form">
+                            <h3>
+                                Leave a Comment ({userCommentCount + 1}/{matchedOrderIds.length})
+                            </h3>
+                            <label>
+                                Rating:
+                                <select value={userRating} onChange={(e) => setUserRating(Number(e.target.value))}>
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                                        <option key={star} value={star}>{star}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <textarea
+                                placeholder="Write your comment..."
+                                value={userComment}
+                                onChange={(e) => setUserComment(e.target.value)}
+                            />
+                            <button onClick={handleSubmitComment}>Submit Comment</button>
+                        </div>
+                    ) : (
+                        <p><em>You've used all your comments ({matchedOrderIds.length} allowed).</em></p>
+                    )
                 )}
 
                 {!currentUser && <p><em>Login to comment.</em></p>}
 
                 {currentUser && !hasPurchasedAndDelivered && (
-                    matchedOrderId
+                    matchedOrderIds.length > 0
                         ? <p><em>You can comment only after the product is delivered.</em></p>
                         : <p><em>You need to order this product before commenting.</em></p>
                 )}
             </div>
-
         </div>
     );
 }
-
 export default ProductDetail;

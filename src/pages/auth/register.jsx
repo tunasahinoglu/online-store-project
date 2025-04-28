@@ -23,6 +23,19 @@ const RegisterPage = () => {
     const [sortOption, setSortOption] = useState('default');
     const [currentUser, setCurrentUser] = useState(null);
     const { cart, addToCart } = useCart();
+    const [selectedCategory, setSelectedCategory] = useState('All');
+
+    const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
+        const params = new URLSearchParams();
+        if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
+        if (newSortOption !== 'default') params.set('sort', newSortOption);
+        if (newCategory !== 'All') params.set('category', newCategory);
+
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
+    };
 
     const handleSortChange = (e) => {
         const newSortOption = e.target.value;
@@ -85,7 +98,10 @@ const RegisterPage = () => {
             navigate('/');
         } catch (error) {
             console.log(error);
-            setError(error.message);
+            if (error.message == "Failed to fetch")
+                setError("Registration failed. Please try again.");
+            else
+                setError(error.message);
         } finally {
             setLoading(false);
         }
@@ -144,7 +160,11 @@ const RegisterPage = () => {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -271,9 +291,6 @@ const RegisterPage = () => {
                         </button>
                     </Link>
                 </form>
-                <footer>
-                    <p>&copy; Copyright 2025, CS308-Group32</p>
-                </footer>
             </div>
         </div>
     );

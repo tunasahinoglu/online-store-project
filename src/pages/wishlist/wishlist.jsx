@@ -15,9 +15,9 @@ function Wishlist() {
             if (user) {
                 setCurrentUser(user);
                 const userDataResponse = await get(`users/${user.uid}`);
-                const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
-                    ? userDataResponse[0].undefined
-                    : userDataResponse;
+                const userData = Array.isArray(userDataResponse)
+                ? userDataResponse[0]?.[user.uid]
+                : userDataResponse;
 
                 const allProductsData = await get('products');
                 const productsObj = Object.assign({}, ...allProductsData);
@@ -41,9 +41,9 @@ function Wishlist() {
     const removeFromWishlist = async (productId) => {
         try {
             const userDataResponse = await get(`users/${currentUser.uid}`);
-            const userData = Array.isArray(userDataResponse) && userDataResponse[0]?.undefined
-                ? userDataResponse[0].undefined
-                : userDataResponse;
+            const userData = Array.isArray(userDataResponse)
+            ? userDataResponse[0]?.[currentUser.uid]
+            : userDataResponse;
 
             const updatedWishlist = userData.wishlist.filter(id => id !== productId);
 

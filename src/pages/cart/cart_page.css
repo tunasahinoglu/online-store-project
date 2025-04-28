@@ -3,8 +3,8 @@
     margin: 0 auto;
     padding: 2rem 1rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #131921;
-    color: white;
+   
+
 }
 
 .cart-loading-overlay {
@@ -41,7 +41,7 @@
 
 .cart-header h1 {
     font-size: 2rem;
-    color: white;
+    
     font-weight: 600;
 }
 
@@ -276,4 +276,63 @@
     background-color: white;
     border-radius: 4px;
     padding: 5px;
+}
+
+.cart-item-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    width: 100%;
+    padding-left: 15px;
+}
+
+.price-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    justify-content: flex-start; 
+}
+
+.cart-item-name {
+    text-align: left;
+    width: 100%;
+    margin: 0 0 8px 0;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.discount-percentage {
+    color: white;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.cart-item-price.discounted {
+    color: #ffa41c;
+    font-weight: bold;
+}
+
+.cart-summary-row.discount span:last-child,
+.cart-summary-row.discount-percent span:last-child {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.discount-text {
+    font-size: 1.1em;
+}
+
+.discount-percent-text {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.cart-summary-row.discount-percent {
+    border-bottom: none;
+    margin-top: -8px;
+    padding-bottom: 0;
 }

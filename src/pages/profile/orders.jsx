@@ -4,7 +4,7 @@ import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { get } from '../../services/firebase/database.js';
+import { get, set } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import './profilepage.css';
 
@@ -16,11 +16,14 @@ function Homepage() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const { cart, addToCart } = useCart();
     const [currentUser, setCurrentUser] = useState(null);
-    const [firestoreProducts, setFirestoreProducts] = useState({});
-    const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
+    const [orders, setOrders] = useState([]);
+    const [userID, setUserID] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('All');
+
+
 
 
 
@@ -34,18 +37,19 @@ function Homepage() {
         setSelectedCategory(category);
     }, [searchParams]);
 
+
+
+
     const updateURLParams = (newSearchTerm = searchTerm, newSortOption = sortOption, newCategory = selectedCategory) => {
         const params = new URLSearchParams();
         if (newSearchTerm.trim()) params.set('search', newSearchTerm.trim());
-        else params.delete('search');
-
         if (newSortOption !== 'default') params.set('sort', newSortOption);
-        else params.delete('sort');
-
         if (newCategory !== 'All') params.set('category', newCategory);
-        else params.delete('category');
 
-        setSearchParams(params);
+        navigate({
+            pathname: '/',
+            search: `?${params.toString()}`
+        });
     };
 
     const handleLogout = async () => {
@@ -82,6 +86,36 @@ function Homepage() {
         updateURLParams('', sortOption, category);
     };
 
+    const handleCancelOrder = async (orderId) => {
+        try {
+            set(`orders/${orderId}`, { status: "cancelled" })
+
+            console.log(`Order ${orderId} cancelled successfully.`);
+            alert('cancelled successfully');
+            window.location.reload();
+        } catch (error) {
+            alert('cancelled error');
+            console.error('Error cancelling order:', error);
+        }
+    };
+
+    const [deliveryCompanies, setDeliveryCompanies] = useState({});
+
+    useEffect(() => {
+        async function fetchDeliveryCompanies() {
+            try {
+                const companiesData = await get('deliverycompanies');
+                setDeliveryCompanies(companiesData);
+                console.log("Delivery companies fetched:", companiesData);
+            } catch (error) {
+                console.error("Error fetching delivery companies:", error);
+            }
+        }
+
+        fetchDeliveryCompanies();
+    }, []);
+
+
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setCurrentUser(user);
@@ -113,19 +147,50 @@ function Homepage() {
     }, []);
 
     useEffect(() => {
-        const Myuser = auth.onAuthStateChanged(async (user) => {
-            if (Myuser) {
-                const data = await get(`users/${user.uid}`);
-                console.log("Full user data:", data);
-
-                const values = Object.values(data);
-                const userInfo = values[0];
-                setUserinfo(userInfo);
-                console.log('userinfo', userInfo.undefined.firstname); // Debugging line
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const data = await get(`users/${user.uid}`);
+                    const userInfo = data[0];
+                    setUserID(user.uid);
+                    setUserinfo(userInfo);
+                    console.log(userInfo);
+                } catch (error) {
+                    console.error("Error fetching user info:", error);
+                }
+            } else {
+                console.error("No user is logged in.");
             }
         });
-        return Myuser;
+
+        return unsubscribe;
     }, []);
+
+
+    //const orders = await get("orders", null, [["user", "==", user.uid]]);
+
+    useEffect(() => {
+        async function fetchOrders() {
+            if (!userID) return;
+
+            try {
+                const fetchedOrders = await get("orders", null, [["user", "==", userID]]);
+                if (fetchedOrders) {
+                    const ordersArray = Object.entries(fetchedOrders).map(([id, order]) => ({
+                        id,
+                        ...order
+                    }));
+                    setOrders(ordersArray);
+                    console.log(ordersArray);
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+            }
+        }
+
+        fetchOrders();
+    }, [userID]);
+
 
 
     return (
@@ -181,7 +246,11 @@ function Homepage() {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}
@@ -202,22 +271,89 @@ function Homepage() {
             </header>
 
             <main className="main-content2">
-                <h1>{INFOuser?.undefined?.firstname || "loading"}  {INFOuser?.undefined?.lastname || "loading"}</h1>
+                <h2>{INFOuser[userID]?.firstname ?? "loading"} {INFOuser[userID]?.lastname ?? "loading"}</h2>
                 <div className='profile-tabs'>
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
                 </div>
-                <div className="profile-container">
+                <div className="order-container">
                     <h2>Orders</h2>
-                    <div className="delivered-orders-box">
-                        <h3>Delivered Orders</h3>
-                        <ul>
-                            <li>Order #12345 - Delivered on April 10</li>
-                            <li>Order #67890 - Delivered on April 12</li>
-                        </ul>
-                    </div>
+                    <div className="order-filters">
+                        <button onClick={() => setSelectedStatus('All')}>All</button>
+                        <button onClick={() => setSelectedStatus('processing')}>Processing</button>
+                        <button onClick={() => setSelectedStatus('in transit')}>In Transit</button>
+                        <button onClick={() => setSelectedStatus('delivered')}>Delivered</button>
+                        <button onClick={() => setSelectedStatus('cancelled')}>Cancelled</button>
 
+                    </div>
+                    <div className="orders-list">
+                        {(() => {
+                            const filteredOrders = (selectedStatus === 'All'
+                                ? orders
+                                : orders.filter(order => {
+                                    const orderKey = Object.keys(order)[1];
+                                    const orderData = order[orderKey];
+                                    return orderData.status?.toLowerCase() === selectedStatus.toLowerCase();
+                                })
+                            ).sort((a, b) => {
+                                const aKey = Object.keys(a)[1];
+                                const bKey = Object.keys(b)[1];
+                                const aDate = new Date(a[aKey].date);
+                                const bDate = new Date(b[bKey].date);
+                                return bDate - aDate;
+                            });
+
+
+
+                            return filteredOrders.length > 0 ? (
+                                filteredOrders.map((order) => {
+                                    const orderKey = Object.keys(order)[1];
+                                    const orderData = order[orderKey];
+
+                                    const deliveryCompanyId = orderData.delivery?.company;
+                                    const deliveryCompanyName = deliveryCompanies.find(
+                                        company => Object.keys(company)[0] === deliveryCompanyId
+                                    )?.[deliveryCompanyId]?.name ?? 'No Delivery Company';
+
+                                    return (
+                                        <div key={order.id} className="order-card">
+                                            <h3>Order Number: {parseInt(order.id, 10) + 1}</h3>
+                                            <div className="order-info">
+                                                <div>
+                                                    <p><span>Name: </span> {orderData.firstname} {orderData.lastname}</p>
+                                                    <p><span>Status: </span> {orderData.status}</p>
+                                                    <p><span>Total Cost: </span> {orderData.totalcost}₺</p>
+                                                    <p><span>Date: </span> {new Date(orderData.date).toLocaleString()}</p>
+                                                </div>
+                                                <div>
+                                                    <p><span>Delivery City: </span> {orderData.address?.city ?? 'No Delivery City'}</p>
+                                                    <p><span>Billing City: </span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
+                                                    <p>
+                                                        <span>Delivery Company: </span>
+                                                        {deliveryCompanyName}
+                                                    </p>
+                                                    <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
+                                                </div>
+                                            </div>
+
+                                            {orderData.status?.toLowerCase() === 'processing' && (
+                                                <button
+                                                    color='red'
+                                                    className="cancel-order-button"
+                                                    onClick={() => handleCancelOrder(orderKey)}
+                                                >
+                                                    Cancel Order
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p>No orders found for "{selectedStatus}".</p>
+                            );
+                        })()}
+                    </div>
                 </div>
 
             </main>

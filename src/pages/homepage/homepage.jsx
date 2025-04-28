@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../assets/teknosuLogo.jpg';
 import './homepage.css';
 import { useCart } from '../../pages/cart/cart_context';
-import { auth, database } from "../../services/firebase/connect.js";
+import { auth } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { get } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
@@ -101,15 +101,16 @@ function Homepage() {
     });
 
     const sortedProducts = [...filteredProducts].sort((a, b) => {
+        const aFinalPrice = a.discount > 0 ? a.price * (1 - a.discount / 100) : a.price;
+        const bFinalPrice = b.discount > 0 ? b.price * (1 - b.discount / 100) : b.price;
+
         if (sortOption === 'priceHighToLow') {
-            return b.price - a.price;
+            return bFinalPrice - aFinalPrice;
         } else if (sortOption === 'priceLowToHigh') {
-            return a.price - b.price;
-        }
-        else if (sortOption === 'popularity') {
+            return aFinalPrice - bFinalPrice;
+        } else if (sortOption === 'popularity') {
             return (b.popularity || 0) - (a.popularity || 0);
-        }
-        else {
+        } else {
             return 0;
         }
     });
@@ -223,7 +224,11 @@ function Homepage() {
                             </div>
 
 
-                            <NotificationDialog open={openDialog} onClose={() => setOpenDialog(false)} />
+                            <NotificationDialog
+                                open={openDialog}
+                                onClose={() => setOpenDialog(false)}
+                                onSeen={(newUnseenCount) => setUnseenCount(newUnseenCount)}
+                            />
                             <button
                                 className="profile-button"
                                 onClick={() => navigate('/profile')}

@@ -5,6 +5,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import jsPDF from "jspdf";
+import logo from '../../assets/teknosuLogo.jpg';
+import { useNavigate } from "react-router-dom";
 
 export default function SalesManagerPage() {
   const [products, setProducts] = useState([]);
@@ -61,6 +63,8 @@ export default function SalesManagerPage() {
     });
     setRefundRequests(parsed);
   };
+
+    const navigate = useNavigate();
 
   const handlePriceChange = (id, value) => {
     setPriceInputs((prev) => ({ ...prev, [id]: value }));
@@ -156,7 +160,14 @@ export default function SalesManagerPage() {
 
   const { total, cost, profit } = calculateRevenue();
 
-  return (
+  return ( <div> <div className="app-bar">
+      <img
+          src={logo}
+          alt="Logo"
+          className="app-bar-logo"
+          onClick={() => navigate('/')}
+      />
+  </div>
     <div className="sales-page">
       <div className="sales-container">
         <h1 className="sales-title">Sales Manager Dashboard</h1>
@@ -290,6 +301,6 @@ export default function SalesManagerPage() {
         </section>
 
       </div>
-    </div>
+    </div></div>
   );
 }
