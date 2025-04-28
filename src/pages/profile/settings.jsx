@@ -62,10 +62,12 @@ function Homepage() {
     const handleSave = async () => {
         if (!currentUser || !userID) return;
         try {
-            await set(`users/${userID}`, { firstname: FirstnameSave, lastname: LastnameSave, country: CountrySave, city: CitySave, address: AddressSave, wishlist: [] })
-            alert('Address saved successfully!');
+            const response = await set(`users/${userID}`, { firstname: FirstnameSave, lastname: LastnameSave, country: CountrySave, city: CitySave, address: AddressSave, wishlist: [] })
+            console.log(response)
+            alert('Your information saved successfully!');
+            window.location.reload();
         } catch (error) {
-            console.error('Error saving address:', error);
+            console.error('Error saving information:', error);
         }
     };
 

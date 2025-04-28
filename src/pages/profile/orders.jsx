@@ -92,10 +92,10 @@ function Homepage() {
             console.log(response);
 
             console.log(`Order ${orderId} cancelled successfully.`);
-            alert('cancelled successfully');
+            alert('Your order has been cancelled successfully');
             window.location.reload();
         } catch (error) {
-            alert('cancelled error');
+            alert('Your order cannot be cancelled');
             console.error('Error cancelling order:', error);
         }
     };
