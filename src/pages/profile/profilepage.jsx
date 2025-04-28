@@ -20,7 +20,7 @@ function Homepage() {
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState([]);
     const [userID, setUserID] = useState('');
-
+    const [userRole, setUserRole] = useState(null);
 
 
     useEffect(() => {
@@ -77,6 +77,17 @@ function Homepage() {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setCurrentUser(user);
             if (user) {
+                const userData = await get(`users/${user.uid}`);
+
+                if (userData && Array.isArray(userData) && userData.length > 0) {
+                    const userKey = Object.keys(userData[0])[0];
+                    const userInfo = userData[0][userKey];
+
+                    if (userInfo && userInfo.role) {
+                        setUserRole(userInfo.role);
+                    }
+                }
+
                 const data = await get(`users/${user.uid}/notifications`);
 
                 let merged = {};
@@ -154,6 +165,19 @@ function Homepage() {
                 </div>
 
                 <div className="header-actions">
+                    {currentUser && userRole && (
+                        <div className="role-specific-buttons">
+                            {userRole === 'admin' && (
+                                <button onClick={() => navigate('/admin')}>👨‍💻 Admin</button>
+                            )}
+                            {userRole === 'productmanager' && (
+                                <button onClick={() => navigate('/productmanager')}>🛒 Product Manager</button>
+                            )}
+                            {userRole === 'salesmanager' && (
+                                <button onClick={() => navigate('/sales')}>💼 Sales Manager</button>
+                            )}
+                        </div>
+                    )}
                     {currentUser ? (
                         <div className="user-actions">
                             <div className="wishlist-icon" onClick={() => navigate('/wishlist')}>
@@ -207,15 +231,6 @@ function Homepage() {
                     <button onClick={() => navigate('/profile')}>Account</button>
                     <button onClick={() => navigate('/orders')}>Orders</button>
                     <button onClick={() => navigate('/settings')}>Settings</button>
-                    {INFOuser[userID]?.role === 'salesmanager' && (
-                        <button onClick={() => navigate('/sales')}>Sales Page</button>
-                    )}
-                    {INFOuser[userID]?.role === 'productmanager' && (
-                        <button onClick={() => navigate('/productmanager')}>Product Page</button>
-                    )}
-                    {INFOuser[userID]?.role === 'admin' && (
-                        <button onClick={() => navigate('/admin')}>Admin Page</button>
-                    )}
                 </div>
                 <div className="profile-container">
                     <div className='names'>

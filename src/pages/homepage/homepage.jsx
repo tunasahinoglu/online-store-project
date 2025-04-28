@@ -20,7 +20,7 @@ function Homepage() {
     const [dynamicCategories, setDynamicCategories] = useState(['All']);
     const [openDialog, setOpenDialog] = useState(false);
     const [unseenCount, setUnseenCount] = useState(0);
-
+    const [userRole, setUserRole] = useState(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -144,6 +144,17 @@ function Homepage() {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setCurrentUser(user);
             if (user) {
+                const userData = await get(`users/${user.uid}`);
+                
+                if (userData && Array.isArray(userData) && userData.length > 0) {
+                    const userKey = Object.keys(userData[0])[0];
+                    const userInfo = userData[0][userKey];
+
+                    if (userInfo && userInfo.role) {
+                        setUserRole(userInfo.role);
+                    }
+                }
+
                 const data = await get(`users/${user.uid}/notifications`);
 
                 let merged = {};
@@ -201,6 +212,20 @@ function Homepage() {
                 </div>
 
                 <div className="header-actions">
+                    {currentUser && userRole && (
+                        <div className="role-specific-buttons">
+                            {userRole === 'admin' && (
+                                <button onClick={() => navigate('/admin')}>👨‍💻 Admin</button>
+                            )}
+                            {userRole === 'productmanager' && (
+                                <button onClick={() => navigate('/productmanager')}>🛒 Product Manager</button>
+                            )}
+                            {userRole === 'salesmanager' && (
+                                <button onClick={() => navigate('/sales')}>💼 Sales Manager</button>
+                            )}
+                        </div>
+                    )}
+
                     {currentUser ? (
                         <div className="user-actions">
                             <div className="wishlist-icon" onClick={() => navigate('/wishlist')}>
