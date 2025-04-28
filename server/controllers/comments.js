@@ -101,6 +101,25 @@ export const addComment = async (req, res, next) => {
         //add the comment
         const commentDocument = await database.collection("comments").add(commentData);
         await log(database, "ADD", `comments/${commentDocument.id}`, commentData, decodedToken.uid);
+        //send notification
+        let message;
+        switch (comment) {
+            case undefined:
+                message = `Rating #${commentDocument.id} has been posted.`;
+                break;
+            case "":
+                message = `Rating #${commentDocument.id} has been posted.`;
+                break;
+            default:
+                message = `Comment #${commentDocument.id} has been submitted for approval.`;
+        }
+        const notificationData = {
+            message: message,
+            seen: false,
+            date: Date()
+        };
+        const notificationDocument = await database.collection("users").doc(decodedToken.uid).collection("notifications").add(notificationData);
+        await log(database, "ADD", `users/${decodedToken.uid}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
@@ -177,6 +196,22 @@ export const setComment = async (req, res, next) => {
         commentData["approved"] = approved;
         await commentReference.set(commentData);
         await log(database, "SET", `comments/${commentID}`, commentData, decodedToken.uid);
+        //send notification
+        let message;
+        switch (commentData["comment"]) {
+          case "":
+            message = `Rating #${commentDocument.id} has been ${approval ? "made visible" : "hidden"}.`;
+            break;
+          default:
+            message = `Comment #${commentDocument.id} has been ${approval ? "approved" : "denied"}.`;
+        }
+        const notificationData = {
+            message: message,
+            seen: false,
+            date: Date()
+        };
+        const notificationDocument = await database.collection("users").doc(commentData.user).collection("notifications").add(notificationData);
+        await log(database, "ADD", `users/${commentData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
