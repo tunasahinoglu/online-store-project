@@ -318,7 +318,7 @@ function Homepage() {
 
                                     return (
                                         <div key={order.id} className="order-card">
-                                            <h3>Order Number: {parseInt(order.id, 10) + 1}</h3>
+                                            <h3>Order Number: {orderKey}</h3>
                                             <div className="order-info">
                                                 <div>
                                                     <p><span>Name: </span> {orderData.firstname} {orderData.lastname}</p>
