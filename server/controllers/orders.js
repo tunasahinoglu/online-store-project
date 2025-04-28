@@ -283,7 +283,7 @@ export const setOrder = async (req, res, next) => {
         }
         //send notification
         let message;
-        switch (orderStatus) {
+        switch (status) {
           case "cancelled":
             message = `Order #${orderDocument.id} has been cancelled.`;
             break;

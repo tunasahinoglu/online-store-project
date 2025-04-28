@@ -88,7 +88,8 @@ function Homepage() {
 
     const handleCancelOrder = async (orderId) => {
         try {
-            set(`orders/${orderId}`, { status: "cancelled" })
+            const response = await set(`orders/${orderId}`, { status: "cancelled" })
+            console.log(response);
 
             console.log(`Order ${orderId} cancelled successfully.`);
             alert('cancelled successfully');
