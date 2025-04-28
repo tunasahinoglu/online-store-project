@@ -222,7 +222,7 @@ function Homepage() {
                         <button onClick={() => navigate('/sales')}>Sales Page</button>
                     )}
                     {INFOuser[userID]?.role === 'productmanager' && (
-                        <button onClick={() => navigate('/product')}>Product Page</button>
+                        <button onClick={() => navigate('/productmanager')}>Product Page</button>
                     )}
                     {INFOuser[userID]?.role === 'admin' && (
                         <button onClick={() => navigate('/admin')}>Admin Page</button>
