@@ -34,6 +34,7 @@ export const addProduct = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (name === undefined || category === undefined || subcategory === undefined || serialnumber === undefined || image === undefined || stock === undefined || warranty === undefined || distributorname === undefined || features === undefined) {
             const error = new Error("All fields are required");
@@ -81,8 +82,8 @@ export const addProduct = async (req, res, next) => {
             return next(error);
         }
         
+        //set the product data
         let productData;
-        //get the product
         productData = {
             name: name,
             category: category,
@@ -93,17 +94,21 @@ export const addProduct = async (req, res, next) => {
             discount: 0,
             stock: stock,
             popularity: 0,
-            description: description !== undefined ? description : "",
+            description: description !== undefined ? description : undefined,
             warranty: warranty,
             distributorname: distributorname,
             features: features
         };
+
         //add the product
         const productDocument = await database.collection("products").add(productData);
         await log(database, "ADD", `products/${productDocument.id}`, productData, decodedToken.uid);
+
+        //send a response
         res.status(200).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
+
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
@@ -128,7 +133,7 @@ export const setProduct = async (req, res, next) => {
     const productID = req.params.productID;
     
 
-    //add the product
+    //set the product
     try {
         //token check
         let decodedToken;
@@ -148,6 +153,7 @@ export const setProduct = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (tokenRole !== "salesmanager") {
             if (name === undefined || category === undefined || subcategory === undefined || serialnumber === undefined || image === undefined || stock === undefined || warranty === undefined || distributorname === undefined || features === undefined) {
@@ -211,9 +217,7 @@ export const setProduct = async (req, res, next) => {
             }
         }
         
-        let productData;
-        let oldPrice;
-        let oldDiscount;
+        //get the product
         const productReference = database.collection("products").doc(productID);
         const productDocument = await productReference.get();
         if (!productDocument.exists) {
@@ -221,33 +225,31 @@ export const setProduct = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
-        //get the product
+        const productData = productDocument.data();
+        
+        //set the product data
+        const oldPrice = productData.price;
+        const oldDiscount = productData.discount;
         if (tokenRole === "productmanager") {
-            productData = {
-                name: name,
-                category: category,
-                subcategory: subcategory,
-                serialnumber: serialnumber,
-                image: image,
-                price: productDocument.data().price,
-                discount: productDocument.data().discount,
-                stock: stock,
-                popularity: productDocument.data().popularity,
-                description: description !== undefined ? description : "",
-                warranty: warranty,
-                distributorname: distributorname,
-                features: features
-            };
+            productData.name = name;
+            productData.category = category;
+            productData.subcategory = subcategory;
+            productData.serialnumber = serialnumber;
+            productData.image = image;
+            productData.stock = stock;
+            productData.description = description;
+            productData.warranty = warranty;
+            productData.distributorname = distributorname;
+            productData.features = features;
         } else {
-            productData = productDocument.data();
-            oldPrice = productData["price"];
-            oldDiscount = productData["discount"];
-            productData["price"] = price;
-            productData["discount"] = discount;
+            productData.price = price;
+            productData.discount = discount;
         }
+
         //set the product
         await database.collection("products").doc(productID).set(productData);
         await log(database, "SET", `products/${productID}`, productData, decodedToken.uid);
+
         //send notifications to users with the product in their wishlist upon price decrease
         if (tokenRole === "salesmanager" && oldPrice*(100-oldDiscount)/100 > price*(100-discount)/100) {
             const userReference = database.collection("users").where("wishlist", "array-contains", productID);
@@ -265,9 +267,12 @@ export const setProduct = async (req, res, next) => {
                 await log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
             }
         }
+
+        //send a response
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
+
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
@@ -310,6 +315,7 @@ export const deleteProduct = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //get the product
         const productReference = database.collection("products").doc(productID);
         const productDocument = await productReference.get();
@@ -318,12 +324,16 @@ export const deleteProduct = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
         //delete the product
         await database.collection("products").doc(productID).delete();
         await log(database, "DELETE", `products/${productID}`, null, decodedToken.uid);
+
+        //send a response
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         console.error(error);
+        
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;

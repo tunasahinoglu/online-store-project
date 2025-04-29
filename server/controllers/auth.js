@@ -81,6 +81,7 @@ export const createAccount = async (req, res, next) => {
         });
     } catch (error) {
         console.log(error);
+        
         //extract error message and return response
         let message = "Registration failed. Please try again.";
         let status = 500;

@@ -14,7 +14,7 @@ export const addDeliveryCompany = async (req, res, next) => {
     const { name, costs, email } = req.body;
 
     
-    //set the user
+    //add the delivery company
     try {
         //token check
         let decodedToken;
@@ -34,6 +34,7 @@ export const addDeliveryCompany = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (name === undefined || costs === undefined || email === undefined) {
             const error = new Error("All fields are required");
@@ -53,6 +54,7 @@ export const addDeliveryCompany = async (req, res, next) => {
             return next(error);
         }
 
+        //set delivery company data
         const deliveryCompanyData = {
             name: name,
             costs: costs,
@@ -62,9 +64,12 @@ export const addDeliveryCompany = async (req, res, next) => {
         //add the delivery company
         const deliveryCompanyDocument = await database.collection("deliverycompanies").add(deliveryCompanyData);
         await log(database, "ADD", `deliverycompanies/${deliveryCompanyDocument.id}`, deliveryCompanyData, decodedToken.uid);
+
+        //send a response
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
+        
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;

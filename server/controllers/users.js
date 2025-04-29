@@ -16,7 +16,7 @@ export const setProduct = async (req, res, next) => {
     const productID = req.params.productID;
     
 
-    //add the product
+    //set the basket product
     try {
         //token check
         let decodedToken;
@@ -38,6 +38,7 @@ export const setProduct = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (count === undefined) {
             const error = new Error("All fields are required");
@@ -48,6 +49,7 @@ export const setProduct = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+        
         //get the user
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
@@ -56,6 +58,7 @@ export const setProduct = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
         //get the product
         const productReference = database.collection("products").doc(productID);
         const productDocument = await productReference.get();
@@ -64,6 +67,7 @@ export const setProduct = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
         //check whether count is above stock number
         if (count > productDocument.data().stock) {
             const error = new Error("Please enter a valid count");
@@ -71,22 +75,26 @@ export const setProduct = async (req, res, next) => {
             return next(error);
         }
 
+        //set the basket product data
         const productData = {
             count: count
         };
 
+        //set the basket product
         let method = "ADD";
         const reference = database.collection("users").doc(userID).collection("basket").doc(productID);
         const document = await reference.get();
         if (document.exists) {
             method = "SET";
         }
-        //set the product
         await database.collection("users").doc(userID).collection("basket").doc(productID).set(productData);
         await log(database, method, `users/${userDocument.id}/basket/${productID}`, productData, decodedToken.uid);
+
+        //send a response
         res.status(200).json({message: `Successfully ${method == "ADD" ? "added" : "set"}`});
     } catch (error) {
         console.error(error);
+
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
@@ -134,6 +142,7 @@ export const setUser = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (isUser && (firstname === undefined || lastname === undefined || country === undefined || city === undefined || address === undefined)) {
             const error = new Error("All fields are required");
@@ -184,7 +193,8 @@ export const setUser = async (req, res, next) => {
                 }
             }
         }
-        //get the user
+
+        //get the user data
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
         if (!userDocument.exists) {
@@ -192,25 +202,38 @@ export const setUser = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+        let userData = userDocument.data();
 
-        const userData = {
-            firstname: tokenRole === "admin" ? userDocument.data().firstname : firstname,
-            lastname: tokenRole === "admin" ? userDocument.data().lastname : lastname,
-            email: userDocument.data().email,
-            role: tokenRole === "admin" ? role : userDocument.data().role,
-            address: {
-                country: tokenRole === "admin" ? userDocument.data().address.country : country,
-                city: tokenRole === "admin" ? userDocument.data().address.city : city,
-                address: tokenRole === "admin" ? userDocument.data().address.address : address
-            },
-            active: tokenRole === "admin" ? active : userDocument.data().active,
-            wishlist: tokenRole === "admin" ? userDocument.data().wishlist : wishlist
-        };
+        //set the user data
+        if (tokenRole !== "admin") {
+            userData.role = role;
+            userData.active = active;
+        } else {
+            userData.firstname = firstname;
+            userData.lastname = lastname;
+            userData.address.country = country;
+            userData.address.city = city;
+            userData.address.address = address;
+            userData.wishlist = wishlist;
+        }
 
         //set the user
         await database.collection("users").doc(userID).set(userData);
         await log(database, "SET", `users/${userDocument.uid}`, userData, decodedToken.uid);
-        if (tokenRole === "admin" && userDocument.data().active !== active) {
+
+        //send notification to user
+        const oldUserData = userDocument.data();
+        const roleNameMap = {customer: "customer", productmanager: "product manager", salesmanager: "sales manager", admin: "admin"};
+        if (tokenRole === "admin" && oldUserData.role !== role) {
+            const notificationData = {
+                message: `Your role has been changed to ${roleNameMap[role]}.`,
+                seen: false,
+                date: Date()
+            };
+            const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
+            await log(database, "ADD", `users/${userID}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        }
+        if (tokenRole === "admin" && oldUserData.active !== active) {
             const notificationData = {
                 message: `Your account has been ${active ? "suspended" : "activated"}.`,
                 seen: false,
@@ -219,9 +242,11 @@ export const setUser = async (req, res, next) => {
             const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
             await log(database, "ADD", `users/${userID}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         }
+
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
+        
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
@@ -269,6 +294,7 @@ export const setNotification = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (seen === undefined) {
             const error = new Error("All fields are required");
@@ -279,6 +305,7 @@ export const setNotification = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+        
         //get the user
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
@@ -287,6 +314,8 @@ export const setNotification = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
+        //get the notification
         const notificationReference = userReference.collection("notifications").doc(notificationID);
         const notificationDocument = await notificationReference.get();
         if (!notificationDocument.exists) {
@@ -294,13 +323,20 @@ export const setNotification = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
+        //set the notification data
         const notificationData = notificationDocument.data();
         notificationData["seen"] = seen;
+
+        //set the notification
         await notificationReference.set(notificationData);
         await log(database, "SET", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        
+        //send a response
         res.status(201).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
+
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
@@ -325,7 +361,7 @@ export const deleteProduct = async (req, res, next) => {
     const productID = req.params.productID;
     
 
-    //add the product
+    //delete the product
     try {
         //token check
         let decodedToken;
@@ -347,6 +383,7 @@ export const deleteProduct = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //get the user
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
@@ -355,6 +392,7 @@ export const deleteProduct = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
         //get the product
         const productReference = userReference.collection("basket").doc(productID);
         const productDocument = await productReference.get();
@@ -363,12 +401,16 @@ export const deleteProduct = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
         //delete the product
         await database.collection("users").doc(userID).collection("basket").doc(productID).delete();
         await log(database, "DELETE", `users/${userDocument.uid}/basket/${productID}`, null, decodedToken.uid);
+        
+        //send a response
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         console.error(error);
+        
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;

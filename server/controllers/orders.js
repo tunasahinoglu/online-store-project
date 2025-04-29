@@ -16,7 +16,7 @@ export const addOrder = async (req, res, next) => {
     const { delivery, notes } = req.body;
     
 
-    //add the product
+    //add the order
     try {
         //token check
         let decodedToken;
@@ -38,6 +38,7 @@ export const addOrder = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (delivery === undefined) {
             const error = new Error("All fields are required");
@@ -48,6 +49,7 @@ export const addOrder = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+
         //get the delivery company
         const deliveryCompanyReference = database.collection("deliverycompanies").doc(delivery.company);
         const deliveryCompanyDocument = await deliveryCompanyReference.get();
@@ -65,6 +67,7 @@ export const addOrder = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+
         //get the basket
         const basketReference = userReference.collection("basket");
         const basketSnapshot = await basketReference.get();
@@ -74,6 +77,7 @@ export const addOrder = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+
         //check for an unavailable item
         for (let productDocument of basketDocuments) {
             //get the product
@@ -86,6 +90,7 @@ export const addOrder = async (req, res, next) => {
             }
         }
 
+        //set order data
         const orderData = {
             user: userDocument.id,
             firstname: userDocument.data().firstname,
@@ -103,43 +108,52 @@ export const addOrder = async (req, res, next) => {
 
         //add the order
         let orderDocument = await database.collection("orders").add(orderData);
+
         //calculate total cost & discounted cost
         let totalCost = delivery.type === "standard" ? deliveryCompanyDocument.data().costs[0] : deliveryCompanyDocument.data().costs[1];
         let totalDiscountedCost = totalCost;
         orderData["deliverycost"] = totalCost;
         const orderID = orderDocument.id;
-        for (let productDocument of basketDocuments) {
+        for (let basketProductDocument of basketDocuments) {
             //get the product
-            const reference = database.collection("products").doc(productDocument.id);
-            const document = await reference.get();
+            const productReference = database.collection("products").doc(basketProductDocument.id);
+            const productDocument = await productReference.get();
+            const productData = productDocument.data();
+            const basketProductData = basketProductDocument.data();
+
             //update product
-            const newDocumentData = document.data();
-            newDocumentData["stock"] = document.data().stock - productDocument.data().count;
-            newDocumentData["popularity"] = document.data().popularity + productDocument.data().count;
-            await database.collection("products").doc(productDocument.id).set(newDocumentData);
-            await log(database, "SET", `products/${document.id}`, newDocumentData, decodedToken.uid);
+            const newProductData = productDocument.data();
+            newProductData["stock"] = productData.stock - basketProductData.count;
+            newProductData["popularity"] = productData.popularity + basketProductData.count;
+            await database.collection("products").doc(basketProductDocument.id).set(newProductData);
+            await log(database, "SET", `products/${productDocument.id}`, newProductData, decodedToken.uid);
+            
             //add product
-            totalCost += productDocument.data().count * document.data().price;
-            totalDiscountedCost += productDocument.data().count * document.data().price * (100 - document.data().discount)/100
-            const productData = {
-                name: document.data().name,
-                price: document.data().price,
-                discount: document.data().discount,
-                count: productDocument.data().count
+            totalCost += basketProductData.count * productData.price;
+            totalDiscountedCost += basketProductData.count * productData.price * (100 - documentData.discount)/100
+            const orderProductData = {
+                name: productData.name,
+                price: productData.price,
+                discount: productData.discount,
+                count: basketProductData.count
             };
-            await database.collection("orders").doc(orderID).collection("products").doc(productDocument.id).set(productData);
-            await log(database, "ADD", `orders/${orderID}/products/${productDocument.id}`, productData, decodedToken.uid);
+            await database.collection("orders").doc(orderID).collection("products").doc(basketProductDocument.id).set(orderProductData);
+            await log(database, "ADD", `orders/${orderID}/products/${basketProductDocument.id}`, orderProductData, decodedToken.uid);
         }
+
         //delete user basket
-        for (let productDocument of basketDocuments) {
-            await basketReference.doc(productDocument.id).delete();
-            await log(database, "DELETE", `users/${userDocument.id}/basket/${productDocument.id}`, null, decodedToken.uid);
+        for (let basketProductDocument of basketDocuments) {
+            await basketReference.doc(basketProductDocument.id).delete();
+            await log(database, "DELETE", `users/${userDocument.id}/basket/${basketProductDocument.id}`, null, decodedToken.uid);
         }
+
+        //add the order
         orderData["totalcost"] = totalCost;
         orderData["totaldiscountedcost"] = totalDiscountedCost;
         await database.collection("orders").doc(orderDocument.id).set(orderData);
         await log(database, "ADD", `orders/${orderID}`, orderData, decodedToken.uid);
-        //email
+
+        //send an email to user
         orderDocument = await database.collection("orders").doc(orderDocument.id).get();
         const productsSnapshot = await database.collection("orders").doc(orderDocument.id).collection("products").get();
         const productDocuments = productsSnapshot.docs;
@@ -163,7 +177,8 @@ export const addOrder = async (req, res, next) => {
             <p><strong>Teknosu Team</strong></p>
         `;
         await sendEmail(userDocument.data().email, "We have received your order", content, [attachment]);
-        //send notification
+
+        //send notification to user
         const notificationData = {
             message: `Order #${orderDocument.id} has been placed.`,
             seen: false,
@@ -171,9 +186,12 @@ export const addOrder = async (req, res, next) => {
         };
         const notificationDocument = await database.collection("users").doc(decodedToken.uid).collection("notifications").add(notificationData);
         await log(database, "ADD", `users/${decodedToken.uid}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        
+        //send a response
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
+        
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
@@ -220,6 +238,7 @@ export const setOrder = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (status === undefined) {
             const error = new Error("All fields are required");
@@ -231,7 +250,7 @@ export const setOrder = async (req, res, next) => {
             return next(error);
         }
 
-        //get the order
+        //get the order data
         const orderReference = database.collection("orders").doc(orderID);
         const orderDocument = await orderReference.get();
         if (!orderDocument.exists) {
@@ -240,13 +259,16 @@ export const setOrder = async (req, res, next) => {
             return next(error);
         }
         const orderData = orderDocument.data();
+
+        //status check
         if (!(((tokenRole === "admin" || isUser) && orderData.status === "processing" && status === "cancelled") || (tokenRole === "productmanager" && ((orderData.status === "processing" && status === "in-transit") || (orderData.status === "in-transit" && status === "delivered"))))) {
             const error = new Error("Please enter a valid status");
             error.status = 400;
             return next(error);
         }
+
+        //check existence of products
         if (status === "cancelled") {
-            //check existence of products
             const productsReference = orderReference.collection("products");
             const productsSnapshot = await productsReference.get();
             const productDocuments = productsSnapshot.docs;
@@ -260,14 +282,19 @@ export const setOrder = async (req, res, next) => {
                 }
             }
         }
+
+        //set the order data
         if (status === "delivered") {
             orderData["deliverydate"] = Date();
         }
         orderData["status"] = status;
+
+        //set the order
         await orderReference.set(orderData);
         await log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
+
+        //update product stocks
         if (status === "cancelled") {
-            //update product stocks
             const productsReference = orderReference.collection("products");
             const productsSnapshot = await productsReference.get();
             const productDocuments = productsSnapshot.docs;
@@ -281,7 +308,8 @@ export const setOrder = async (req, res, next) => {
                 await log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }
         }
-        //send notification
+
+        //send notification to user
         let message;
         switch (status) {
           case "cancelled":
@@ -303,9 +331,12 @@ export const setOrder = async (req, res, next) => {
         };
         const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
         await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        
+        //send a response
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         console.error(error);
+        
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;

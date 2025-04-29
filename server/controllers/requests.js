@@ -14,7 +14,7 @@ export const addRequest = async (req, res, next) => {
     const { order, request } = req.body;
     
 
-    //add the product
+    //add the request
     try {
         //token check
         let decodedToken;
@@ -34,6 +34,7 @@ export const addRequest = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (order === undefined || request === undefined) {
             const error = new Error("All fields are required");
@@ -48,6 +49,7 @@ export const addRequest = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+
         //get the order
         const orderReference = database.collection("orders").doc(order);
         const orderDocument = await orderReference.get();
@@ -56,7 +58,8 @@ export const addRequest = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
-        //get the user
+
+        //get the user data
         const userReference = database.collection("users").doc(decodedToken.uid);
         const userDocument = await userReference.get();
         if (!userDocument.exists) {
@@ -64,6 +67,8 @@ export const addRequest = async (req, res, next) => {
             error.status = 404;
             return next(error);
         }
+        const userData = userDocument.data();
+
         //get the request
         const requestReference = database.collection("requests").where("user", "==", decodedToken.uid).where("request", "==", request);
         const requestSnapshot = await requestReference.get();
@@ -73,10 +78,11 @@ export const addRequest = async (req, res, next) => {
             return next(error);
         }   
 
+        //set the request data
         const requestData = {
             user: userDocument.id,
-            firstname: userDocument.data().firstname,
-            lastname: userDocument.data().lastname,
+            firstname: userData.firstname,
+            lastname: userData.lastname,
             reviewed: false,
             approved: false,
             order: order,
@@ -87,6 +93,7 @@ export const addRequest = async (req, res, next) => {
         //add the request
         const requestDocument = await database.collection("requests").add(requestData);
         await log(database, "ADD", `requests/${requestDocument.id}`, requestData, decodedToken.uid);
+
         //send notification
         const notificationData = {
             message: `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`,
@@ -95,9 +102,12 @@ export const addRequest = async (req, res, next) => {
         };
         const notificationDocument = await database.collection("users").doc(decodedToken.uid).collection("notifications").add(notificationData);
         await log(database, "ADD", `users/${decodedToken.uid}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        
+        //send a response
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         console.error(error);
+
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
@@ -143,6 +153,7 @@ export const setRequest = async (req, res, next) => {
                 return next(error);
             }
         }
+
         //input check
         if (approved === undefined) {
             const error = new Error("All fields are required");
@@ -154,7 +165,7 @@ export const setRequest = async (req, res, next) => {
             return next(error);
         }
 
-        //get the request
+        //get the request data
         const requestReference = database.collection("requests").doc(requestID);
         const requestDocument = await requestReference.get();
         if (!requestDocument.exists) {
@@ -168,10 +179,11 @@ export const setRequest = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+
+        //get the order
         let orderReference;
         let orderDocument;
         if (requestData["request"] === "refund") {
-            //get the order
             orderReference = database.collection("orders").doc(requestData["order"]);
             orderDocument = await orderReference.get();
             if (!orderDocument.exists) {
@@ -198,10 +210,13 @@ export const setRequest = async (req, res, next) => {
                 }
             }
         }
+
+        //accept the request
         if (requestData["request"] === "refund" && approved) {
             orderData["status"] = "refunded";
             await orderReference.set(orderData);
             await log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
+            
             //update product stocks
             const productsReference = orderReference.collection("products");
             const productsSnapshot = await productsReference.get();
@@ -216,16 +231,20 @@ export const setRequest = async (req, res, next) => {
                 await log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
             }
         }
+
+        //set the request
         requestData["reviewed"] = true;
         requestData["approved"] = approved;
         await requestReference.set(requestData);
         await log(database, "SET", `requests/${requestID}`, requestData, decodedToken.uid);
+
+        //send an email to user
         if (requestData["request"] === "refunded" && approved) {
-            //send email
             const userReference = database.collection("users").doc(orderData.user);
             const userDocument = await userReference.get();
+            const userData = userDocument.data();
             const content = `
-                <p>Hello ${userDocument.data().firstname},</p>
+                <p>Hello ${userData.firstname},</p>
                 
                 <p>We’re reaching out to confirm that your refund for order #${orderDocument.id} has been successfully processed.</p>
             
@@ -241,8 +260,9 @@ export const setRequest = async (req, res, next) => {
                 <p>Best regards,</p>
                 <p><strong>Teknosu Team</strong></p>
             `;
-            await sendEmail(userDocument.data().email, "Refund request has been confirmed", content);
+            await sendEmail(userData.email, "Refund request has been confirmed", content);
         }
+
         //send notification
         const notificationData = {
             message: `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been ${approved ? "accepted" : "rejected"}.`,
@@ -251,9 +271,12 @@ export const setRequest = async (req, res, next) => {
         };
         const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
         await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        
+        //send a response
         res.status(200).json({message: "Successfully set", alert:alertMessage});
     } catch (error) {
         console.error(error);
+        
         //extract error message and return response
         let message = "Internal server error";
         let status = 500;
