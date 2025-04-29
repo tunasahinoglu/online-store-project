@@ -7,6 +7,90 @@ import log from "../services/log.js";
 const database = admin.firestore();
 
 
+//  @desc   user checks whether its basket is valid
+//  @route  GET  /api/users/:userID/basket-check
+export const checkBasket = async (req, res, next) => {
+    const token = req.headers.authorization;
+    const userID = req.params.userID;
+    
+
+    //set the basket product
+    try {
+        //token check
+        let decodedToken;
+        let tokenRole;
+        let isUser;
+        if (!token) {
+            const error = new Error("No token provided");
+            error.status = 401;
+            return next(error);
+        } else {
+            decodedToken = await admin.auth().verifyIdToken(token);
+            const userReference = database.collection("users").doc(decodedToken.uid);
+            const user = await userReference.get();
+            tokenRole = user.data().role;
+            isUser = user.id === decodedToken.uid;
+            if (!user.exists || !isUser) {
+                const error = new Error("Unauthorized access");
+                error.status = 401;
+                return next(error);
+            }
+        }
+        
+        //get the user
+        const userReference = database.collection("users").doc(userID);
+        const userDocument = await userReference.get();
+        if (!userDocument.exists) {
+            const error = new Error(`A user with the id of ${userID} was not found`);
+            error.status = 404;
+            return next(error);
+        }
+
+        //get the basket
+        let valid = true;
+        const basketReference = userReference.collection("basket");
+        const basketSnapshot = await basketReference.get();
+        const basketDocuments = basketSnapshot.docs;
+
+        //check for an unavailable item
+        let errorMessage = "";
+        for (let productDocument of basketDocuments) {
+            //get the product
+            const reference = database.collection("products").doc(productDocument.id);
+            const document = await reference.get();
+            if (!document.exists || document.data().price === 0) {
+                errorMessage += `\t• Product #${productDocument.id} is not available.\n`;
+
+            } else if (document.data().stock < productDocument.data().count) {
+                errorMessage += `\t• Product #${productDocument.id} does not have enough stock available.\n`;
+            }
+        }
+
+        //send a response
+        if (errorMessage) {
+            res.status(400).json({message: "Invalid", alert: "Basket contains unavailable items:\n" + errorMessage});
+        } else {
+            res.status(200).json({message: "Valid"});
+        }
+    } catch (error) {
+        console.error(error);
+
+        //extract error message and return response
+        let message = "Internal server error";
+        let status = 500;
+        switch (error.code) {
+            case "auth/id-token-expired":
+                message = "Invalid or expired token";
+                status = 401;
+                break;
+        }
+        res.status(status).json({
+          message: message
+        });
+    }
+}
+
+
 //  @desc   admin/user sets product to a specific user's/its basket
 //  @route  PUT  /api/users/:userID/basket/:productID
 export const setProduct = async (req, res, next) => {
