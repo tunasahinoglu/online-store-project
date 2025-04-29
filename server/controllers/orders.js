@@ -130,7 +130,7 @@ export const addOrder = async (req, res, next) => {
             
             //add product
             totalCost += basketProductData.count * productData.price;
-            totalDiscountedCost += basketProductData.count * productData.price * (100 - documentData.discount)/100
+            totalDiscountedCost += basketProductData.count * productData.price * (100 - productData.discount)/100
             const orderProductData = {
                 name: productData.name,
                 price: productData.price,
