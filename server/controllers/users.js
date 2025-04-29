@@ -68,7 +68,7 @@ export const checkBasket = async (req, res, next) => {
 
         //send a response
         if (errorMessage) {
-            res.status(400).json({message: "Invalid", alert: "Basket contains unavailable items:\n" + errorMessage});
+            res.status(200).json({message: "Invalid", alert: "Basket contains unavailable items:\n" + errorMessage});
         } else {
             res.status(200).json({message: "Valid"});
         }
