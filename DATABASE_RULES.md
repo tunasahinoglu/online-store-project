@@ -5,6 +5,8 @@ import { get, add, set, del } from "path-to-database.js"
 - **get:**
     - User can read their own user profile
         - `get("users/{userId}")`
+    - User can validate their own basket
+        - `get("users/{userId}/basket-check")`
     - Admin can read all user profiles
         - `get("users")`
         - `get("users/{userId}")`
