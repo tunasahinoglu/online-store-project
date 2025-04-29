@@ -80,8 +80,9 @@ orderID: {
     "user": "userID",
     "firstname": "non-empty string",
     "lastname": "non-empty string",
-    "totalcost": "positive integer",
+    "totalcost": "positive integer", 
     "totaldiscountedcost": "non-negative integer",
+    "deliverycost": "non-negative integer",
     "status": "processing | in-transit | delivered | cancelled | refunded",
     "address": {
         "country": "non-empty string",
