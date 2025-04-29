@@ -91,6 +91,7 @@ orderID: {
     },
     "delivery": {
         "type": "standard | express",
+        "name": "non-empty string",
         "company": "deliverycompanyID"
     },
     "notes": "string",

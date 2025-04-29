@@ -13,7 +13,8 @@ const database = admin.firestore();
 //  @route  POST  /api/orders
 export const addOrder = async (req, res, next) => {
     const token = req.headers.authorization;
-    const { delivery, notes } = req.body;
+    const { notes } = req.body;
+    let { delivery } = req.body;
     
 
     //add the order
@@ -50,7 +51,7 @@ export const addOrder = async (req, res, next) => {
             return next(error);
         }
 
-        //get the delivery company
+        //get the delivery company data
         const deliveryCompanyReference = database.collection("deliverycompanies").doc(delivery.company);
         const deliveryCompanyDocument = await deliveryCompanyReference.get();
         if (!deliveryCompanyDocument.exists) {
@@ -58,6 +59,7 @@ export const addOrder = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+        const deliveryCompanyData = deliveryCompanyDocument.data();
         
         //get the user
         const userReference = database.collection("users").doc(decodedToken.uid);
@@ -91,6 +93,7 @@ export const addOrder = async (req, res, next) => {
         }
 
         //set order data
+        delivery.name = deliveryCompanyData.name;
         const orderData = {
             user: userDocument.id,
             firstname: userDocument.data().firstname,
@@ -110,7 +113,7 @@ export const addOrder = async (req, res, next) => {
         let orderDocument = await database.collection("orders").add(orderData);
 
         //calculate total cost & discounted cost
-        let totalCost = delivery.type === "standard" ? deliveryCompanyDocument.data().costs[0] : deliveryCompanyDocument.data().costs[1];
+        let totalCost = delivery.type === "standard" ? deliveryCompanyData.costs[0] : deliveryCompanyData.costs[1];
         let totalDiscountedCost = totalCost;
         orderData["deliverycost"] = totalCost;
         const orderID = orderDocument.id;
