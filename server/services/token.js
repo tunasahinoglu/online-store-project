@@ -1,4 +1,4 @@
-import createError from "./error";
+import { createError } from "./error.js";
 
 
 const decodeToken = async (admin, database, token, condition) => {    

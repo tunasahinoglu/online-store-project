@@ -6,7 +6,6 @@ import product from "./routers/products.js"
 import order from "./routers/orders.js"
 import request from "./routers/requests.js"
 import comment from "./routers/comments.js"
-import errorHandler from "./middlewares/error.js"
 import notFoundHandler from "./middlewares/notFound.js"
 import logHandler from "./middlewares/log.js"
 import cors from "cors";
