@@ -105,3 +105,28 @@ export const del = async (path) => {
     if (response.alert) {alert(response.alert);}
     return response.message;
 };
+
+export const basketCheck = async (path) => {
+  const auth = getAuth(app);
+  const user = auth.currentUser;
+  const res = await fetch(`http://localhost:5001/api/${path}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "authorization": user ? await user.getIdToken(true) : ""
+    }
+  });
+
+  const response = await res.json();
+
+  if (!res.ok) {
+    throw new Error(response.message);
+  }
+
+  if (response.alert) {
+    alert(response.alert);
+    return null; 
+  }
+
+  return response.message;
+};

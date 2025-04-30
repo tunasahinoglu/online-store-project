@@ -4,7 +4,7 @@ import { useCart } from '../../pages/cart/cart_context';
 import { useNavigate } from 'react-router-dom';
 import { auth } from "../../services/firebase/connect.js";
 import logo from '../../assets/teknosuLogo.jpg';
-import { get } from '../../services/firebase/database.js';
+import { get, basketCheck } from '../../services/firebase/database.js';
 
 const Cart = () => {
     const { cart, removeFromCart, clearCart, addToCart, isInitialized } = useCart();
@@ -192,7 +192,7 @@ const Cart = () => {
                                                 e.stopPropagation();
                                                 handleAddToCart(product);
                                             }}
-                                            disabled={loading || product.quantity >= product.stock} 
+                                            disabled={loading || product.quantity >= product.stock}
                                         >
                                             +
                                         </button>
@@ -237,17 +237,31 @@ const Cart = () => {
 
                             <button
                                 className="cart-buy-btn"
-                                onClick={() => {
+                                onClick={async () => {
                                     if (!currentUser) {
                                         alert("Please login to proceed to payment.");
                                         navigate('/login');
-                                    } else {
+                                        return;
+                                    }
+
+                                    try {
+                                        const basket = await basketCheck(`users/${currentUser.uid}/basket-check`);
+                                        if (!basket) {
+                                            return;
+                                        }
+
                                         navigate('/payment');
+                                    } catch (error) {
+                                        console.error("Error fetching user or basket data:", error);
+                                        alert("An error occurred while fetching data.");
                                     }
                                 }}
                             >
                                 Buy Now
                             </button>
+
+
+
                         </div>
                     </div>
                 )}
@@ -257,3 +271,4 @@ const Cart = () => {
 }
 
 export default Cart;
+
