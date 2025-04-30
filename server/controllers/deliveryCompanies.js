@@ -20,7 +20,7 @@ export const addDeliveryCompany = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin";
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (name === undefined || costs === undefined || email === undefined)
@@ -66,7 +66,7 @@ export const deleteDeliveryCompany = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin";
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //get the delivery company
         const deliveryCompanyReference = userReference.collection("deliverycompanies").doc(deliveryCompanyID);

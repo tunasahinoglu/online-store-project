@@ -20,7 +20,7 @@ export const addComment = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => userData.active;
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (order === undefined || product === undefined || rate === undefined)
@@ -111,7 +111,7 @@ export const setComment = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" && tokenRole === "productmanager";
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (approved === undefined)

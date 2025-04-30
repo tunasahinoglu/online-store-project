@@ -20,7 +20,7 @@ export const addRequest = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (order === undefined || request === undefined)
@@ -99,7 +99,7 @@ export const setRequest = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "salesmanager";
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (approved === undefined)

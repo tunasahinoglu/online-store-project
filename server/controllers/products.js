@@ -20,7 +20,7 @@ export const addProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager";
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (name === undefined || category === undefined || subcategory === undefined || serialnumber === undefined || image === undefined || stock === undefined || warranty === undefined || distributorname === undefined || features === undefined)
@@ -92,7 +92,7 @@ export const setProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager" || tokenRole === "salesmanager";
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (tokenRole !== "salesmanager") {
@@ -198,7 +198,7 @@ export const deleteProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || tokenRole === "productmanager";
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //get the product
         const productReference = database.collection("products").doc(productID);

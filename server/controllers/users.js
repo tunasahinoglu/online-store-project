@@ -20,7 +20,7 @@ export const checkBasket = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
         
         //get the user
         const userReference = database.collection("users").doc(userID);
@@ -73,7 +73,7 @@ export const setProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (count === undefined)
@@ -136,7 +136,7 @@ export const setUser = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || isUser;
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (isUser && (firstname === undefined || lastname === undefined || country === undefined || city === undefined || address === undefined))
@@ -239,7 +239,7 @@ export const setNotification = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //input check
         if (seen === undefined)
@@ -290,7 +290,7 @@ export const deleteProduct = async (req, res) => {
     //delete the product
     try {
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
 
         //get the user
         const userReference = database.collection("users").doc(userID);

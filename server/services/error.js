@@ -6,10 +6,11 @@ export const createError = (message, status) => {
 
 
 export const extractError = (error) => {
-    console.error(error.message || error);
+    console.error(error);
         
     //extract error message and return 
-    let message = "Internal server error", status = 500;
+    let message = "Internal server error";
+    let status = 500;
 
     switch (error.code) {
         case "auth/id-token-expired":
@@ -25,7 +26,7 @@ export const extractError = (error) => {
             message = "Password should be at least 6 characters"; status = 400;
             break;
         default:
-            message = error.message; status = error.status
+            message = error.message || "Internal server error"; status = error.status || 500
             break;
     }
 

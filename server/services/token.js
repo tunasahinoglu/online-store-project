@@ -15,7 +15,7 @@ const decodeToken = async (admin, database, token, condition) => {
     if (!(userDocument.exists) || !(condition(decodedToken, tokenRole, isUser, userData)))
         throw createError("Unauthorized access", 401);
 
-    return { decodeToken, tokenRole, isUser };
+    return { decodedToken, tokenRole, isUser };
 }
 
 
