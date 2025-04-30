@@ -80,8 +80,7 @@ export const addComment = async (req, res) => {
         const message = commentData.comment === null ?
                         `Rating #${commentDocument.id} has been posted.` :
                         `Comment #${commentDocument.id} has been submitted for approval.`;
-        const notificationDocument = await addNotification(database, decodedToken.uid, message);
-        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+        await addNotification(database, decodedToken.uid, decodedToken.uid, message);
 
         //send a response
         console.log("Response: Successfully added");
@@ -139,8 +138,7 @@ export const setComment = async (req, res) => {
         const message = commentData["comment"] === null ?
                         `Rating #${commentDocument.id} has been ${approval ? "made visible" : "hidden"}.` :
                         `Comment #${commentDocument.id} has been ${approval ? "approved" : "denied"}.`;
-        const notificationDocument = await addNotification(database, commentData.user, message);
-        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+        await addNotification(database, commentData.user, decodedToken.uid, message);
 
         //send a response
         console.log("Response: Successfully set");

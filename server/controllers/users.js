@@ -202,12 +202,10 @@ export const setUser = async (req, res) => {
         const oldUserData = userDocument.data();
         const roleNameMap = {customer: "customer", productmanager: "product manager", salesmanager: "sales manager", admin: "admin"};
         if (tokenRole === "admin" && oldUserData.role !== role) {
-            const notificationDocument = await addNotification(database, userID, `Your role has been changed to ${roleNameMap[role]}.`);
-            await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+            await addNotification(database, userID, decodedToken.uid, `Your role has been changed to ${roleNameMap[role]}.`);
         }
         if (tokenRole === "admin" && oldUserData.active !== active) {
-            const notificationDocument = await addNotification(database, userID, `Your account has been ${active ? "suspended" : "activated"}.`);
-            await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+            await addNotification(database, userID, decodedToken.uid, `Your account has been ${active ? "suspended" : "activated"}.`);
         }
 
         //send a response

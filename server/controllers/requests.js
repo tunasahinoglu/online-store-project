@@ -67,8 +67,7 @@ export const addRequest = async (req, res) => {
         await addLog(database, "ADD", requestDocument.path, null, requestData, decodedToken.uid);
 
         //send notification
-        const notificationDocument = await addNotification(database, orderData.user, `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`);
-        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+        await addNotification(database, orderData.user, decodeToken.uid, `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`);
         
         //send a response
         console.log("Response: Successfully added");
@@ -194,8 +193,7 @@ export const setRequest = async (req, res) => {
         }
 
         //send notification
-        const notificationDocument = await addNotification(database, orderData.user, `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been ${approved ? "accepted" : "rejected"}.`);
-        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+        await addNotification(database, orderData.user, decodedToken.uid, `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been ${approved ? "accepted" : "rejected"}.`);
 
         //send a response
         console.log("Response: Successfully set" + alertMessage ? `\nAlert: ${alertMessage}` : "");

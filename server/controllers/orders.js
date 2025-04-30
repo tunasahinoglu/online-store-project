@@ -79,13 +79,13 @@ export const addOrder = async (req, res) => {
         };
 
         //add the order
-        let orderDocument = await database.collection("orders").add(orderData);
+        let orderReference = await database.collection("orders").add(orderData);
 
         //calculate total cost & discounted cost
         let totalCost = delivery.type === "standard" ? deliveryCompanyData.costs[0] : deliveryCompanyData.costs[1];
         let totalDiscountedCost = totalCost;
         orderData["deliverycost"] = totalCost;
-        const orderID = orderDocument.id;
+        const orderID = orderReference.id;
         for (let basketProductDocument of basketDocuments) {
             //get the product
             const productReference = database.collection("products").doc(basketProductDocument.id);
@@ -117,17 +117,17 @@ export const addOrder = async (req, res) => {
         //delete user basket
         for (let basketProductDocument of basketDocuments) {
             await basketReference.doc(basketProductDocument.id).delete();
-            await addLog(database, "DELETE", basketProductDocument.path, basketProductDocument.data(), null, decodedToken.uid);
+            await addLog(database, "DELETE", basketProductDocument.ref.path, basketProductDocument.data(), null, decodedToken.uid);
         }
 
         //add the order
         orderData["totalcost"] = totalCost;
         orderData["totaldiscountedcost"] = totalDiscountedCost;
-        await database.collection("orders").doc(orderDocument.id).set(orderData);
-        await addLog(database, "ADD", orderDocument.path, null, orderData, decodedToken.uid);
+        await database.collection("orders").doc(orderReference.id).set(orderData);
+        await addLog(database, "ADD", orderReference.path, null, orderData, decodedToken.uid);
 
         //send an email to user
-        orderDocument = await database.collection("orders").doc(orderDocument.id).get();
+        let orderDocument = await database.collection("orders").doc(orderReference.id).get();
         const productsSnapshot = await database.collection("orders").doc(orderDocument.id).collection("products").get();
         const productDocuments = productsSnapshot.docs;
         const attachment = createPDFAttachment(orderDocument, productDocuments);
@@ -152,8 +152,7 @@ export const addOrder = async (req, res) => {
         await sendEmail(userDocument.data().email, "We have received your order", content, [attachment]);
 
         //send notification to user
-        const notificationDocument = await addNotification(database, decodedToken.uid, `Order #${orderDocument.id} has been placed.`);
-        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+        await addNotification(database, decodedToken.uid, decodedToken.uid, `Order #${orderDocument.id} has been placed.`);
         
         //send a response
         console.log("Response: Successfully added");
@@ -178,23 +177,22 @@ export const setOrder = async (req, res) => {
 
     //set the order
     try {
+        //get the order data
+        const orderReference = database.collection("orders").doc(orderID);
+        const orderDocument = await orderReference.get();
+        if (!orderDocument.exists)
+            throw createError(`Order with the id of ${orderID} was not found`, 404);
+        const orderData = orderDocument.data();
+
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || tokenRole === "productmanager" || isUser;
-        let { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, orderData.user, tokenCondition);
 
         //input check
         if (status === undefined)
             throw createError("All fields are required", 400);
         else if (typeof status !== "string" || !["cancelled", "in-transit", "delivered"].includes(status))
             throw createError("Please enter a valid status", 400);
-
-        //get the order data
-        const orderReference = database.collection("orders").doc(orderID);
-        const orderDocument = await orderReference.get();
-        if (!orderDocument.exists)
-            throw createError(`Order with the id of ${orderID} was not found`, 400);
-        const orderData = orderDocument.data();
-        isUser = orderData.user === decodedToken.uid;
 
         //status check
         if (!(((tokenRole === "admin" || isUser) && orderData.status === "processing" && status === "cancelled") || (tokenRole === "productmanager" && ((orderData.status === "processing" && status === "in-transit") || (orderData.status === "in-transit" && status === "delivered")))))
@@ -253,8 +251,7 @@ export const setOrder = async (req, res) => {
           default:
             message = `Order #${orderDocument.id} status has been updated.`;
         }
-        const notificationDocument = await addNotification(database, orderData.user, message);
-        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+        await addNotification(database, orderData.user, decodedToken.uid, message);
         
         //send a response
         console.log("Response: Successfully set");
