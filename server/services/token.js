@@ -12,7 +12,7 @@ const decodeToken = async (admin, database, token, condition) => {
     const tokenRole = userData.role;
     const isUser = userDocument.id === decodedToken.uid;
 
-    if (!(user.exists) || !(condition(decodedToken, tokenRole, isUser, userData)))
+    if (!(userDocument.exists) || !(condition(decodedToken, tokenRole, isUser, userData)))
         throw createError("Unauthorized access", 401);
 
     return { decodeToken, tokenRole, isUser };
