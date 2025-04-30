@@ -6,7 +6,7 @@ export const createError = (message, status) => {
 
 
 export const extractError = (error) => {
-    console.error(error);
+    console.error(error.message || error);
         
     //extract error message and return 
     let message = "Internal server error";
