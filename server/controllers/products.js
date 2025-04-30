@@ -1,7 +1,8 @@
 import admin from "../services/auth.js"
 import decodeToken from "../services/token.js"
-import { createError, extractError } from "../services/error.js";
-import log from "../services/log.js";
+import { createError, extractError } from "../services/error.js"
+import addLog from "../services/log.js"
+import { addNotification } from "../services/notification.js"
 
 
 //initialize apps
@@ -20,7 +21,7 @@ export const addProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager";
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
         if (name === undefined || category === undefined || subcategory === undefined || serialnumber === undefined || image === undefined || stock === undefined || warranty === undefined || distributorname === undefined || features === undefined)
@@ -58,7 +59,7 @@ export const addProduct = async (req, res) => {
             discount: 0,
             stock: stock,
             popularity: 0,
-            description: description !== undefined ? description : undefined,
+            description: description !== undefined ? description : null,
             warranty: warranty,
             distributorname: distributorname,
             features: features
@@ -66,9 +67,10 @@ export const addProduct = async (req, res) => {
 
         //add the product
         const productDocument = await database.collection("products").add(productData);
-        await log(database, "ADD", `products/${productDocument.id}`, productData, decodedToken.uid);
+        await addLog(database, "ADD", productDocument.path, null, productData, decodedToken.uid);
 
         //send a response
+        console.log("Response: Successfully added");
         res.status(200).json({message: "Successfully added"});
     } catch (error) {
         //handle error
@@ -92,7 +94,7 @@ export const setProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager" || tokenRole === "salesmanager";
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
         if (tokenRole !== "salesmanager") {
@@ -154,8 +156,8 @@ export const setProduct = async (req, res) => {
         }
 
         //set the product
-        await database.collection("products").doc(productID).set(productData);
-        await log(database, "SET", `products/${productID}`, productData, decodedToken.uid);
+        await productReference.set(productData);
+        await addLog(database, "SET", productReference.path, productDocument.data(), productData, decodedToken.uid);
 
         //send notifications to users with the product in their wishlist upon price decrease
         if (tokenRole === "salesmanager" && oldPrice*(100-oldDiscount)/100 > price*(100-discount)/100) {
@@ -163,19 +165,14 @@ export const setProduct = async (req, res) => {
             const usersSnapshot = await userReference.get();
             const userDocuments = usersSnapshot.docs;
             for (const userDocument of userDocuments) {
-                const userID = userDocument.id;
-                const notificationData = {
-                    message: `${productData["name"]} is on sale`,
-                    seen: false,
-                    date: Date()
-                };
                 //add the notification
-                const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
-                await log(database, "ADD", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+                const notificationDocument = await addNotification(database, userDocument.id, `${productData["name"]} is on sale`);
+                await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
             }
         }
 
         //send a response
+        console.log("Response: Successfully set");
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         //handle error
@@ -198,7 +195,7 @@ export const deleteProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || tokenRole === "productmanager";
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //get the product
         const productReference = database.collection("products").doc(productID);
@@ -207,10 +204,11 @@ export const deleteProduct = async (req, res) => {
             throw createError(`A product with the id of ${productID} was not found`, 404);
 
         //delete the product
-        await database.collection("products").doc(productID).delete();
-        await log(database, "DELETE", `products/${productID}`, null, decodedToken.uid);
+        await productReference.delete();
+        await addLog(database, "DELETE", productReference.path, productDocument.data(), null, decodedToken.uid);
 
         //send a response
+        console.log("Response: Successfully deleted");
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         //handle error

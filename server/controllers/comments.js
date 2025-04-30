@@ -1,7 +1,8 @@
 import admin from "../services/auth.js"
 import decodeToken from "../services/token.js"
-import { createError, extractError } from "../services/error.js";
-import log from "../services/log.js";
+import { createError, extractError } from "../services/error.js"
+import addLog from "../services/log.js"
+import { addNotification } from "../services/notification.js"
 
 
 //initialize apps
@@ -20,7 +21,7 @@ export const addComment = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => userData.active;
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, true, tokenCondition);
 
         //input check
         if (order === undefined || product === undefined || rate === undefined)
@@ -65,7 +66,7 @@ export const addComment = async (req, res) => {
             order: order,
             product: product,
             rate: rate,
-            comment: comment !== undefined || !comment.trim() ? JSON.stringify(comment) : undefined,
+            comment: comment !== undefined || !comment.trim() ? JSON.stringify(comment) : null,
             reviewed: comment !== undefined ? false : true,
             approved: comment !== undefined ? false : true,
             date: Date()
@@ -73,21 +74,17 @@ export const addComment = async (req, res) => {
 
         //add the comment
         const commentDocument = await database.collection("comments").add(commentData);
-        await log(database, "ADD", `comments/${commentDocument.id}`, commentData, decodedToken.uid);
+        await addLog(database, "ADD", commentDocument.path, null, commentData, decodedToken.uid);
 
         //send notification to user
-        const message = commentData.comment === undefined ?
+        const message = commentData.comment === null ?
                         `Rating #${commentDocument.id} has been posted.` :
                         `Comment #${commentDocument.id} has been submitted for approval.`;
-        const notificationData = {
-            message: message,
-            seen: false,
-            date: Date()
-        };
-        const notificationDocument = await database.collection("users").doc(decodedToken.uid).collection("notifications").add(notificationData);
-        await log(database, "ADD", `users/${decodedToken.uid}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        const notificationDocument = await addNotification(database, decodedToken.uid, message);
+        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
 
         //send a response
+        console.log("Response: Successfully added");
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         //handle error
@@ -111,7 +108,7 @@ export const setComment = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" && tokenRole === "productmanager";
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
         if (approved === undefined)
@@ -136,21 +133,17 @@ export const setComment = async (req, res) => {
 
         //set comment
         await commentReference.set(commentData);
-        await log(database, "SET", `comments/${commentID}`, commentData, decodedToken.uid);
+        await addLog(database, "SET", commentReference.path, commentDocument.data(), commentData, decodedToken.uid);
 
         //send notification to user
-        const message = commentData.comment === undefined ?
+        const message = commentData["comment"] === null ?
                         `Rating #${commentDocument.id} has been ${approval ? "made visible" : "hidden"}.` :
                         `Comment #${commentDocument.id} has been ${approval ? "approved" : "denied"}.`;
-        const notificationData = {
-            message: message,
-            seen: false,
-            date: Date()
-        };
-        const notificationDocument = await database.collection("users").doc(commentData.user).collection("notifications").add(notificationData);
-        await log(database, "ADD", `users/${commentData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        const notificationDocument = await addNotification(database, commentData.user, message);
+        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
 
-        //send response
+        //send a response
+        console.log("Response: Successfully set");
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         //handle error

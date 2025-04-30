@@ -1,7 +1,8 @@
 import admin from "../services/auth.js"
 import decodeToken from "../services/token.js"
 import { createError, extractError } from "../services/error.js";
-import log from "../services/log.js";
+import addLog from "../services/log.js";
+import { addNotification } from "../services/notification.js"
 
 
 //initialize apps
@@ -20,7 +21,7 @@ export const addDeliveryCompany = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin";
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
         if (name === undefined || costs === undefined || email === undefined)
@@ -41,9 +42,10 @@ export const addDeliveryCompany = async (req, res) => {
 
         //add the delivery company
         const deliveryCompanyDocument = await database.collection("deliverycompanies").add(deliveryCompanyData);
-        await log(database, "ADD", `deliverycompanies/${deliveryCompanyDocument.id}`, deliveryCompanyData, decodedToken.uid);
+        await addLog(database, "ADD", deliveryCompanyDocument.path, null, deliveryCompanyData, decodedToken.uid);
 
         //send a response
+        console.log("Response: Successfully added");
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         //handle error
@@ -62,11 +64,11 @@ export const deleteDeliveryCompany = async (req, res) => {
     const deliveryCompanyID = req.params.deliveryCompanyID;
     
 
-    //add the product
+    //delete the delivery company
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin";
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //get the delivery company
         const deliveryCompanyReference = userReference.collection("deliverycompanies").doc(deliveryCompanyID);
@@ -75,10 +77,11 @@ export const deleteDeliveryCompany = async (req, res) => {
             throw createError(`A delivery company with the id of ${deliveryCompanyID} was not found`, 404);
 
         //delete the delivery company
-        await database.collection("users").doc(deliveryCompanyID).delete();
-        await log(database, "DELETE", `deliverycompanies/${deliveryCompanyDocument.id}`, null, decodedToken.uid);
+        await deliveryCompanyReference.delete();
+        await addLog(database, "DELETE", deliveryCompanyReference.path, deliveryCompanyDocument.data(), null, decodedToken.uid);
 
         //send a response
+        console.log("Response: Successfully deleted");
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         //handle error

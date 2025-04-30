@@ -1,7 +1,8 @@
 import admin from "../services/auth.js"
 import decodeToken from "../services/token.js"
-import { createError, extractError } from "../services/error.js";
-import log from "../services/log.js";
+import { createError, extractError } from "../services/error.js"
+import addLog from "../services/log.js"
+import { addNotification } from "../services/notification.js"
 
 
 //initialize apps
@@ -20,7 +21,7 @@ export const checkBasket = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, userID, tokenCondition);
         
         //get the user
         const userReference = database.collection("users").doc(userID);
@@ -46,10 +47,14 @@ export const checkBasket = async (req, res) => {
         }
 
         //send a response
-        if (errorMessage)
+        if (errorMessage) {
+            console.log("Response: Invalid" + `\nAlert: ${errorMessage}`);
             res.status(200).json({message: "Invalid", alert: "Basket contains unavailable items:\n" + errorMessage});
-        else
+        }
+        else {
+            console.log("Response: Valid");
             res.status(200).json({message: "Valid"});
+        }
     } catch (error) {
         //handle error
         const { message, status } = extractError(error);
@@ -73,7 +78,7 @@ export const setProduct = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, userID, tokenCondition);
 
         //input check
         if (count === undefined)
@@ -108,10 +113,11 @@ export const setProduct = async (req, res) => {
         const document = await reference.get();
         if (document.exists)
             method = "SET";
-        await database.collection("users").doc(userID).collection("basket").doc(productID).set(productData);
-        await log(database, method, `users/${userDocument.id}/basket/${productID}`, productData, decodedToken.uid);
+        await reference.set(productData);
+        await addLog(database, method, reference.path, document.data() || null, productData, decodedToken.uid);
 
         //send a response
+        console.log("Response: " + `Successfully ${method == "ADD" ? "added" : "set"}`);
         res.status(200).json({message: `Successfully ${method == "ADD" ? "added" : "set"}`});
     } catch (error) {
         //handle error
@@ -136,7 +142,7 @@ export const setUser = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || isUser;
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, userID, tokenCondition);
 
         //input check
         if (isUser && (firstname === undefined || lastname === undefined || country === undefined || city === undefined || address === undefined))
@@ -189,32 +195,23 @@ export const setUser = async (req, res) => {
         }
 
         //set the user
-        await database.collection("users").doc(userID).set(userData);
-        await log(database, "SET", `users/${userDocument.uid}`, userData, decodedToken.uid);
+        await userReference.set(userData);
+        await addLog(database, "SET", userReference.path, userDocument.data(), userData, decodedToken.uid);
 
         //send notification to user
         const oldUserData = userDocument.data();
         const roleNameMap = {customer: "customer", productmanager: "product manager", salesmanager: "sales manager", admin: "admin"};
         if (tokenRole === "admin" && oldUserData.role !== role) {
-            const notificationData = {
-                message: `Your role has been changed to ${roleNameMap[role]}.`,
-                seen: false,
-                date: Date()
-            };
-            const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
-            await log(database, "ADD", `users/${userID}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+            const notificationDocument = await addNotification(database, userID, `Your role has been changed to ${roleNameMap[role]}.`);
+            await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
         }
         if (tokenRole === "admin" && oldUserData.active !== active) {
-            const notificationData = {
-                message: `Your account has been ${active ? "suspended" : "activated"}.`,
-                seen: false,
-                date: Date()
-            };
-            const notificationDocument = await database.collection("users").doc(userID).collection("notifications").add(notificationData);
-            await log(database, "ADD", `users/${userID}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+            const notificationDocument = await addNotification(database, userID, `Your account has been ${active ? "suspended" : "activated"}.`);
+            await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
         }
 
         //send a response
+        console.log("Response: Successfully set");
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
         //handle error
@@ -239,7 +236,7 @@ export const setNotification = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, userID, tokenCondition);
 
         //input check
         if (seen === undefined)
@@ -265,9 +262,10 @@ export const setNotification = async (req, res) => {
 
         //set the notification
         await notificationReference.set(notificationData);
-        await log(database, "SET", `users/${userDocument.id}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        await addLog(database, "SET", notificationReference.path, notificationDocument.data(), notificationData, decodedToken.uid);
         
         //send a response
+        console.log("Response: Successfully set");
         res.status(201).json({message: "Successfully set"});
     } catch (error) {
         //handle error
@@ -290,7 +288,7 @@ export const deleteProduct = async (req, res) => {
     //delete the product
     try {
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, userID, tokenCondition);
 
         //get the user
         const userReference = database.collection("users").doc(userID);
@@ -305,10 +303,11 @@ export const deleteProduct = async (req, res) => {
             throw createError(`A product with the id of ${productID} was not found`, 404);
 
         //delete the product
-        await database.collection("users").doc(userID).collection("basket").doc(productID).delete();
-        await log(database, "DELETE", `users/${userDocument.uid}/basket/${productID}`, null, decodedToken.uid);
+        await productReference.delete();
+        await addLog(database, "DELETE", productReference.path, productDocument.data(), null, decodedToken.uid);
         
         //send a response
+        console.log("Response: Successfully deleted");
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
         //handle error

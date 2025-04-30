@@ -1,12 +1,13 @@
-const log = async (database, method, document, data, user) => {
+const addLog = async (database, method, document, oldData, newData, user) => {
     await database.collection("logs").add({
         user: user,
         method: method,
         document: document,
-        data: data,
+        olddata: oldData,
+        newdata: newData,
         date: Date()
     });
 };
 
 
-export default log;
+export default addLog;

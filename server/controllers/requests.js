@@ -1,7 +1,8 @@
 import admin from "../services/auth.js"
 import decodeToken from "../services/token.js"
-import { createError, extractError } from "../services/error.js";
-import log from "../services/log.js";
+import { createError, extractError } from "../services/error.js"
+import addLog from "../services/log.js"
+import { addNotification } from "../services/notification.js"
 
 
 //initialize apps
@@ -20,7 +21,7 @@ export const addRequest = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, true, tokenCondition);
 
         //input check
         if (order === undefined || request === undefined)
@@ -63,18 +64,14 @@ export const addRequest = async (req, res) => {
 
         //add the request
         const requestDocument = await database.collection("requests").add(requestData);
-        await log(database, "ADD", `requests/${requestDocument.id}`, requestData, decodedToken.uid);
+        await addLog(database, "ADD", requestDocument.path, null, requestData, decodedToken.uid);
 
         //send notification
-        const notificationData = {
-            message: `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`,
-            seen: false,
-            date: Date()
-        };
-        const notificationDocument = await database.collection("users").doc(decodedToken.uid).collection("notifications").add(notificationData);
-        await log(database, "ADD", `users/${decodedToken.uid}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
+        const notificationDocument = await addNotification(database, orderData.user, `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`);
+        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
         
         //send a response
+        console.log("Response: Successfully added");
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
         //handle error
@@ -99,7 +96,7 @@ export const setRequest = async (req, res) => {
     try {
         //token check
         const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "salesmanager";
-        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, tokenCondition);
+        const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
         if (approved === undefined)
@@ -148,7 +145,7 @@ export const setRequest = async (req, res) => {
         if (requestData["request"] === "refund" && approved) {
             orderData["status"] = "refunded";
             await orderReference.set(orderData);
-            await log(database, "SET", `orders/${orderID}`, orderData, decodedToken.uid);
+            await addLog(database, "SET", orderReference.path, orderDocument.data(), orderData, decodedToken.uid);
             
             //update product stocks
             const productsReference = orderReference.collection("products");
@@ -161,7 +158,7 @@ export const setRequest = async (req, res) => {
                 productData["stock"] += productDocument.data().count;
                 productData["popularity"] -= productDocument.data().count;
                 await reference.set(productData);
-                await log(database, "SET", `products/${productDocument.id}`, productData, decodedToken.uid);
+                await addLog(database, "SET", reference.path, document.data(), productData, decodedToken.uid);
             }
         }
 
@@ -169,7 +166,7 @@ export const setRequest = async (req, res) => {
         requestData["reviewed"] = true;
         requestData["approved"] = approved;
         await requestReference.set(requestData);
-        await log(database, "SET", `requests/${requestID}`, requestData, decodedToken.uid);
+        await addLog(database, "SET", requestReference.path, requestDocument.data(), requestData, decodedToken.uid);
 
         //send an email to user
         if (requestData["request"] === "refunded" && approved) {
@@ -197,15 +194,11 @@ export const setRequest = async (req, res) => {
         }
 
         //send notification
-        const notificationData = {
-            message: `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been ${approved ? "accepted" : "rejected"}.`,
-            seen: false,
-            date: Date()
-        };
-        const notificationDocument = await database.collection("users").doc(orderData.user).collection("notifications").add(notificationData);
-        await log(database, "ADD", `users/${orderData.user}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
-        
+        const notificationDocument = await addNotification(database, orderData.user, `${requestData["request"].charAt(0).toUpperCase() + requestData["request"].slice(1)} request for order #${orderDocument.id} has been ${approved ? "accepted" : "rejected"}.`);
+        await addLog(database, "ADD", notificationDocument.path, null, notificationDocument.data(), decodedToken.uid);
+
         //send a response
+        console.log("Response: Successfully set" + alertMessage ? `\nAlert: ${alertMessage}` : "");
         res.status(200).json({message: "Successfully set", alert:alertMessage});
     } catch (error) {
         //handle error

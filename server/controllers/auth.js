@@ -1,6 +1,6 @@
 import admin from "../services/auth.js"
 import { createError, extractError } from "../services/error.js";
-import log from "../services/log.js";
+import addLog from "../services/log.js";
 
 
 //initialize apps
@@ -57,9 +57,10 @@ export const createAccount = async (req, res) => {
             wishlist: []
         };
         await userReference.set(userData);
-        await log(database, "ADD", `users/${user.uid}`, userData, user.uid);
+        await addLog(database, "ADD", userReference.path, null, userData, user.uid);
 
-        //return response
+        //return a response
+        console.log("Response: Successfully added");
         res.status(201).json({message: "Successfully added", token: token});
     } catch (error) {
         //handle error
