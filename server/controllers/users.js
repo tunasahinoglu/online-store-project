@@ -289,10 +289,11 @@ export const setUser = async (req, res, next) => {
         let userData = userDocument.data();
 
         //set the user data
-        if (tokenRole !== "admin") {
+        if (tokenRole === "admin") {
             userData.role = role;
             userData.active = active;
-        } else {
+        }
+        if (isUser) {
             userData.firstname = firstname;
             userData.lastname = lastname;
             userData.address.country = country;
