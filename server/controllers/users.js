@@ -1,4 +1,6 @@
 import admin from "../services/auth.js"
+import decodeToken from "../services/token.js"
+import { createError, extractError } from "../services/error.js";
 import log from "../services/log.js";
 
 
@@ -9,7 +11,7 @@ const database = admin.firestore();
 
 //  @desc   user checks whether its basket is valid
 //  @route  GET  /api/users/:userID/basket-check
-export const checkBasket = async (req, res, next) => {
+export const checkBasket = async (req, res) => {
     const token = req.headers.authorization;
     const userID = req.params.userID;
     
@@ -17,37 +19,16 @@ export const checkBasket = async (req, res, next) => {
     //set the basket product
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        let isUser;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            isUser = user.id === decodedToken.uid;
-            if (!user.exists || !isUser) {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
         
         //get the user
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
-        if (!userDocument.exists) {
-            const error = new Error(`A user with the id of ${userID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!userDocument.exists)
+            throw createError(`A user with the id of ${userID} was not found`, 404);
 
         //get the basket
-        let valid = true;
         const basketReference = userReference.collection("basket");
         const basketSnapshot = await basketReference.get();
         const basketDocuments = basketSnapshot.docs;
@@ -58,42 +39,30 @@ export const checkBasket = async (req, res, next) => {
             //get the product
             const reference = database.collection("products").doc(productDocument.id);
             const document = await reference.get();
-            if (!document.exists || document.data().price === 0) {
+            if (!document.exists || document.data().price === 0)
                 errorMessage += `\t• Product #${productDocument.id} is not available.\n`;
-
-            } else if (document.data().stock < productDocument.data().count) {
+            else if (document.data().stock < productDocument.data().count)
                 errorMessage += `\t• Product #${productDocument.id} does not have enough stock available.\n`;
-            }
         }
 
         //send a response
-        if (errorMessage) {
+        if (errorMessage)
             res.status(200).json({message: "Invalid", alert: "Basket contains unavailable items:\n" + errorMessage});
-        } else {
+        else
             res.status(200).json({message: "Valid"});
-        }
     } catch (error) {
-        console.error(error);
+        //handle error
+        const { message, status } = extractError(error);
 
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //send a response
+        res.status(status).json({message: message});
     }
 }
 
 
 //  @desc   admin/user sets product to a specific user's/its basket
 //  @route  PUT  /api/users/:userID/basket/:productID
-export const setProduct = async (req, res, next) => {
+export const setProduct = async (req, res) => {
     const token = req.headers.authorization;
     const { count } = req.body;
     const userID = req.params.userID;
@@ -103,61 +72,30 @@ export const setProduct = async (req, res, next) => {
     //set the basket product
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        let isUser;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            isUser = user.id === decodedToken.uid;
-            if (!user.exists || !isUser) {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
 
         //input check
-        if (count === undefined) {
-            const error = new Error("All fields are required");
-            error.status = 400;
-            return next(error);
-        } else if (!Number.isInteger(count) || count <= 0) {
-            const error = new Error("Please enter a valid count");
-            error.status = 400;
-            return next(error);
-        }
+        if (count === undefined)
+            throw createError("All fields are required", 400);
+        else if (!Number.isInteger(count) || count <= 0)
+            throw createError("Please enter a valid count", 400);
         
         //get the user
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
-        if (!userDocument.exists) {
-            const error = new Error(`A user with the id of ${userID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!userDocument.exists)
+            throw createError(`A user with the id of ${userID} was not found`, 404);
 
         //get the product
         const productReference = database.collection("products").doc(productID);
         const productDocument = await productReference.get();
-        if (!productDocument.exists) {
-            const error = new Error(`A product with the id of ${productID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!productDocument.exists)
+            throw createError(`A product with the id of ${productID} was not found`, 404);
 
         //check whether count is above stock number
-        if (count > productDocument.data().stock) {
-            const error = new Error("Please enter a valid count");
-            error.status = 400;
-            return next(error);
-        }
+        if (count > productDocument.data().stock)
+            throw createError("Please enter a valid count", 400);
 
         //set the basket product data
         const productData = {
@@ -168,36 +106,26 @@ export const setProduct = async (req, res, next) => {
         let method = "ADD";
         const reference = database.collection("users").doc(userID).collection("basket").doc(productID);
         const document = await reference.get();
-        if (document.exists) {
+        if (document.exists)
             method = "SET";
-        }
         await database.collection("users").doc(userID).collection("basket").doc(productID).set(productData);
         await log(database, method, `users/${userDocument.id}/basket/${productID}`, productData, decodedToken.uid);
 
         //send a response
         res.status(200).json({message: `Successfully ${method == "ADD" ? "added" : "set"}`});
     } catch (error) {
-        console.error(error);
+        //handle error
+        const { message, status } = extractError(error);
 
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //send a response
+        res.status(status).json({message: message});
     }
 }
 
 
 //  @desc   admin/user sets a specific user/itself
 //  @route  PUT  /api/users/:userID
-export const setUser = async (req, res, next) => {
+export const setUser = async (req, res) => {
     const token = req.headers.authorization;
     const { firstname, lastname, role, country, city, address, active } = req.body;
     let { wishlist } = req.body;
@@ -207,85 +135,43 @@ export const setUser = async (req, res, next) => {
     //set the user
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        let isUser;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            isUser = user.id === decodedToken.uid;
-            if (!user.exists || (tokenRole !== "admin" && !isUser)) {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || isUser;
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
 
         //input check
-        if (isUser && (firstname === undefined || lastname === undefined || country === undefined || city === undefined || address === undefined)) {
-            const error = new Error("All fields are required");
-            error.status = 400;
-            return next(error);
-        } else if (isUser && (typeof firstname !== "string" || !firstname.trim())) {
-            const error = new Error("Please enter a valid firstname");
-            error.status = 400;
-            return next(error);
-        } else if (isUser && (typeof lastname !== "string" || !lastname.trim())) {
-            const error = new Error("Please enter a valid lastname");
-            error.status = 400;
-            return next(error);
-        } else if (tokenRole === "admin" && role !== undefined && typeof role !== "string" && !["customer", "productmanager", "salesmanager", "admin"].includes(role)) {
-            const error = new Error("Please enter a valid role");
-            error.status = 400;
-            return next(error);
-        } else if (isUser && (typeof country !== "string" || !country.trim())) {
-            const error = new Error("Please enter a valid country");
-            error.status = 400;
-            return next(error);
-        } else if (isUser && (typeof city !== "string" || !city.trim())) {
-            const error = new Error("Please enter a valid city");
-            error.status = 400;
-            return next(error);
-        } else if (isUser && (typeof address !== "string" || !address.trim())) {
-            const error = new Error("Please enter a valid address");
-            error.status = 400;
-            return next(error);
-        } else if (isUser && (!Array.isArray(wishlist))) {
-            const error = new Error("Please enter a valid wishlist");
-            error.status = 400;
-            return next(error);
-        } else if (tokenRole === "admin" && typeof active !== "boolean") {
-            const error = new Error("Please enter a valid active");
-            error.status = 400;
-            return next(error); 
-        }
+        if (isUser && (firstname === undefined || lastname === undefined || country === undefined || city === undefined || address === undefined))
+            throw createError("All fields are required", 400);
+        else if (isUser && (typeof firstname !== "string" || !firstname.trim()))
+            throw createError("Please enter a valid firstname", 400);
+        else if (isUser && (typeof lastname !== "string" || !lastname.trim()))
+            throw createError("Please enter a valid lastname", 400);
+        else if (tokenRole === "admin" && role !== undefined && typeof role !== "string" && !["customer", "productmanager", "salesmanager", "admin"].includes(role))
+            throw createError("Please enter a valid role", 400);
+        else if (isUser && (typeof country !== "string" || !country.trim()))
+            throw createError("Please enter a valid country", 400);
+        else if (isUser && (typeof city !== "string" || !city.trim()))
+            throw createError("Please enter a valid city", 400);
+        else if (isUser && (typeof address !== "string" || !address.trim()))
+            throw createError("Please enter a valid address", 400);
+        else if (isUser && (!Array.isArray(wishlist)))
+            throw createError("Please enter a valid wishlist", 400);
+        else if (tokenRole === "admin" && typeof active !== "boolean")
+            throw createError("Please enter a valid active", 400); 
         if (isUser) {
             wishlist = [...new Set(wishlist)];
             for (let productID of wishlist) {
                 const productReference = database.collection("products").doc(productID);
                 const product = await productReference.get();
-                if (!product.exists) {
-                    const error = new Error("Please enter a valid wishlist");
-                    error.status = 400;
-                    return next(error);
-                }
+                if (!product.exists)
+                    throw createError("Please enter a valid wishlist", 400);
             }
         }
 
         //get the user data
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
-        if (!userDocument.exists) {
-            const error = new Error(`A user with the id of ${userID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!userDocument.exists)
+            throw createError(`A user with the id of ${userID} was not found`, 404);
         let userData = userDocument.data();
 
         //set the user data
@@ -328,29 +214,21 @@ export const setUser = async (req, res, next) => {
             await log(database, "ADD", `users/${userID}/notifications/${notificationDocument.id}`, notificationData, decodedToken.uid);
         }
 
+        //send a response
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
-        console.error(error);
-        
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //handle error
+        const { message, status } = extractError(error);
+
+        //send a response
+        res.status(status).json({message: message});
     }
 }
 
 
 //  @desc   user sets its specific notification
 //  @route  PUT  /api/users/:userID/notifications/:notificationID
-export const setNotification = async (req, res, next) => {
+export const setNotification = async (req, res) => {
     const token = req.headers.authorization;
     const { seen } = req.body;
     const userID = req.params.userID;
@@ -360,54 +238,26 @@ export const setNotification = async (req, res, next) => {
     //add the product
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        let isUser;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            isUser = user.id === decodedToken.uid;
-            if (!user.exists || !isUser) {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
 
         //input check
-        if (seen === undefined) {
-            const error = new Error("All fields are required");
-            error.status = 400;
-            return next(error);
-        } else if (typeof seen !== "boolean") {
-            const error = new Error("Please enter a valid seen");
-            error.status = 400;
-            return next(error);
-        }
+        if (seen === undefined)
+            throw createError("All fields are required", 400);
+        else if (typeof seen !== "boolean")
+            throw createError("Please enter a valid seen", 400);
         
         //get the user
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
-        if (!userDocument.exists) {
-            const error = new Error(`A user with the id of ${userID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!userDocument.exists)
+            throw createError(`A user with the id of ${userID} was not found`, 404);
 
         //get the notification
         const notificationReference = userReference.collection("notifications").doc(notificationID);
         const notificationDocument = await notificationReference.get();
-        if (!notificationDocument.exists) {
-            const error = new Error(`A notification with the id of ${notificationID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!notificationDocument.exists)
+            throw createError(`A notification with the id of ${notificationID} was not found`, 404);
 
         //set the notification data
         const notificationData = notificationDocument.data();
@@ -420,27 +270,18 @@ export const setNotification = async (req, res, next) => {
         //send a response
         res.status(201).json({message: "Successfully set"});
     } catch (error) {
-        console.error(error);
+        //handle error
+        const { message, status } = extractError(error);
 
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //send a response
+        res.status(status).json({message: message});
     }
 }
 
 
 //  @desc   admin/user deletes product from a specific user's/its basket
 //  @route  DELETE  /api/users/:userID/basket/:productID
-export const deleteProduct = async (req, res, next) => {
+export const deleteProduct = async (req, res) => {
     const token = req.headers.authorization;
     const userID = req.params.userID;
     const productID = req.params.productID;
@@ -448,44 +289,20 @@ export const deleteProduct = async (req, res, next) => {
 
     //delete the product
     try {
-        //token check
-        let decodedToken;
-        let tokenRole;
-        let isUser;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            isUser = user.id === decodedToken.uid;
-            if (!user.exists || !isUser) {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => isUser;
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
 
         //get the user
         const userReference = database.collection("users").doc(userID);
         const userDocument = await userReference.get();
-        if (!userDocument.exists) {
-            const error = new Error(`A user with the id of ${userID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!userDocument.exists)
+            throw createError(`A user with the id of ${userID} was not found`, 404);
 
         //get the product
         const productReference = userReference.collection("basket").doc(productID);
         const productDocument = await productReference.get();
-        if (!productDocument.exists) {
-            const error = new Error(`A product with the id of ${productID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!productDocument.exists)
+            throw createError(`A product with the id of ${productID} was not found`, 404);
 
         //delete the product
         await database.collection("users").doc(userID).collection("basket").doc(productID).delete();
@@ -494,19 +311,10 @@ export const deleteProduct = async (req, res, next) => {
         //send a response
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
-        console.error(error);
-        
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //handle error
+        const { message, status } = extractError(error);
+
+        //send a response
+        res.status(status).json({message: message});
     }
 }

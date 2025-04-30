@@ -1,5 +1,6 @@
 import colors from 'colors';
 
+
 const logHandler = (req, res, next) => {
     const colorMap = {
         GET: "green",
@@ -11,5 +12,6 @@ const logHandler = (req, res, next) => {
     console.log(`${req.method} => ${req.protocol}://${req.get('host')}${req.originalUrl}`[color]);
     next();
 };
+
 
 export default logHandler;

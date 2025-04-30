@@ -1,4 +1,6 @@
 import admin from "../services/auth.js"
+import decodeToken from "../services/token.js"
+import { createError, extractError } from "../services/error.js";
 import log from "../services/log.js";
 
 
@@ -17,43 +19,19 @@ export const addDeliveryCompany = async (req, res, next) => {
     //add the delivery company
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            if (!user.exists || tokenRole !== "admin") {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin";
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
 
         //input check
-        if (name === undefined || costs === undefined || email === undefined) {
-            const error = new Error("All fields are required");
-            error.status = 400;
-            return next(error);
-        } else if (typeof name !== "string" || !name.trim()) {
-            const error = new Error("Please enter a valid name");
-            error.status = 400;
-            return next(error);
-        } else if (!Array.isArray(costs) || costs.length !== 2 || typeof costs[0] !== "number" || costs[0] < 0 || typeof costs[1] !== "number" || costs[1] < 0) {
-            const error = new Error("Please enter a valid costs");
-            error.status = 400;
-            return next(error);
-        } else if (typeof email !== "string" || !email.trim().match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-            const error = new Error("Please enter a valid email address");
-            error.status = 400;
-            return next(error);
-        }
-
+        if (name === undefined || costs === undefined || email === undefined)
+            throw createError("All fields are required", 400);
+        else if (typeof name !== "string" || !name.trim())
+            throw createError("Please enter a valid name", 400);
+        else if (!Array.isArray(costs) || costs.length !== 2 || typeof costs[0] !== "number" || costs[0] < 0 || typeof costs[1] !== "number" || costs[1] < 0)
+            throw createError("Please enter a valid costs", 400);
+        else if (typeof email !== "string" || !email.trim().match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+            throw createError("Please enter a valid email address", 400);
+        
         //set delivery company data
         const deliveryCompanyData = {
             name: name,
@@ -68,20 +46,11 @@ export const addDeliveryCompany = async (req, res, next) => {
         //send a response
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
-        console.error(error);
-        
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //handle error
+        const { message, status } = extractError(error);
+
+        //send a response
+        res.status(status).json({message: message});
     }
 }
 
@@ -96,48 +65,26 @@ export const deleteDeliveryCompany = async (req, res, next) => {
     //add the product
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            if (!user.exists || tokenRole !== "admin") {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin";
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
+
         //get the delivery company
         const deliveryCompanyReference = userReference.collection("deliverycompanies").doc(deliveryCompanyID);
         const deliveryCompanyDocument = await deliveryCompanyReference.get();
-        if (!deliveryCompanyDocument.exists) {
-            const error = new Error(`A delivery company with the id of ${deliveryCompanyID} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!deliveryCompanyDocument.exists)
+            throw createError(`A delivery company with the id of ${deliveryCompanyID} was not found`, 404);
+
         //delete the delivery company
         await database.collection("users").doc(deliveryCompanyID).delete();
         await log(database, "DELETE", `deliverycompanies/${deliveryCompanyDocument.id}`, null, decodedToken.uid);
+
+        //send a response
         res.status(200).json({message: "Successfully deleted"});
     } catch (error) {
-        console.error(error);
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //handle error
+        const { message, status } = extractError(error);
+
+        //send a response
+        res.status(status).json({message: message});
     }
 }

@@ -55,7 +55,6 @@ app.use("/api/comments", comment);
 
 //error handling middlewares
 app.use(notFoundHandler);
-app.use(errorHandler);
 
 
 //listen the port

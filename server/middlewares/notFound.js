@@ -17,5 +17,6 @@ const notFoundHandler = (req, res, next) => {
         res.sendFile(path.join(__dirname, "../../dist", "index.html"));
     }
 };
-    
+
+
 export default notFoundHandler;

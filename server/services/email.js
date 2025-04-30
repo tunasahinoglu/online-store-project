@@ -21,4 +21,5 @@ const sendEmail = async (to, subject, content, attachments=[]) => {
     await transporter.sendMail(email);
 };
 
+
 export default sendEmail;

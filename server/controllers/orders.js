@@ -1,4 +1,6 @@
 import admin from "../services/auth.js"
+import decodeToken from "../services/token.js"
+import { createError, extractError } from "../services/error.js";
 import log from "../services/log.js";
 import createPDFAttachment from "../services/pdf.js";
 import sendEmail from "../services/email.js";
@@ -11,7 +13,7 @@ const database = admin.firestore();
 
 //  @desc   user adds an order
 //  @route  POST  /api/orders
-export const addOrder = async (req, res, next) => {
+export const addOrder = async (req, res) => {
     const token = req.headers.authorization;
     const { notes } = req.body;
     let { delivery } = req.body;
@@ -20,76 +22,42 @@ export const addOrder = async (req, res, next) => {
     //add the order
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        let isUser;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            isUser = user.id === decodedToken.uid;
-            if (!user.exists || !user.data().active) {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => userData.active;
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
 
         //input check
-        if (delivery === undefined) {
-            const error = new Error("All fields are required");
-            error.status = 400;
-            return next(error);
-        } else if (typeof delivery !== "object" || delivery.type === undefined || typeof delivery.type !== "string" || !["standard", "express"].includes(delivery.type) || delivery.company === undefined || typeof delivery.company !== "string") {
-            const error = new Error("Please enter a valid delivery");
-            error.status = 400;
-            return next(error);
-        }
+        if (delivery === undefined)
+            throw createError("All fields are required", 400);
+        else if (typeof delivery !== "object" || delivery.type === undefined || typeof delivery.type !== "string" || !["standard", "express"].includes(delivery.type) || delivery.company === undefined || typeof delivery.company !== "string")
+            throw createError("Please enter a valid delivery", 400);
 
         //get the delivery company data
         const deliveryCompanyReference = database.collection("deliverycompanies").doc(delivery.company);
         const deliveryCompanyDocument = await deliveryCompanyReference.get();
-        if (!deliveryCompanyDocument.exists) {
-            const error = new Error("Please enter a valid delivery");
-            error.status = 400;
-            return next(error);
-        }
+        if (!deliveryCompanyDocument.exists)
+            throw createError("Please enter a valid delivery", 400);
         const deliveryCompanyData = deliveryCompanyDocument.data();
         
         //get the user
         const userReference = database.collection("users").doc(decodedToken.uid);
         const userDocument = await userReference.get();
-        if (!userDocument.exists) {
-            const error = new Error(`A user with the id of ${decodedToken.uid} was not found`);
-            error.status = 404;
-            return next(error);
-        }
+        if (!userDocument.exists)
+            throw createError(`A user with the id of ${decodedToken.uid} was not found`, 404);
 
         //get the basket
         const basketReference = userReference.collection("basket");
         const basketSnapshot = await basketReference.get();
         const basketDocuments = basketSnapshot.docs;
-        if (basketDocuments.empty) {
-            const error = new Error(`Basket is empty`);
-            error.status = 400;
-            return next(error);
-        }
+        if (basketDocuments.empty)
+            throw createError(`Basket is empty`, 400);
 
         //check for an unavailable item
         for (let productDocument of basketDocuments) {
             //get the product
             const reference = database.collection("products").doc(productDocument.id);
             const document = await reference.get();
-            if (!document.exists || document.data().price === 0 || document.data().stock < productDocument.data().count) {
-                const error = new Error(`Basket contains an unavailable item`);
-                error.status = 400;
-                return next(error);
-            }
+            if (!document.exists || document.data().price === 0 || document.data().stock < productDocument.data().count)
+                throw createError(`Basket contains an unavailable item`, 400);
         }
 
         //set order data
@@ -193,27 +161,18 @@ export const addOrder = async (req, res, next) => {
         //send a response
         res.status(201).json({message: "Successfully added"});
     } catch (error) {
-        console.error(error);
-        
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //handle error
+        const { message, status } = extractError(error);
+
+        //send a response
+        res.status(status).json({message: message});
     }
 }
 
 
 //  @desc   user/productmanager/admin sets an order
 //  @route  PUT  /api/orders/:orderID
-export const setOrder = async (req, res, next) => {
+export const setOrder = async (req, res) => {
     const token = req.headers.authorization;
     const { status } = req.body;
     const orderID = req.params.orderID;
@@ -222,53 +181,25 @@ export const setOrder = async (req, res, next) => {
     //set the order
     try {
         //token check
-        let decodedToken;
-        let tokenRole;
-        let isUser;
-        if (!token) {
-            const error = new Error("No token provided");
-            error.status = 401;
-            return next(error);
-        } else {
-            decodedToken = await admin.auth().verifyIdToken(token);
-            const userReference = database.collection("users").doc(decodedToken.uid);
-            const user = await userReference.get();
-            tokenRole = user.data().role;
-            isUser = user.id === decodedToken.uid;
-            if (!user.exists || (tokenRole !== "admin" && tokenRole !== "productmanager" && !isUser)) {
-                const error = new Error("Unauthorized access");
-                error.status = 401;
-                return next(error);
-            }
-        }
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || tokenRole === "productmanager" || isUser;
+        const { decodedToken, tokenRole, isUser } = decodeToken(admin, database, token, tokenCondition);
 
         //input check
-        if (status === undefined) {
-            const error = new Error("All fields are required");
-            error.status = 400;
-            return next(error);
-        } else if (typeof status !== "string" || !["cancelled", "in-transit", "delivered"].includes(status)) {
-            const error = new Error("Please enter a valid status");
-            error.status = 400;
-            return next(error);
-        }
+        if (status === undefined)
+            throw createError("All fields are required", 400);
+        else if (typeof status !== "string" || !["cancelled", "in-transit", "delivered"].includes(status))
+            throw createError("Please enter a valid status", 400);
 
         //get the order data
         const orderReference = database.collection("orders").doc(orderID);
         const orderDocument = await orderReference.get();
-        if (!orderDocument.exists) {
-            const error = new Error(`Order with the id of ${orderID} was not found`);
-            error.status = 400;
-            return next(error);
-        }
+        if (!orderDocument.exists)
+            throw createError(`Order with the id of ${orderID} was not found`, 400);
         const orderData = orderDocument.data();
 
         //status check
-        if (!(((tokenRole === "admin" || isUser) && orderData.status === "processing" && status === "cancelled") || (tokenRole === "productmanager" && ((orderData.status === "processing" && status === "in-transit") || (orderData.status === "in-transit" && status === "delivered"))))) {
-            const error = new Error("Please enter a valid status");
-            error.status = 400;
-            return next(error);
-        }
+        if (!(((tokenRole === "admin" || isUser) && orderData.status === "processing" && status === "cancelled") || (tokenRole === "productmanager" && ((orderData.status === "processing" && status === "in-transit") || (orderData.status === "in-transit" && status === "delivered")))))
+            throw createError("Please enter a valid status", 400);
 
         //check existence of products
         if (status === "cancelled") {
@@ -278,18 +209,14 @@ export const setOrder = async (req, res, next) => {
             for (let productDocument of productDocuments) {
                 const reference = database.collection("products").doc(productDocument.id);
                 const document = await reference.get();
-                if (!document.exists) {
-                    const error = new Error("Some products are not suitable for the cancellation request");
-                    error.status = 400;
-                    return next(error);
-                }
+                if (!document.exists)
+                    throw createError("Some products are not suitable for the cancellation request", 400);
             }
         }
 
         //set the order data
-        if (status === "delivered") {
+        if (status === "delivered")
             orderData["deliverydate"] = Date();
-        }
         orderData["status"] = status;
 
         //set the order
@@ -338,19 +265,10 @@ export const setOrder = async (req, res, next) => {
         //send a response
         res.status(200).json({message: "Successfully set"});
     } catch (error) {
-        console.error(error);
-        
-        //extract error message and return response
-        let message = "Internal server error";
-        let status = 500;
-        switch (error.code) {
-            case "auth/id-token-expired":
-                message = "Invalid or expired token";
-                status = 401;
-                break;
-        }
-        res.status(status).json({
-          message: message
-        });
+        //handle error
+        const { message, status } = extractError(error);
+
+        //send a response
+        res.status(status).json({message: message});
     }
 }

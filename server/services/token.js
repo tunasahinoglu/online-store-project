@@ -18,4 +18,5 @@ const decodeToken = async (admin, database, token, condition) => {
     return { decodeToken, tokenRole, isUser };
 }
 
+
 export default decodeToken;

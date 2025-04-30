@@ -1,12 +1,12 @@
-const createError = (message, status) => {
+export const createError = (message, status) => {
     const error = new Error(message);
     error.status = status;
     return error;
 }
 
 
-const extractError = (error) => {
-    console.error(error);
+export const extractError = (error) => {
+    console.error(error.message || error);
         
     //extract error message and return 
     let message = "Internal server error", status = 500;
@@ -31,5 +31,3 @@ const extractError = (error) => {
 
     return { message, status };
 }
-
-export default { createError, extractError };
