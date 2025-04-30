@@ -11,7 +11,7 @@ const database = admin.firestore();
 
 //  @desc   admin adds a delivery company
 //  @route  POST /api/deliverycompanies
-export const addDeliveryCompany = async (req, res, next) => {
+export const addDeliveryCompany = async (req, res) => {
     const token = req.headers.authorization;
     const { name, costs, email } = req.body;
 
@@ -57,7 +57,7 @@ export const addDeliveryCompany = async (req, res, next) => {
 
 //  @desc   admin deletes a specific delivery company
 //  @route  DELETE  /api/deliverycompanies/:deliveryCompanyID
-export const deleteDeliveryCompany = async (req, res, next) => {
+export const deleteDeliveryCompany = async (req, res) => {
     const token = req.headers.authorization;
     const deliveryCompanyID = req.params.deliveryCompanyID;
     
