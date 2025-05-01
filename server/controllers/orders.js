@@ -16,8 +16,7 @@ const database = admin.firestore();
 //  @route  POST  /api/orders
 export const addOrder = async (req, res) => {
     const token = req.headers.authorization;
-    const { notes } = req.body;
-    let { delivery } = req.body;
+    const { delivery, notes } = req.body;
     
 
     //add the order
@@ -31,6 +30,8 @@ export const addOrder = async (req, res) => {
             throw createError("All fields are required", 400);
         else if (typeof delivery !== "object" || delivery.type === undefined || typeof delivery.type !== "string" || !["standard", "express"].includes(delivery.type) || delivery.company === undefined || typeof delivery.company !== "string")
             throw createError("Please enter a valid delivery", 400);
+        else if (notes !== undefined && typeof notes !== "string")
+            throw createError("Please enter valid notes", 400);
 
         //get the delivery company data
         const deliveryCompanyReference = database.collection("deliverycompanies").doc(delivery.company);
@@ -74,7 +75,7 @@ export const addOrder = async (req, res) => {
             address: userDocument.data().address,
             billingaddress: userDocument.data().address,
             delivery: delivery,
-            notes: notes ? JSON.stringify(notes) : "",
+            notes: notes !== undefined ? notes : null,
             date: Date()
         };
 
