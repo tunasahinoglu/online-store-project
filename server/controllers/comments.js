@@ -59,6 +59,7 @@ export const addComment = async (req, res) => {
             throw createError(`A comment was already made for this order of the product`, 400);
 
         //set comment data
+        const isRating = comment === undefined || comment.trim();
         const commentData = {
             user: decodedToken.uid,
             firstname: userData.firstname,
@@ -66,9 +67,9 @@ export const addComment = async (req, res) => {
             order: order,
             product: product,
             rate: rate,
-            comment: comment !== undefined || !comment.trim() ? JSON.stringify(comment) : null,
-            reviewed: comment !== undefined ? false : true,
-            approved: comment !== undefined ? false : true,
+            comment: isRating ? null : JSON.stringify(comment),
+            reviewed: isRating ? true : false,
+            approved: isRating ? true : false,
             date: Date()
         };
 
@@ -77,7 +78,7 @@ export const addComment = async (req, res) => {
         await addLog(database, "ADD", commentDocument.path, null, commentData, decodedToken.uid);
 
         //send notification to user
-        const message = commentData.comment === null ?
+        const message = isRating ?
                         `Rating #${commentDocument.id} has been posted.` :
                         `Comment #${commentDocument.id} has been submitted for approval.`;
         await addNotification(database, decodedToken.uid, decodedToken.uid, message);
@@ -127,6 +128,7 @@ export const setComment = async (req, res) => {
             throw createError("Comment is already reviewed", 400);
 
         //set comment data
+        const isRating = commentData["comment"] === null;
         commentData["reviewed"] = true;
         commentData["approved"] = approved;
 
@@ -135,7 +137,7 @@ export const setComment = async (req, res) => {
         await addLog(database, "SET", commentReference.path, commentDocument.data(), commentData, decodedToken.uid);
 
         //send notification to user
-        const message = commentData["comment"] === null ?
+        const message = isRating ?
                         `Rating #${commentDocument.id} has been ${approval ? "made visible" : "hidden"}.` :
                         `Comment #${commentDocument.id} has been ${approval ? "approved" : "denied"}.`;
         await addNotification(database, commentData.user, decodedToken.uid, message);

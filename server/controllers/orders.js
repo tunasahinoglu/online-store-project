@@ -127,10 +127,10 @@ export const addOrder = async (req, res) => {
         await addLog(database, "ADD", orderReference.path, null, orderData, decodedToken.uid);
 
         //send an email to user
-        let orderDocument = await database.collection("orders").doc(orderReference.id).get();
-        const productsSnapshot = await database.collection("orders").doc(orderDocument.id).collection("products").get();
-        const productDocuments = productsSnapshot.docs;
-        const attachment = createPDFAttachment(orderDocument, productDocuments);
+        const orderDocument = await database.collection("orders").doc(orderReference.id).get();
+        const orderProductsSnapshot = await database.collection("orders").doc(orderDocument.id).collection("products").get();
+        const orderProductDocuments = orderProductsSnapshot.docs;
+        const attachment = createPDFAttachment(orderDocument, orderProductDocuments);
         const content = `
             <p>Hello ${userDocument.data().firstname},</p>
         
@@ -200,13 +200,13 @@ export const setOrder = async (req, res) => {
 
         //check existence of products
         if (status === "cancelled") {
-            const productsReference = orderReference.collection("products");
-            const productsSnapshot = await productsReference.get();
-            const productDocuments = productsSnapshot.docs;
-            for (let productDocument of productDocuments) {
-                const reference = database.collection("products").doc(productDocument.id);
-                const document = await reference.get();
-                if (!document.exists)
+            const orderProductsReference = orderReference.collection("products");
+            const orderProductsSnapshot = await orderProductsReference.get();
+            const orderProductDocuments = orderProductsSnapshot.docs;
+            for (let orderProductDocument of orderProductDocuments) {
+                const productReference = database.collection("products").doc(orderProductDocument.id);
+                const productDocument = await productReference.get();
+                if (!productDocument.exists)
                     throw createError("Some products are not suitable for the cancellation request", 400);
             }
         }
@@ -222,17 +222,18 @@ export const setOrder = async (req, res) => {
 
         //update product stocks
         if (status === "cancelled") {
-            const productsReference = orderReference.collection("products");
-            const productsSnapshot = await productsReference.get();
-            const productDocuments = productsSnapshot.docs;
-            for (let productDocument of productDocuments) {
-                const reference = database.collection("products").doc(productDocument.id);
-                const document = await reference.get();
-                const productData = document.data();
-                productData["stock"] += productDocument.data().count;
-                productData["popularity"] -= productDocument.data().count;
-                await reference.set(productData);
-                await addLog(database, "SET", reference.path, document.data(), productData, decodedToken.uid);
+            const orderProductsReference = orderReference.collection("products");
+            const orderProductsSnapshot = await orderProductsReference.get();
+            const orderProductDocuments = orderProductsSnapshot.docs;
+            for (let orderProductDocument of orderProductDocuments) {
+                const productReference = database.collection("products").doc(orderProductDocument.id);
+                const productDocument = await productReference.get();
+                const orderProductData = orderProductDocument.data();
+                const productData = productDocument.data();
+                productData["stock"] += orderProductData.count;
+                productData["popularity"] -= orderProductData.count;
+                await productReference.set(productData);
+                await addLog(database, "SET", productReference.path, productDocument.data(), productData, decodedToken.uid);
             }
         }
 
