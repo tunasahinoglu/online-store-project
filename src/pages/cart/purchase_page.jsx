@@ -86,7 +86,7 @@ const Checkout = () => {
         notes: null,
         navigate // Pass navigate as a parameter to handleCheckout,
       });
-      await clearCart();
+      window.location.reload();
     } catch (err) {
       console.error("Order placement failed:", err);
       alert("Failed to place order.");
