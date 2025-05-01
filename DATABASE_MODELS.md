@@ -147,7 +147,8 @@ commentID: {
 
 ```jsonc
 logID: {
-    "data": "document data",
+    "olddata": "document data || null",
+    "newdata": "document data || null",
     "document": "document path",
     "method": "ADD | SET | DELETE",
     "user": "userID",
