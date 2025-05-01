@@ -63,7 +63,7 @@ productID: {
     "discount": "integer between 0 and 100",
     "stock": "non-negative integer",
     "popularity": "non-negative integer",
-    "description": "string",
+    "description": "non-empty string || null",
     "warranty": "integer not less than -1", // in months and -1 means lifetime
     "distributorname": "non-empty string",
     "features": {
@@ -94,7 +94,7 @@ orderID: {
         "name": "non-empty string",
         "company": "deliverycompanyID"
     },
-    "notes": "string",
+    "notes": "non-empty string || null",
     "date": "timestamp",
     "deliverydate": "timestamp"
 }
@@ -138,7 +138,7 @@ commentID: {
     "rate": "integer between 0 and 10",
     "reviewed": "false by default | true",
     "approved": "false by default | true",
-    "comment": "string",
+    "comment": "non-empty string || null",
     "date": "timestamp"
 }
 ```
