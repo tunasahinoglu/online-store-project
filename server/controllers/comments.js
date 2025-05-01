@@ -32,6 +32,8 @@ export const addComment = async (req, res) => {
             throw createError("Please enter a valid product", 400);
         else if (!Number.isInteger(rate) || 10 < rate < 0)
             throw createError("Please enter a valid rate", 400);
+        else if (comment !== undefined && comment !== null && typeof comment !== "string")
+            throw createError("Please enter a valid comment", 400);
 
         //get the order
         const orderReference = database.collection("orders").doc(order);
@@ -59,7 +61,7 @@ export const addComment = async (req, res) => {
             throw createError(`A comment was already made for this order of the product`, 400);
 
         //set comment data
-        const isRating = comment === undefined || comment.trim();
+        const isRating = comment === undefined || comment === null || !comment.trim();
         const commentData = {
             user: decodedToken.uid,
             firstname: userData.firstname,
@@ -67,7 +69,7 @@ export const addComment = async (req, res) => {
             order: order,
             product: product,
             rate: rate,
-            comment: isRating ? null : JSON.stringify(comment),
+            comment: isRating ? null : comment,
             reviewed: isRating ? true : false,
             approved: isRating ? true : false,
             date: Date()

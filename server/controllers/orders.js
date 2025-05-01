@@ -30,7 +30,7 @@ export const addOrder = async (req, res) => {
             throw createError("All fields are required", 400);
         else if (typeof delivery !== "object" || delivery.type === undefined || typeof delivery.type !== "string" || !["standard", "express"].includes(delivery.type) || delivery.company === undefined || typeof delivery.company !== "string")
             throw createError("Please enter a valid delivery", 400);
-        else if (notes !== undefined && typeof notes !== "string")
+        else if (notes !== undefined && notes !== null && typeof notes !== "string")
             throw createError("Please enter valid notes", 400);
 
         //get the delivery company data
@@ -75,7 +75,7 @@ export const addOrder = async (req, res) => {
             address: userDocument.data().address,
             billingaddress: userDocument.data().address,
             delivery: delivery,
-            notes: notes !== undefined ? notes : null,
+            notes: notes === undefined || notes === null || !notes.trim() ? null : notes,
             date: Date()
         };
 

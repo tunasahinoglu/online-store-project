@@ -38,7 +38,7 @@ export const addProduct = async (req, res) => {
             throw createError("Please enter a valid image", 400);
         else if (!Number.isInteger(stock) || stock < 0)
             throw createError("Please enter a valid stock", 400);
-        else if (description !== undefined && typeof description !== "string")
+        else if (description !== undefined && description === null && typeof description !== "string")
             throw createError("Please enter a valid description", 400);
         else if (!Number.isInteger(warranty) || stock < -1)
             throw createError("Please enter a valid warranty", 400);
@@ -59,7 +59,7 @@ export const addProduct = async (req, res) => {
             discount: 0,
             stock: stock,
             popularity: 0,
-            description: description !== undefined ? description : null,
+            description: description === undefined || description === null || !description.trim() ? null : description,
             warranty: warranty,
             distributorname: distributorname,
             features: features
