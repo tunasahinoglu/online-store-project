@@ -246,7 +246,7 @@ const Cart = () => {
 
                                     try {
                                         const basket = await basketCheck(`users/${currentUser.uid}/basket-check`);
-                                        if (!basket) {
+                                        if (basket === "Invalid") {
                                             return;
                                         }
 
