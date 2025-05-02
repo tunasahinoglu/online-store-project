@@ -148,7 +148,7 @@ export const addOrder = async (req, res) => {
             <p>Please find the invoice attached.</p>
         
             <p>Best regards,</p>
-            <p><strong>Teknosu Team</strong></p>
+            <p><strong>TeknoSU Team</strong></p>
         `;
         await sendEmail(userDocument.data().email, "We have received your order", content, [attachment]);
 

@@ -187,7 +187,7 @@ export const setRequest = async (req, res) => {
                 <p>The amount will be credited back within 3-5 business days, depending on your bank’s processing time.</p>
             
                 <p>Best regards,</p>
-                <p><strong>Teknosu Team</strong></p>
+                <p><strong>TeknoSU Team</strong></p>
             `;
             await sendEmail(userData.email, "Refund request has been confirmed", content);
         }
