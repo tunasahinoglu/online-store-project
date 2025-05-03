@@ -156,123 +156,168 @@ export default function SalesManagerPage() {
   
   const generateInvoicePDF = (order) => {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
-    let y = 45;
+    let y = 50;
   
+    // Logo
     doc.addImage(logo, "JPEG", 50, y, 100, 40);
-    y += 5;
-    doc.setFontSize(10).setTextColor(68);
-    doc.text("TeknoSU", 200, y, { align: "right" });
-    y += 15;
-    doc.text("Orta, Tuzla", 200, y, { align: "right" });
-    y += 15;
-    doc.text("Istanbul, Turkey", 200, y, { align: "right" });
   
-    y = 140;
-    doc.setFontSize(20).text("Invoice", 50, y);
+    // TeknoSU Address (static)
+    doc.setFontSize(10).setFont("Helvetica").setTextColor(68);
+    doc.text("TeknoSU", 520, y, { align: "right" });
     y += 15;
-    doc.setLineWidth(1).setDrawColor(170);
-    doc.line(50, y, 550, y);
+    doc.text("Orta, Tuzla", 520, y, { align: "right" });
+    y += 15;
+    doc.text("Istanbul, Turkey", 520, y, { align: "right" });
+  
+    // Title
+    y = 140;
+    doc.setFont("Helvetica-Bold").setFontSize(20).setTextColor(0);
+    doc.text("Invoice", 50, y);
+  
+    y += 25;
+    doc.setDrawColor(170).setLineWidth(1).line(50, y, 550, y);
     y += 20;
   
-    const text = (label, value) => {
+    const data = order;
+  
+    const drawField = (label, value, bold = false) => {
       doc.setFont("Helvetica").setFontSize(10);
       doc.text(label, 50, y);
-      doc.setFont("Helvetica-Bold");
+      doc.setFont(bold ? "Helvetica-Bold" : "Helvetica");
       doc.text(value, 150, y);
       y += 15;
     };
   
-    const data = order;
-    text("User Number:", data.user || "-");
-    text("Order Number:", data.id || "-");
-    text("Billing Date:", new Date(data.date).toString() || "-");
-    text("Total Due:", `$${(data.totaldiscountedcost ?? 0).toFixed(2)}`);
-    text("Company Number:", data.delivery?.company || "-");
-    text("Company Name:", data.delivery?.name || "-");
-    text("Delivery Type:", data.delivery?.type || "-");
-    text("Delivery Cost:", `$${(data.deliverycost ?? 0).toFixed(2)}`);
-    text("Notes:", data.notes || "-");
-  
+    // Left-side Info
+    drawField("User Number:", data.user || "-", true);
+    drawField("Order Number:", data.id || "-", true);
+    drawField("Billing Date:", new Date(data.date).toString(), false);
+    drawField("Total Due:", `$${(data.totaldiscountedcost ?? 0).toFixed(2)}`, true);
     y += 10;
-    doc.setFont("Helvetica-Bold").text("Delivery Address", 200, y, { align: "right", underline: true });
-    y += 15;
-    doc.setFont("Helvetica-Bold").text(`${data.firstname} ${data.lastname}`, 200, y, { align: "right" });
-    y += 15;
-    doc.setFont("Helvetica").text(data.address?.address || "-", 200, y, { align: "right" });
-    y += 15;
-    doc.text(`${data.address?.city || ""}, ${data.address?.country || ""}`, 200, y, { align: "right" });
-  
-    y += 30;
-    doc.setFont("Helvetica-Bold").text("Billing Address", 200, y, { align: "right", underline: true });
-    y += 15;
-    doc.setFont("Helvetica-Bold").text(`${data.firstname} ${data.lastname}`, 200, y, { align: "right" });
-    y += 15;
-    doc.setFont("Helvetica").text(data.billingaddress?.address || "-", 200, y, { align: "right" });
-    y += 15;
-    doc.text(`${data.billingaddress?.city || ""}, ${data.billingaddress?.country || ""}`, 200, y, { align: "right" });
-  
-    y += 30;
-    doc.setLineWidth(1).setDrawColor(170).line(50, y, 550, y);
+    drawField("Company Number:", data.delivery?.company || "-", true);
+    drawField("Company Name:", data.delivery?.name || "-", false);
+    drawField("Delivery Type:", data.delivery?.type || "-", false);
+    drawField("Delivery Cost:", `$${(data.deliverycost ?? 0).toFixed(2)}`, false);
     y += 10;
+    drawField("Notes:", data.notes || "-", false);
+  
+    // Right-side Address Blocks (aligned with User Number line)
+    let addrY = 180;
+    doc.setFont("Helvetica").setFontSize(10);
+    doc.text("Delivery Address", 520, addrY, { align: "right", underline: true });
+  
+    addrY += 15;
+    doc.setFont("Helvetica-Bold");
+    doc.text(`${data.firstname} ${data.lastname}`, 520, addrY, { align: "right" });
+  
+    addrY += 15;
+    doc.setFont("Helvetica");
+    doc.text(data.address?.address || "-", 520, addrY, { align: "right" });
+  
+    addrY += 15;
+    doc.text(`${data.address?.city || "-"}, ${data.address?.country || "-"}`, 520, addrY, { align: "right" });
+  
+    // Billing address
+    addrY += 25;
+    doc.setFont("Helvetica").setFontSize(10);
+    doc.text("Billing Address", 520, addrY, { align: "right", underline: true });
+  
+    addrY += 15;
+    doc.setFont("Helvetica-Bold");
+    doc.text(`${data.firstname} ${data.lastname}`, 520, addrY, { align: "right" });
+  
+    addrY += 15;
+    doc.setFont("Helvetica");
+    doc.text(data.billingaddress?.address || "-", 520, addrY, { align: "right" });
+  
+    addrY += 15;
+    doc.text(`${data.billingaddress?.city || "-"}, ${data.billingaddress?.country || "-"}`, 520, addrY, { align: "right" });
+  
+    // Table Header
+    y += 15; // More space after Notes
+    doc.setDrawColor(170).line(50, y, 550, y);
+    y += 25;
+  
     doc.setFont("Helvetica-Bold");
     doc.text("ID", 50, y);
-    doc.text("Name", 150, y);
-    doc.text("Qty", 300, y, { align: "right" });
-    doc.text("Discount", 400, y, { align: "right" });
+    doc.text("Name", 180, y); // shifted slightly from 150 to prevent overlap
+    doc.text("Quantity", 320, y, { align: "right" });
+    doc.text("Discount", 420, y, { align: "right" });
     doc.text("Line Total", 550, y, { align: "right" });
     y += 10;
-    doc.setLineWidth(1).setDrawColor(170).line(50, y, 550, y);
+    doc.setDrawColor(170).line(50, y, 550, y);
     y += 10;
   
+    // Table Rows
     doc.setFont("Helvetica").setFontSize(10);
+    let subtotal = 0;
     (data.products || []).forEach((p) => {
-      if (y >= 750) {
+      if (y >= 740) {
         doc.addPage();
         y = 50;
       }
+  
       const qty = p.count ?? 0;
       const price = p.price ?? 0;
       const discount = p.discount ?? 0;
-      const original = qty * price;
-      const discounted = original * (1 - discount / 100);
+      const lineTotal = qty * price * (1 - discount / 100);
+      subtotal += lineTotal;
   
       doc.text(p.id || "-", 50, y);
-      doc.text(p.name || "-", 150, y);
-      doc.text(`${qty}`, 300, y, { align: "right" });
-      doc.text(discount > 0 ? `${discount}%` : "-", 400, y, { align: "right" });
-      doc.text(`$${discounted.toFixed(2)}`, 550, y, { align: "right" });
+      doc.text(p.name || "-", 180, y); // same shift here
+      doc.text(`${qty}`, 320, y, { align: "right" });
+      doc.text(discount > 0 ? `${discount}%` : "-", 420, y, { align: "right" });
+      doc.text(`$${lineTotal.toFixed(2)}`, 550, y, { align: "right" });
       y += 20;
       doc.setDrawColor(170).line(50, y, 550, y);
       y += 10;
     });
   
-    doc.setFont("Helvetica");
-    doc.text("Subtotal", 400, y, { align: "right" });
-    doc.text(`$${((data.totaldiscountedcost ?? 0) - (data.deliverycost ?? 0)).toFixed(2)}`, 550, y, { align: "right" });
+    // Totals
+    doc.setFont("Helvetica-Bold");
+    doc.text("Subtotal", 320, y, { align: "right" });
+    doc.text(`$${subtotal.toFixed(2)}`, 550, y, { align: "right" });
     y += 20;
-    doc.text("Delivery Cost", 400, y, { align: "right" });
+    doc.text("Delivery Cost", 320, y, { align: "right" });
     doc.text(`$${(data.deliverycost ?? 0).toFixed(2)}`, 550, y, { align: "right" });
     y += 25;
-    doc.setFont("Helvetica-Bold");
-    doc.text("Total Due", 400, y, { align: "right" });
-    doc.text(`$${(data.totaldiscountedcost ?? 0).toFixed(2)}`, 550, y, { align: "right" });
+    doc.text("Total Due", 320, y, { align: "right" });
+    doc.text(`$${(subtotal + (data.deliverycost ?? 0)).toFixed(2)}`, 550, y, { align: "right" });
   
+    // Footer
+    y = 765;
     doc.setFont("Helvetica").setFontSize(10).setTextColor(68);
-    doc.text("You may cancel your order while it is still being processed. Refunds are available within 30 days of delivery. Thank you for choosing TeknoSU.", 50, 765, { align: "center", width: 500 });
+    doc.text(
+      "You may cancel your order while it is still being processed. Refunds are available within 30 days of delivery. Thank you for choosing TeknoSU.",
+      50,
+      y,
+      { align: "center", width: 500 }
+    );
   
     doc.save(`Order_id: ${data.id}.pdf`);
   };
   
   const downloadMultipleInvoices = async () => {
     for (let i = 0; i < deliveredInvoices.length; i++) {
+      const invoice = deliveredInvoices[i];
+  
+      // Fetch products subcollection from /orders/{id}/products/
+      const productDocs = await get(`orders/${invoice.id}/products`);
+      const fullProducts = productDocs.map(obj => {
+        const id = Object.keys(obj)[0];
+        return { id, ...obj[id] };
+      });
+  
+      invoice.products = fullProducts; // Attach to invoice
       await new Promise((resolve) => {
         setTimeout(() => {
-          generateInvoicePDF(deliveredInvoices[i]);
+          generateInvoicePDF(invoice); // Generate with accurate product info
           resolve();
         }, 400);
       });
     }
-  };  
+  };
+  
   
   const filteredInvoices = invoices.filter((inv) => {
     const invDate = new Date(inv.date);
@@ -489,5 +534,5 @@ return (
   </div>
 );
   
-  
+
 }  
