@@ -97,7 +97,9 @@ function Homepage() {
         const matchesCategory = selectedCategory === 'All' ||
             product.category === selectedCategory ||
             product.subcategory === selectedCategory;
-        return matchesSearch && matchesCategory;
+
+        const priceGreaterThanZero = product.price > 0;
+        return matchesSearch && matchesCategory && priceGreaterThanZero;
     });
 
     const sortedProducts = [...filteredProducts].sort((a, b) => {
