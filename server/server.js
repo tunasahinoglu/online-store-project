@@ -18,7 +18,7 @@ import path from "path";
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 //-secrets
-const port = process.env.PORT;
+const port = process.env.PORT || 5001;
 
 
 //initialize apps
@@ -35,7 +35,7 @@ app.use(logHandler);
 
 //routing
 //-index.html
-app.use(express.static(path.join(__dirname, "../dist")));
+// app.use(express.static(path.join(__dirname, "../dist")));
 //-auth
 app.use("/api/auth", auth);
 //-users

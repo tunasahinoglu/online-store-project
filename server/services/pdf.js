@@ -6,7 +6,7 @@ const createPDFAttachment = (orderDocument, productDocuments) => {
 
     //header
     let currentY = 45;
-    pdf.image("server/assets/teknosuLogo.jpg", 50, currentY, { width: 150 });
+    pdf.image("assets/teknosuLogo.jpg", 50, currentY, { width: 150 });
     currentY += 5;
     pdf.fillColor("#444444").fontSize(10);
     pdf.text("TeknoSU", 200, currentY, { align: "right" });

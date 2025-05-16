@@ -1,0 +1,17 @@
+version: "3"
+services:
+  client:
+    build:
+      context: ./client
+    ports:
+      - "5173:80" 
+
+  server:
+    build:
+      context: ./server
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+    env_file:
+      - server/.env
