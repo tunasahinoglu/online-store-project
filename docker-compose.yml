@@ -14,4 +14,4 @@ services:
     environment:
       - PORT=5001
     env_file:
-      - server/.env
+      - .env
