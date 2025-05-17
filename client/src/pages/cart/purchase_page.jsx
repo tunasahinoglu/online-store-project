@@ -44,10 +44,17 @@ const Checkout = () => {
     expirationDate: '',
   });
 
-  const totalPrice = cart.reduce(
-    (sum, product) => sum + product.price * product.quantity,
-    0
-  );
+  const calculatePrice = (product) => {
+      if (product.discount && product.discount > 0) {
+          return product.price * (1 - product.discount / 100);
+      }
+      return product.price;
+  };
+
+  const totalPrice = cart.reduce((sum, product) => {
+      return sum + (calculatePrice(product) * product.quantity);
+  }, 0);
+
   const deliveryFee = selectedOption?.price || 0;
   const total = totalPrice + deliveryFee;
 
