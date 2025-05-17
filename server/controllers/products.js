@@ -10,7 +10,7 @@ import { addNotification } from "../services/notification.js"
 const database = admin.firestore();
 
 
-//  @desc   productmanager adds a product
+//  @desc   productmanager/admin adds a product
 //  @route  PUT  /api/products/
 export const addProduct = async (req, res) => {
     const token = req.headers.authorization;
@@ -20,7 +20,7 @@ export const addProduct = async (req, res) => {
     //add the product
     try {
         //token check
-        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager";
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager" || tokenRole == "admin";
         const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
@@ -82,7 +82,7 @@ export const addProduct = async (req, res) => {
 }
 
 
-//  @desc   productmanager/salesmanager sets a product
+//  @desc   productmanager/salesmanager/admin sets a product
 //  @route  PUT  /api/products/:productID
 export const setProduct = async (req, res) => {
     const token = req.headers.authorization;
@@ -93,7 +93,7 @@ export const setProduct = async (req, res) => {
     //set the product
     try {
         //token check
-        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager" || tokenRole === "salesmanager";
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "productmanager" || tokenRole === "salesmanager" || tokenRole == "admin";
         const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
