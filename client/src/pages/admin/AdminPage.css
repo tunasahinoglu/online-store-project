@@ -1,0 +1,46 @@
+body, html {
+  background-color: #ffffff; /* Force light background */
+  color: #000000;            /* Force dark text */
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-container {
+  background-color: #f9f9f9;
+  color: #000000;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-box {
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #eeeeee;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+select {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #ccc;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+h1, h2 {
+  color: #222222;
+}

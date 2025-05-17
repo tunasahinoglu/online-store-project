@@ -1,0 +1,65 @@
+/* Input and button container */
+.form-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+/* Input fields */
+.form-group input {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  min-width: 200px;
+  flex: 1;
+}
+
+/* Button */
+.form-group button {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  background-color: #1f2937;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Button hover */
+.form-group button:hover {
+  background-color: #374151;
+}
+
+/* Existing company list */
+.company-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f3f4f6;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #000000;
+}
+
+/* Delete button */
+.company-row button {
+  background-color: #dc2626;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.company-row button:hover {
+  background-color: #b91c1c;
+}
