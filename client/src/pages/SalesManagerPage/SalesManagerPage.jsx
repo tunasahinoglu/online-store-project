@@ -39,6 +39,10 @@ export default function SalesManagerPage() {
         return { id, ...data };
       });
       setProducts(loaded);
+
+      const discounted = loaded.filter(p => p.discount && p.discount > 0);
+      setDiscountedProductData(discounted);
+      setShowDiscountedList(true);
     });
   
     get("orders").then((fetched) => {
@@ -108,7 +112,7 @@ export default function SalesManagerPage() {
   
     const updatedProduct = {
       ...products.find((p) => p.id === id),
-      price: discountedItem.originalPrice
+      discount: 0
     };
     set(`products/${id}`, updatedProduct);
   
@@ -126,27 +130,25 @@ export default function SalesManagerPage() {
         p.price !== null &&
         !discountedProductData.find((d) => d.id === p.id)
     );
-  
-    const updated = newDiscounts.map((p) => {
-      const original = p.price;
-      const discountedPrice = (original * (100 - discount)) / 100;
-      return {
-        ...p,
-        discount: discount,
-      };
-    });
-  
+
+    const updated = newDiscounts.map((p) => ({
+      ...p,
+      discount: discount, // add discount field only
+    }));
+
     updated.forEach((product) => {
-      set(`products/${product.id}`, product);
+      // Only update discount in the database, keep price intact
+      const { price, ...rest } = product;
+      set(`products/${product.id}`, { ...rest, price });
     });
-  
+
     setProducts((prev) =>
       prev.map((p) => {
         const match = updated.find((u) => u.id === p.id);
-        return match ? { ...p, price: match.price } : p;
+        return match ? { ...p, discount: match.discount } : p; // update discount in state
       })
     );
-  
+
     setDiscountedItems(updated);
     setDiscountedProductData((prev) => [...prev, ...updated]);
     setShowDiscountedList(true);
@@ -448,7 +450,7 @@ return (
                 <ul>
                   {discountedProductData.map((item) => (
                     <li key={item.id}>
-                      {item.name} — Original Price: ${item.originalPrice.toFixed(2)} — {item.discountPercent}% off → ${item.price.toFixed(2)}
+                      {item.name} — Original Price: ${item.price.toFixed(2)} — {item.discount}% off → ${(item.price * (100 - item.discount) /100 ).toFixed(2)}
                       <button
                         className="button"
                         style={{ marginLeft: "1rem" }}
