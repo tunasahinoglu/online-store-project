@@ -132,9 +132,7 @@ export default function SalesManagerPage() {
       const discountedPrice = (original * (100 - discount)) / 100;
       return {
         ...p,
-        price: discountedPrice,
-        originalPrice: original,
-        discountPercent: discount,
+        discount: discount,
       };
     });
   
