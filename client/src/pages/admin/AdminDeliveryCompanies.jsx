@@ -114,7 +114,7 @@ function AdminDeliveryCompanies() {
         alignItems: 'center',
         borderBottom: '1px solid #ccc'
       }}>
-        <img src={logo} alt="Logo" style={{ height: '40px', marginRight: '1rem' }} />
+        <img src={logo} alt="Logo" style={{ height: '40px', marginRight: '1rem' }} onClick={() => navigate('/')}/>
         <h1 style={{ fontSize: '1.5rem', color: '#1f2937' }}>Delivery Companies Management</h1>
       </header>
 

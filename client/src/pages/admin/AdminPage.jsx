@@ -75,7 +75,7 @@ function AdminPage() {
         alignItems: 'center',
         borderBottom: '1px solid #ccc'
       }}>
-        <img src={logo} alt="Logo" style={{ height: '40px', marginRight: '1rem' }} />
+        <img src={logo} alt="Logo" style={{ height: '40px', marginRight: '1rem' }} onClick={() => navigate('/')}/>
         <h1 style={{ fontSize: '1.5rem', color: '#1f2937' }}>Admin Dashboard</h1>
       </header>
 
@@ -109,7 +109,7 @@ function AdminPage() {
                     value={user.role || ''}
                     onChange={e => handleRoleChange(user.id, e.target.value)}
                   >
-                    <option value="cutomer">Customer</option>
+                    <option value="customer">Customer</option>
                     <option value="admin">Admin</option>
                     <option value="salesmanager">Sales Manager</option>
                     <option value="productmanager">Product Manager</option>
