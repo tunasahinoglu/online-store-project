@@ -109,11 +109,10 @@ function AdminPage() {
                     value={user.role || ''}
                     onChange={e => handleRoleChange(user.id, e.target.value)}
                   >
-                    <option value="">None</option>
+                    <option value="cutomer">Customer</option>
                     <option value="admin">Admin</option>
-                    <option value="sales">Sales Manager</option>
-                    <option value="product">Product Manager</option>
-                    <option value="delivery">Delivery Staff</option>
+                    <option value="salesmanager">Sales Manager</option>
+                    <option value="productmanager">Product Manager</option>
                   </select>
                 </div>
               ))}
