@@ -14,6 +14,8 @@ import OrdersPage from "../pages/profile/orders.jsx";
 import CheckoutPage from "../pages/cart/purchase_page.jsx";
 import SalesManagerPage from "../pages/SalesManagerPage/SalesManagerPage.jsx";
 import ProductManagerPage from "../pages/ProductManagerPage/ProductManagerPage.jsx";
+import Adminpage from "../pages/admin/AdminPage.jsx";
+import AdminDeliveryCompaniesPage from "../pages/admin/AdminDeliveryCompanies.jsx";
 
 const AppRouter = () => {
   return (
@@ -32,6 +34,8 @@ const AppRouter = () => {
           <Route path="/payment" element={<CheckoutPage />} />
           <Route path="/sales" element={<SalesManagerPage />} />
           <Route path="/productmanager" element={<ProductManagerPage />} />
+          <Route path="/admin" element={<Adminpage/>}/>
+          <Route path="/admin/delivery" element={<AdminDeliveryCompaniesPage/>}/>
         </Routes>
       </Router>
     </CartProvider>
