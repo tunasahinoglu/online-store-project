@@ -7,10 +7,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Module and build folders
 node_modules
 dist
 dist-ssr
 *.local
+
+# Secrets
+.key.json
+.env
 
 # Editor directories and files
 .vscode/*
@@ -24,3 +29,4 @@ dist-ssr
 *.sw?
 .env
 /server/.key.json
+*.sw?

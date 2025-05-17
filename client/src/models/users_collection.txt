@@ -1,0 +1,21 @@
+//users collection
+userID: {
+    firstname: ".+"
+    lastname: ".+"
+    email: ".+@.+[.].+"
+    role: "customer"/"productmanager"/"salesmanager"/"admin"
+    address: {
+        country: ".+",
+        city: ".+",
+        address: ".+",
+    }
+    wishlist [
+        productID1
+        ...
+    ]
+}
+
+//users/basket collection
+productID: {
+    count: > 0
+}
