@@ -4,7 +4,7 @@ import logo from '../../assets/teknosuLogo.jpg';
 import { useCart } from '../../pages/cart/cart_context';
 import { auth, database } from "../../services/firebase/connect.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { get, set } from '../../services/firebase/database.js';
+import { get, set, add } from '../../services/firebase/database.js';
 import NotificationDialog from '../../pages/notification/notification_dialog.jsx';
 import './profilepage.css';
 
@@ -22,8 +22,8 @@ function Homepage() {
     const [orders, setOrders] = useState([]);
     const [userID, setUserID] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('All');
-
-
+    const [modalOrder, setModalOrder] = useState(null);
+    const [orderData, setOrderData] = useState(null);
 
 
 
@@ -194,6 +194,117 @@ function Homepage() {
 
 
 
+    function OrderDetailsModal({ order, onClose, deliveryCompanies }) {
+        if (!order) return null;
+        const orderKey = Object.keys(order)[1];
+        const orderData = order[orderKey];
+        setOrderData(orderData);
+        const deliveryCompanyId = orderData.delivery?.company;
+
+        // deliveryCompanies may be an object or array, normalize to object
+        let companiesObj = deliveryCompanies;
+        if (Array.isArray(deliveryCompanies)) {
+            companiesObj = {};
+            deliveryCompanies.forEach(obj => {
+                const id = Object.keys(obj)[0];
+                companiesObj[id] = obj[id];
+            });
+        }
+
+        let deliveryCompanyName = 'Unknown Company';
+        if (companiesObj && deliveryCompanyId && companiesObj[deliveryCompanyId]?.name) {
+            deliveryCompanyName = companiesObj[deliveryCompanyId].name;
+        }
+
+        let refundAvailable = false;
+        if (orderData.date && orderData.deliverydate) {
+            const orderDate = new Date(orderData.date);
+            const deliveryDate = orderData.deliverydate
+            const diffDays = Math.floor((deliveryDate - orderDate) / (1000 * 60 * 60 * 24));
+            refundAvailable = diffDays <= 30;
+        }
+
+        // Implement refund request using the model from DATABASE_MODELS.md
+        const handleRefund = async () => {
+            try {
+                await add("requests", {
+                    user: orderData.user,
+                    firstname: orderData.firstname,
+                    lastname: orderData.lastname,
+                    revievew: false,
+                    approved: false,
+                    order: orderKey,
+                    request: "refund",
+                    date: new Date().toISOString()
+                });
+                await set(`orders/${orderKey}`, { status: "refunded" });
+                alert('Refund requested!');
+            } catch (error) {
+                console.error('Error sending refund request:', error);
+                alert('Error requesting refund.');
+            }
+        };
+
+        return (
+            <div className="modal-overlay" onClick={onClose}>
+                <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <button className="modal-close" onClick={onClose}>X</button>
+                    <h3>Order Number: {orderKey}</h3>
+                    <div>
+                        <p><span>Name: </span> {orderData.firstname} {orderData.lastname}</p>
+                        <p><span>Status: </span> {orderData.status}</p>
+                        <p><span>Total Cost: </span> {orderData.totalcost}₺</p>
+                        <p><span>Date: </span> {new Date(orderData.date).toLocaleString()}</p>
+                        <p><span>Delivery City: </span> {orderData.address?.city ?? 'No Delivery City'}</p>
+                        <p><span>Billing City: </span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
+                        <p><span>Delivery Company: </span>{deliveryCompanyName}</p>
+                        <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
+                        {/* Removed Items Bought section */}
+                        {orderData.status?.toLowerCase() === 'processing' && (
+                            <button
+                                className="cancel-order-button"
+                                style={{
+                                    backgroundColor: 'red',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '0.5em 1em',
+                                    borderRadius: '4px',
+                                    marginTop: '1em',
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => {
+                                    onClose();
+                                    handleCancelOrder(orderKey);
+                                }}
+                            >
+                                Cancel Order
+                            </button>
+                        )}
+                        {/* Refund button, only if 30 days between order and delivery */}
+                        {refundAvailable && (
+                            <button
+                                className="refund-order-button"
+                                style={{
+                                    backgroundColor: 'black',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '0.5em 1em',
+                                    borderRadius: '4px',
+                                    marginTop: '1em',
+                                    marginLeft: '1em',
+                                    cursor: 'pointer'
+                                }}
+                                onClick={handleRefund}
+                            >
+                                Request Refund
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="homepage">
             <header className="app-bar">
@@ -286,6 +397,7 @@ function Homepage() {
                         <button onClick={() => setSelectedStatus('in transit')}>In Transit</button>
                         <button onClick={() => setSelectedStatus('delivered')}>Delivered</button>
                         <button onClick={() => setSelectedStatus('cancelled')}>Cancelled</button>
+                        <button onClick={() => setSelectedStatus('refunded')}>Refunded</button>
 
                     </div>
                     <div className="orders-list">
@@ -305,58 +417,43 @@ function Homepage() {
                                 return bDate - aDate;
                             });
 
-
-
                             return filteredOrders.length > 0 ? (
                                 filteredOrders.map((order) => {
                                     const orderKey = Object.keys(order)[1];
                                     const orderData = order[orderKey];
-
-                                    const deliveryCompanyId = orderData.delivery?.company;
-                                    const deliveryCompanyName = deliveryCompanies.find(
-                                        company => Object.keys(company)[0] === deliveryCompanyId
-                                    )?.[deliveryCompanyId]?.name ?? 'No Delivery Company';
-
                                     return (
-                                        <div key={order.id} className="order-card">
+                                        <div
+                                            key={order.id}
+                                            className="order-card"
+                                            onClick={() => setModalOrder(order)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
                                             <h3>Order Number: {orderKey}</h3>
                                             <div className="order-info">
                                                 <div>
-                                                    <p><span>Name: </span> {orderData.firstname} {orderData.lastname}</p>
                                                     <p><span>Status: </span> {orderData.status}</p>
                                                     <p><span>Total Cost: </span> {orderData.totalcost}₺</p>
                                                     <p><span>Date: </span> {new Date(orderData.date).toLocaleString()}</p>
                                                 </div>
-                                                <div>
-                                                    <p><span>Delivery City: </span> {orderData.address?.city ?? 'No Delivery City'}</p>
-                                                    <p><span>Billing City: </span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
-                                                    <p>
-                                                        <span>Delivery Company: </span>
-                                                        {deliveryCompanyName}
-                                                    </p>
-                                                    <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
-                                                </div>
                                             </div>
-
-                                            {orderData.status?.toLowerCase() === 'processing' && (
-                                                <button
-                                                    color='red'
-                                                    className="cancel-order-button"
-                                                    onClick={() => handleCancelOrder(orderKey)}
-                                                >
-                                                    Cancel Order
-                                                </button>
-                                            )}
                                         </div>
                                     );
                                 })
                             ) : (
-                                <p>No orders found for "{selectedStatus}".</p>
+                                <p>
+                                    {selectedStatus === 'All'
+                                        ? 'No orders found.'
+                                        : `No orders found for "${selectedStatus}".`}
+                                </p>
                             );
                         })()}
+                        <OrderDetailsModal
+                            order={modalOrder}
+                            onClose={() => setModalOrder(null)}
+                            deliveryCompanies={deliveryCompanies}
+                        />
                     </div>
                 </div>
-
             </main>
         </div>
     );
