@@ -23,7 +23,8 @@ function Homepage() {
     const [userID, setUserID] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('All');
     const [modalOrder, setModalOrder] = useState(null);
-    const [orderData, setOrderData] = useState(null);
+    const [orderData1, setOrderData] = useState(null);
+    const [ordernum, setOrderNum] = useState(null);
 
 
 
@@ -197,6 +198,8 @@ function Homepage() {
     function OrderDetailsModal({ order, onClose, deliveryCompanies }) {
         if (!order) return null;
         const orderKey = Object.keys(order)[1];
+        setOrderNum(orderKey);
+        console.log("order key", orderKey);
         const orderData = order[orderKey];
         setOrderData(orderData);
         const deliveryCompanyId = orderData.delivery?.company;
@@ -219,25 +222,17 @@ function Homepage() {
         let refundAvailable = false;
         if (orderData.date && orderData.deliverydate) {
             const orderDate = new Date(orderData.date);
-            const deliveryDate = orderData.deliverydate
+            const deliveryDate = new Date(orderData.deliverydate);
+            console.log("delivery date", deliveryDate);
             const diffDays = Math.floor((deliveryDate - orderDate) / (1000 * 60 * 60 * 24));
+            console.log("diff days", diffDays);
             refundAvailable = diffDays <= 30;
         }
 
-        // Implement refund request using the model from DATABASE_MODELS.md
         const handleRefund = async () => {
             try {
-                await add("requests", {
-                    user: orderData.user,
-                    firstname: orderData.firstname,
-                    lastname: orderData.lastname,
-                    revievew: false,
-                    approved: false,
-                    order: orderKey,
-                    request: "refund",
-                    date: new Date().toISOString()
-                });
-                await set(`orders/${orderKey}`, { status: "refunded" });
+                add("requests", { request: "refund", order: ordernum })
+                //await set(`orders/${orderKey}`, { status: "refunded" });
                 alert('Refund requested!');
             } catch (error) {
                 console.error('Error sending refund request:', error);
