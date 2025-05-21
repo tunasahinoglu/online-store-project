@@ -242,11 +242,11 @@ function Homepage() {
                             />
                         </div>
                         <div className='input-group'>
-                            <h3>Country</h3>
+                            <h3>Address</h3>
                             <input
                                 type="text"
-                                placeholder={INFOuser[userID]?.address.country || "loading"}
-                                onChange={(e) => setCountrySave(e.target.value)}
+                                placeholder={INFOuser[userID]?.address.address || "loading"}
+                                onChange={(e) => setAddressSave(e.target.value)}
                                 className="disabled-input"
                             />
                         </div>
@@ -260,11 +260,11 @@ function Homepage() {
                             />
                         </div>
                         <div className='input-group'>
-                            <h3>Address</h3>
+                            <h3>Country</h3>
                             <input
                                 type="text"
-                                placeholder={INFOuser[userID]?.address.address || "loading"}
-                                onChange={(e) => setAddressSave(e.target.value)}
+                                placeholder={INFOuser[userID]?.address.country || "loading"}
+                                onChange={(e) => setCountrySave(e.target.value)}
                                 className="disabled-input"
                             />
                         </div>

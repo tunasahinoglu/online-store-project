@@ -20,6 +20,7 @@ function Homepage() {
     const [unseenCount, setUnseenCount] = useState(0);
     const [INFOuser, setUserinfo] = useState({});
     const [orders, setOrders] = useState([]);
+    const [requests, setRequests] = useState([]);
     const [userID, setUserID] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('All');
     const [modalOrder, setModalOrder] = useState(null);
@@ -168,9 +169,6 @@ function Homepage() {
         return unsubscribe;
     }, []);
 
-
-    //const orders = await get("orders", null, [["user", "==", user.uid]]);
-
     useEffect(() => {
         async function fetchOrders() {
             if (!userID) return;
@@ -187,6 +185,20 @@ function Homepage() {
                 }
             } catch (error) {
                 console.error('Error fetching orders:', error);
+            }
+
+            try {
+                const fetchedRequests = await get("requests", null, [["user", "==", userID]])
+                if (fetchedRequests) {
+                    const requestsArray = Object.entries(fetchedRequests).map(([id, request]) => ({
+                        id,
+                        ...request
+                    }));
+                    setRequests(requestsArray);
+                    console.log(requestsArray);
+                }
+            } catch (error) {
+                console.error('Error fetching requests:', error)
             }
         }
 
@@ -226,14 +238,14 @@ function Homepage() {
             console.log("delivery date", deliveryDate);
             const diffDays = Math.floor((deliveryDate - orderDate) / (1000 * 60 * 60 * 24));
             console.log("diff days", diffDays);
-            refundAvailable = diffDays <= 30;
+            refundAvailable = diffDays <= 30 && !(requests?.some(req => Object.values(req).some(entry => entry.order === orderKey)));
         }
 
         const handleRefund = async () => {
             try {
-                add("requests", { request: "refund", order: ordernum })
-                //await set(`orders/${orderKey}`, { status: "refunded" });
+                await add("requests", { request: "refund", order: ordernum })
                 alert('Refund requested!');
+                window.location.reload();
             } catch (error) {
                 console.error('Error sending refund request:', error);
                 alert('Error requesting refund.');
@@ -248,11 +260,14 @@ function Homepage() {
                     <div>
                         <p><span>Name: </span> {orderData.firstname} {orderData.lastname}</p>
                         <p><span>Status: </span> {orderData.status}</p>
-                        <p><span>Total Cost: </span> {orderData.totalcost}₺</p>
-                        <p><span>Date: </span> {new Date(orderData.date).toLocaleString()}</p>
-                        <p><span>Delivery City: </span> {orderData.address?.city ?? 'No Delivery City'}</p>
-                        <p><span>Billing City: </span> {orderData.billingaddress?.city ?? 'No Billing City'}</p>
-                        <p><span>Delivery Company: </span>{deliveryCompanyName}</p>
+                        <p><span>Total Cost: </span> {orderData.totalcost}$</p>
+                        <p><span>Order Date: </span> {new Date(orderData.date).toLocaleString()}</p>
+                        {orderData.deliverydate && (
+                            <p><span>Delivery Date: </span> {new Date(orderData.deliverydate).toLocaleString()}</p>
+                        )}
+                        <p><span>Delivery Address: </span> {orderData.address ? `${orderData.address.address ?? ''}, ${orderData.address.city ?? ''}, ${orderData.address.country ?? ''}` : 'No Delivery Address'}</p>
+                        <p><span>Billing Address: </span> {orderData.billingaddress ? `${orderData.billingaddress.address ?? ''}, ${orderData.billingaddress.city ?? ''}, ${orderData.billingaddress.country ?? ''}` : 'No Billing Address'}</p>
+                        <p><span>Delivery Company: </span>{orderData.delivery?.name ?? 'No Delivery Company Name'}</p>
                         <p><span>Delivery Type:</span> {orderData.delivery?.type ?? 'No Delivery Type'}</p>
                         {/* Removed Items Bought section */}
                         {orderData.status?.toLowerCase() === 'processing' && (
@@ -289,7 +304,10 @@ function Homepage() {
                                     marginLeft: '1em',
                                     cursor: 'pointer'
                                 }}
-                                onClick={handleRefund}
+                                onClick={() => {
+                                    onClose();
+                                    handleRefund();
+                                }}
                             >
                                 Request Refund
                             </button>

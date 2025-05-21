@@ -67,7 +67,7 @@ export const addRequest = async (req, res) => {
         await addLog(database, "ADD", requestDocument.path, null, requestData, decodedToken.uid);
 
         //send notification
-        await addNotification(database, orderData.user, decodeToken.uid, `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`);
+        await addNotification(database, userDocument.id, decodedToken.uid, `${request.charAt(0).toUpperCase() + request.slice(1)} request for order #${order} has been added.`);
         
         //send a response
         console.log("Response: Successfully added");

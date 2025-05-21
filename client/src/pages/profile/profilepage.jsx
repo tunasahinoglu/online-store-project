@@ -235,14 +235,6 @@ function Homepage() {
                 <div className="profile-container">
                     <div className='names'>
                         <div className='input-group'>
-                            <h3>Adress </h3>
-                            <input
-                                type="text"
-                                value={INFOuser[userID]?.address.address || "loading"}
-                                disabled
-                            />
-                        </div>
-                        <div className='input-group'>
                             <h3>Email </h3>
                             <input
                                 type="text"
@@ -255,6 +247,14 @@ function Homepage() {
                             <input
                                 type="text"
                                 value={INFOuser[userID]?.active ? "Active" : "Inactive"}
+                                disabled
+                            />
+                        </div>
+                        <div className='input-group'>
+                            <h3>Adress </h3>
+                            <input
+                                type="text"
+                                value={INFOuser[userID]?.address.address || "loading"}
                                 disabled
                             />
                         </div>
