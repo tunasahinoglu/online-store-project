@@ -45,7 +45,7 @@ export const addRequest = async (req, res) => {
         const userData = userDocument.data();
 
         //get the request
-        const requestReference = database.collection("requests").where("user", "==", decodedToken.uid).where("request", "==", request);
+        const requestReference = database.collection("requests").where("order", "==", order).where("user", "==", decodedToken.uid).where("request", "==", request);
         const requestSnapshot = await requestReference.get();
         if (!requestSnapshot.empty)
             throw createError(`A request was already made`, 400);
