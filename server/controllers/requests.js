@@ -115,12 +115,13 @@ export const setRequest = async (req, res) => {
         //get the order
         let orderReference;
         let orderDocument;
+        let orderData;
         if (requestData["request"] === "refund") {
             orderReference = database.collection("orders").doc(requestData["order"]);
             orderDocument = await orderReference.get();
             if (!orderDocument.exists)
                 throw createError(`Order with the id of ${orderID} was not found`, 404);
-            const orderData = orderDocument.data();
+            orderData = orderDocument.data();
             if ((new Date() - new Date(orderData["deliverydate"]))/(1000*60*60*24) > 30) {
                 approved = false;
                 alertMessage = "Request is rejected since 30 days have passed"
