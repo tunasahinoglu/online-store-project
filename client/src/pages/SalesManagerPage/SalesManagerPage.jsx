@@ -28,9 +28,32 @@ export default function SalesManagerPage() {
   const [discountedProductData, setDiscountedProductData] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  
+  const [refunds, setRefunds] = useState([]);
+
   const navigate = useNavigate();
   
+  useEffect(() => {
+    get("requests").then((fetched) => {
+      const loaded = fetched.map(obj => {
+        const id = Object.keys(obj)[0];
+        const data = obj[id];
+        return { id, ...data };
+      });
+
+      const filtered = loaded.filter(
+        (r) =>
+          typeof r.request === "string" &&
+          r.request.toLowerCase().trim() === "refund" &&
+          r.reviewed === false
+      );
+
+      setRefunds(filtered);
+    }).catch((err) => {
+      console.error("Failed to fetch refund requests:", err);
+    });
+  }, []);
+
+
   useEffect(() => {
     get("products").then((fetched) => {
       const loaded = fetched.map(obj => {
@@ -64,6 +87,27 @@ export default function SalesManagerPage() {
     });
   }, []);
   
+    const handleRefundAction = async (id, approved) => {
+    const refund = refunds.find(r => r.id === id);
+    if (!refund) return;
+
+    const updated = {
+      ...refund,
+      approved: Boolean(approved),
+      reviewed: true,
+    };
+
+    try {
+      await set(`requests/${id}`, updated);
+      setRefunds((prev) =>
+        prev.filter((r) => r.id !== id) // remove from UI after action
+      );
+    } catch (err) {
+      console.error("Error updating refund request:", err);
+    }
+  };
+
+
   const handlePriceChange = (id, value) => {
     setPriceInputs((prev) => ({ ...prev, [id]: value }));
   };
@@ -392,6 +436,42 @@ return (
             </div>
           </div>
         </section>
+       
+        {/* Refund Request Management */}
+<section className="sales-section">
+  <h2 className="section-title">Refund Requests</h2>
+  <div className="discount-list-box">
+    <div className="discount-list-inner">
+      {refunds.length === 0 ? (
+        <p>No refund requests found.</p>
+      ) : (
+        <ul>
+          {refunds.map((req) => (
+            <li key={req.id} style={{ marginBottom: "1rem" }}>
+              <strong>User:</strong> {req.firstname} {req.lastname} —&nbsp;
+              <strong>Order:</strong> {req.order} —&nbsp;
+              <strong>Date:</strong> {new Date(req.date).toLocaleString()}
+              <br />
+              <button
+                className="button"
+                onClick={() => handleRefundAction(req.id, true)}
+              >
+                ✅ Approve
+              </button>
+              <button
+                className="button"
+                style={{ marginLeft: "1rem" }}
+                onClick={() => handleRefundAction(req.id, false)}
+              >
+                ❌ Reject
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</section>
 
         {/* Discount Section */}
         <section className="sales-section">
