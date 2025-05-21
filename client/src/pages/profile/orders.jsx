@@ -407,7 +407,7 @@ function Homepage() {
                     <div className="order-filters">
                         <button onClick={() => setSelectedStatus('All')}>All</button>
                         <button onClick={() => setSelectedStatus('processing')}>Processing</button>
-                        <button onClick={() => setSelectedStatus('in transit')}>In Transit</button>
+                        <button onClick={() => setSelectedStatus('in-transit')}>In-Transit</button>
                         <button onClick={() => setSelectedStatus('delivered')}>Delivered</button>
                         <button onClick={() => setSelectedStatus('cancelled')}>Cancelled</button>
                         <button onClick={() => setSelectedStatus('refunded')}>Refunded</button>
