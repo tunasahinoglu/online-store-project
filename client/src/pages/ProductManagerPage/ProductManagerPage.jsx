@@ -187,7 +187,7 @@ function ProductManagerPage() {
                   <div style={{ flex: 1 }}>
                     <p><strong>Order ID:</strong> {inv.id}</p>
                     <p><strong>Customer:</strong> {inv.firstname} {inv.lastname}</p>
-                    <p><strong>Address:</strong> {inv.address?.address}, {inv.address?.city}</p>
+                    <p><strong>Address:</strong> {inv.address?.address}, {inv.address?.city}, {inv.address?.country}</p>
                     <p><strong>Status:</strong> {inv.status}</p>
                     <p><strong>Order Date:</strong> {inv.date ? String(inv.date) : "N/A"}</p>
                   </div>
