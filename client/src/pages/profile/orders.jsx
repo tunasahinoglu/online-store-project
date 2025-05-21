@@ -260,7 +260,7 @@ function Homepage() {
                     <div>
                         <p><span>Name: </span> {orderData.firstname} {orderData.lastname}</p>
                         <p><span>Status: </span> {orderData.status}</p>
-                        <p><span>Total Cost: </span> {orderData.totalcost}$</p>
+                        <p><span>Total Cost: </span> {orderData.totaldiscountedcost}$</p>
                         <p><span>Order Date: </span> {new Date(orderData.date).toLocaleString()}</p>
                         {orderData.deliverydate && (
                             <p><span>Delivery Date: </span> {new Date(orderData.deliverydate).toLocaleString()}</p>
@@ -445,7 +445,7 @@ function Homepage() {
                                             <div className="order-info">
                                                 <div>
                                                     <p><span>Status: </span> {orderData.status}</p>
-                                                    <p><span>Total Cost: </span> {orderData.totalcost}₺</p>
+                                                    <p><span>Total Cost: </span> {orderData.totaldiscountedcost}₺</p>
                                                     <p><span>Date: </span> {new Date(orderData.date).toLocaleString()}</p>
                                                 </div>
                                             </div>
