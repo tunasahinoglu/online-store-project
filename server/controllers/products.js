@@ -166,7 +166,7 @@ export const setProduct = async (req, res) => {
             const userDocuments = usersSnapshot.docs;
             for (const userDocument of userDocuments) {
                 //add the notification
-                await addNotification(database, userDocument.id, decodedToken.uid, message);
+                await addNotification(database, userDocument.id, decodedToken.uid, `Product ${productData.name} #${productID} is on sale!`);
             }
         }
 
