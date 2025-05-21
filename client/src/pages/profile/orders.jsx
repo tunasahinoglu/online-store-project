@@ -233,10 +233,10 @@ function Homepage() {
 
         let refundAvailable = false;
         if (orderData.date && orderData.deliverydate) {
-            const orderDate = new Date(orderData.date);
+            const orderDate = new Date();
             const deliveryDate = new Date(orderData.deliverydate);
             console.log("delivery date", deliveryDate);
-            const diffDays = Math.floor((deliveryDate - orderDate) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor((orderDate - deliveryDate) / (1000 * 60 * 60 * 24));
             console.log("diff days", diffDays);
             refundAvailable = diffDays <= 30 && !(requests?.some(req => Object.values(req).some(entry => entry.order === orderKey)));
         }

@@ -109,7 +109,7 @@ export const setComment = async (req, res) => {
     //set the comment
     try {
         //token check
-        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" && tokenRole === "productmanager";
+        const tokenCondition = (decodedToken, tokenRole, isUser, userData) => tokenRole === "admin" || tokenRole === "productmanager";
         const { decodedToken, tokenRole, isUser } = await decodeToken(admin, database, token, false, tokenCondition);
 
         //input check
@@ -140,8 +140,8 @@ export const setComment = async (req, res) => {
 
         //send notification to user
         const message = isRating ?
-                        `Rating #${commentDocument.id} has been ${approval ? "made visible" : "hidden"}.` :
-                        `Comment #${commentDocument.id} has been ${approval ? "approved" : "denied"}.`;
+                        `Rating #${commentDocument.id} has been ${approved ? "made visible" : "hidden"}.` :
+                        `Comment #${commentDocument.id} has been ${approved ? "approved" : "denied"}.`;
         await addNotification(database, commentData.user, decodedToken.uid, message);
 
         //send a response
